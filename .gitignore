@@ -1,0 +1,28 @@
+*
+
+!/include/
+!/include/**/
+!/include/**/*.h
+
+!/src/
+!/src/**/
+!/src/**/*.cpp
+
+!/standalone/
+!/standalone/*.cpp
+
+!/test/
+!/test/**/
+!/test/**/*.h
+!/test/**/*.cpp
+!/test/**/*.txt
+
+# !/docs/
+# !/docs/CMakeLists
+# !/docs/mainpage.md
+
+!/**/CMakeLists.txt
+
+!/README.md
+!/LICENSE
+!/.gitignore
