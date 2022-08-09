@@ -573,8 +573,8 @@ public:
 	/// @exceptsafe Shall not throw exceptions.
 	///
 	inline int SetGoto(Symbol *symbol, ProductionItemCollection<EvalType> *collection) noexcept {
-		auto [iter, success] = goto_table_.insert(std::make_pair(symbol, collection));
-		return success ? 0 : -1;
+		const auto result = goto_table_.insert(std::make_pair(symbol, collection));
+		return result.second ? 0 : -1;
 	}
 
 

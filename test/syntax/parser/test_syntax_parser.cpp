@@ -200,7 +200,7 @@ TEST(SLRSyntaxParserTest, ActionTable) {
 		const std::vector<std::vector<int>> &action_type = add_multi_action_type;
 		const std::vector<std::vector<int>> &action_value = add_multi_action_value;
 		AddMultiGrammar grammar;
-		SLRSyntaxParser parser(&grammar);
+		SLRSyntaxParser<double> parser(&grammar);
 		ActionTable *table = parser.GetActionTable();
 		for (size_t c = 0; c < action_type.size(); ++c) {
 			for (size_t s = 0; s < action_type[0].size(); ++s) {
@@ -242,7 +242,7 @@ TEST(SLRSyntaxParserTest, ActionTable) {
 		const std::vector<std::vector<int>> &action_type = logical_action_type;
 		const std::vector<std::vector<int>> &action_value = logical_action_value;
 		LogicalGrammar grammar;
-		SLRSyntaxParser parser(&grammar);
+		SLRSyntaxParser<bool> parser(&grammar);
 		ActionTable *table = parser.GetActionTable();
 		for (size_t c = 0; c < action_type.size(); ++c) {
 			for (size_t s = 0; s < action_type[0].size(); ++s) {
@@ -288,7 +288,7 @@ TEST(SLRSyntaxParserTest, Parse) {
 		const std::vector<double> &result = kAddMultiResult;
 		for (auto tokens : tokens_list) {
 			AddMultiGrammar grammar;
-			SLRSyntaxParser parser(&grammar);
+			SLRSyntaxParser<double> parser(&grammar);
 			ASSERT_EQ(parser.Parse(tokens), 0);
 
 			// parser.PrintTree(parser.Root());
@@ -310,7 +310,7 @@ TEST(SLRSyntaxParserTest, Parse) {
 		const std::vector<bool> &result = kLogicalResult;
 		for (auto tokens : tokens_list) {
 			LogicalGrammar grammar;
-			SLRSyntaxParser parser(&grammar);
+			SLRSyntaxParser<bool> parser(&grammar);
 			ASSERT_EQ(parser.Parse(tokens), 0);
 
 			// parser.PrintTree(parser.Root());

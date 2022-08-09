@@ -1,6 +1,7 @@
 #include "syntax/logic_comparer.h"
 
 #include <iostream>
+#include <algorithm>
 
 namespace ecc {
 

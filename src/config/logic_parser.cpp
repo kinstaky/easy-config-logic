@@ -59,13 +59,13 @@ int LogicParser::Parse(const std::string &expr) noexcept {
 	std::vector<TokenPtr> tokens;
 	size_t divisor;
 	if (ExtendLeftLex(expr, left_side_str, tokens, divisor) != 0) {
-		// std::cerr << "Error: ExtendLeftLex failed" << std::endl;
+		std::cerr << "Error: ExtendLeftLex failed" << std::endl;
 		return -1;
 	}
 
 	int generate_index = ExtendDividerParse(left_side_str, tokens, divisor);
 	if (generate_index < 0) {
-		// std::cerr << "Error: ExtendDividerParse failed" << std::endl;
+		std::cerr << "Error: ExtendDividerParse failed" << std::endl;
 		return -1;
 	}
 
@@ -161,7 +161,7 @@ int LogicParser::LeftSideLex(const std::string &expr, std::string &left, std::st
 
 		if (c == '=') {
 			if (left.empty()) {
-				// std::cerr << "Error: Expected left hand side variable before '='" << std::endl;
+				std::cerr << "Error: Expected left hand side variable before '='" << std::endl;
 				return -1;
 			} else {
 				right = expr.substr(i+1, expr.length()-i-1);
@@ -173,9 +173,9 @@ int LogicParser::LeftSideLex(const std::string &expr, std::string &left, std::st
 			left += c;
 		} else {
 			if (left.empty()) {
-				// std::cerr << "Error: Expected expression starts with left hand side variable!" << std::endl;
+				std::cerr << "Error: Expected expression starts with left hand side variable!" << std::endl;
 			} else {
-				// std::cerr << "Error: Invalid symbol in left hand side variable: " << c << std::endl;
+				std::cerr << "Error: Invalid symbol in left hand side variable: " << c << std::endl;
 			}
 			return -1;
 		}
@@ -187,17 +187,17 @@ int LogicParser::LeftSideLex(const std::string &expr, std::string &left, std::st
 int LogicParser::ExtendDividerParse(const std::string &left, const std::vector<TokenPtr> &right, size_t divisor) noexcept {
 	// check identifiers form
 	if (!CheckIdentifiers(left, right)) {
-		// std::cerr << "Error: Identifiers form!" << std::endl;
+		std::cerr << "Error: Identifiers form!" << std::endl;
 		return -1;
 	}
 	// check port input and output conflict
 	if (!CheckIoConflict(left, right)) {
-		// std::cerr << "Error: Input output conflict!" << std::endl;
+		std::cerr << "Error: Input output conflict!" << std::endl;
 		return -1;
 	}
 
 	if (IsDivider(left) && !divisor) {
-		// std::cerr << "Error: Expected \" / divisor\" in divider expression" << std::endl;
+		std::cerr << "Error: Expected \" / divisor\" in divider expression" << std::endl;
 		return -1;
 	}
 
@@ -215,18 +215,18 @@ int LogicParser::ExtendDividerParse(const std::string &left, const std::vector<T
 
 	// parse the right side tokens and generate the syntax tree
 	LogicalGrammar grammar;
-	SLRSyntaxParser parser(&grammar);
+	SLRSyntaxParser<bool> parser(&grammar);
 
 	if (IsDivider(right[0]->Value())) {
 		// contains divider
 		std::vector<TokenPtr> extracted_tokens(right.begin()+2, right.end());
 		if (parser.Parse(extracted_tokens) != 0) {
-			// std::cerr << "Error: Syntax parse failed" << std::endl;
+			std::cerr << "Error: Syntax parse failed" << std::endl;
 			return -1;
 		}
 	} else {
 		if (parser.Parse(right) != 0) {
-			// std::cerr << "Error: Syntax parse failed" << std::endl;
+			std::cerr << "Error: Syntax parse failed" << std::endl;
 			return -1;
 		}
 	}
@@ -237,7 +237,7 @@ int LogicParser::ExtendDividerParse(const std::string &left, const std::vector<T
 	// generate gates
 	int generate_index = GenerateGates(tree.Root(), tree.IdList());
 	if (generate_index < 0) {
-		// std::cerr << "Error: Generate gates!" << std::endl;
+		std::cerr << "Error: Generate gates!" << std::endl;
 		return -1;
 	}
 
@@ -245,7 +245,7 @@ int LogicParser::ExtendDividerParse(const std::string &left, const std::vector<T
 		std::vector<TokenPtr> divider_tokens(right.begin(), right.begin()+2);
 		generate_index = GenerateDividerGate(divider_tokens, size_t(generate_index));
 		if (generate_index < 0) {
-			// std::cerr << "Error: Generate divider gate" << std::endl;
+			std::cerr << "Error: Generate divider gate" << std::endl;
 			return -1;
 		}
 	}
@@ -282,7 +282,7 @@ bool LogicParser::CheckIdentifiers(const std::string &left, const std::vector<To
 		auto id_start = right.begin();
 		if (IsDivider(right[0]->Value())) {
 			if (right[1]->Value() != "|" && right[1]->Value() != "&") {
-				// std::cerr << "Error: Expected operator '|' or '&' after divider identifier " << right[1]->Value() << std::endl;
+				std::cerr << "Error: Expected operator '|' or '&' after divider identifier " << right[1]->Value() << std::endl;
 				return false;
 			}
 			std::advance(id_start, 2);
@@ -293,16 +293,16 @@ bool LogicParser::CheckIdentifiers(const std::string &left, const std::vector<To
 				if (id->Value() != "|" && id->Value() != "&"
 					&& id->Value() != "(" && id->Value() != ")"
 				){
-					// std::cerr << "Error: Undefined operator " << id->Value() << std::endl;
+					std::cerr << "Error: Undefined operator " << id->Value() << std::endl;
 					return false;
 				}
 			} else if (id->Type() == kSymbolType_Identifier) {
 				if (!IsFrontIo(id->Value())) {
-					// std::cerr << "Error: Expected identifier in front io port form " << id->Value() << std::endl;
+					std::cerr << "Error: Expected identifier in front io port form " << id->Value() << std::endl;
 					return false;
 				}
 			} else {
-				// std::cerr << "Error: Invalid identifier type " << id->Type() << std::endl;
+				std::cerr << "Error: Invalid identifier type " << id->Type() << std::endl;
 				return false;
 			}
 		}
@@ -318,35 +318,35 @@ bool LogicParser::CheckIoConflict(const std::string &left, const std::vector<Tok
 		// check back output conflict
 		if (back_output_ != size_t(-1)) {
 			// two source of back
-			// std::cerr << "Error: Multiple source of back plane port" << std::endl;
+			std::cerr << "Error: Multiple source of back plane port" << std::endl;
 			return false;
 		}
 	} else if (IsFrontIo(left)) {
 		// check front output port conflict
 		if (front_out_use_.test(IdentifierIndex(left))) {
 			// front output conflict
-			// std::cerr << "Error: Multiple source of fornt port " << left << std::endl;
+			std::cerr << "Error: Multiple source of fornt port " << left << std::endl;
 			return false;
 		}
 	} else if (IsScaler(left)) {
 		// check scaler source conflict
 		if (scaler_use_.test(IdentifierIndex(left)-kScalersOffset)) {
 			// scaler source conflict
-			// std::cerr << "Error: Multiple source of scaler " << left << std::endl;
+			std::cerr << "Error: Multiple source of scaler " << left << std::endl;
 			return false;
 		}
 	} else if (IsDivider(left)) {
 		// check divider source conflict
 		if (divider_use_.test(IdentifierIndex(left)-kDividersOffset)) {
 			// divider source conflict
-			// std::cerr << "Error: Multiple source of divider " << left << std::endl;
+			std::cerr << "Error: Multiple source of divider " << left << std::endl;
 			return false;
 		}
 	}
 
 	// check whether the using divider has been defined before
 	if (IsDivider(right[0]->Value()) && !divider_use_.test(IdentifierIndex(right[0]->Value())-kDividersOffset)) {
-		// std::cerr << "Error: Use of undefined divider " << right[0]->Value() << std::endl;
+		std::cerr << "Error: Use of undefined divider " << right[0]->Value() << std::endl;
 		return false;
 	}
 
@@ -360,7 +360,7 @@ bool LogicParser::CheckIoConflict(const std::string &left, const std::vector<Tok
 				continue;
 			}
 			if (right[i]->Value() == left) {
-				// std::cerr << "Error: Input and output in the same port " << left << std::endl;
+				std::cerr << "Error: Input and output in the same port " << left << std::endl;
 				return false;
 			}
 		}
@@ -368,7 +368,7 @@ bool LogicParser::CheckIoConflict(const std::string &left, const std::vector<Tok
 
 	// check this output with previous inputs
 	if (IsFrontIo(left) && front_in_use_.test(IdentifierIndex(left))) {
-		// std::cerr << "Error: Output port defined as input port before " << left << std::endl;
+		std::cerr << "Error: Output port defined as input port before " << left << std::endl;
 		return false;
 	}
 	// check this inputs with previous outputs
@@ -376,7 +376,7 @@ bool LogicParser::CheckIoConflict(const std::string &left, const std::vector<Tok
 		// not the clock
 		if (IsScaler(left) && right.size() == 1) {
 			if (right[0]->Type() != kSymbolType_Identifier) {
-				// std::cerr << "Error: The only token is not identifier " << right[0]->Value() << std::endl;
+				std::cerr << "Error: The only token is not identifier " << right[0]->Value() << std::endl;
 				return false;
 			}
 		} else {
@@ -390,7 +390,7 @@ bool LogicParser::CheckIoConflict(const std::string &left, const std::vector<Tok
 					continue;
 				}
 				if (front_out_use_.test(IdentifierIndex(right[i]->Value()))) {
-					// std::cerr << "Error: Input port defined as output port before " << right[i]->Value() << std::endl;
+					std::cerr << "Error: Input port defined as output port before " << right[i]->Value() << std::endl;
 					return false;
 				}
 			}
@@ -408,12 +408,12 @@ bool LogicParser::CheckIoConflict(const std::string &left, const std::vector<Tok
 			}
 			if (front_use_lemo_.test(IdentifierIndex(right[i]->Value()))) {
 				if (!IsLemoIo(right[i]->Value())) {
-					// std::cerr << "Error: Input port was defined as lemo input before " << right[i]->Value() << std::endl;
+					std::cerr << "Error: Input port was defined as lemo input before " << right[i]->Value() << std::endl;
 					return false;
 				}
 			} else {
 				if (IsLemoIo(right[i]->Value())) {
-					// std::cerr << "Error: Input port wasn't defined as lemo input before " << right[i]->Value() << std::endl;
+					std::cerr << "Error: Input port wasn't defined as lemo input before " << right[i]->Value() << std::endl;
 					return false;
 				}
 			}
@@ -729,7 +729,7 @@ int LogicParser::GenerateDividerGate(const std::vector<TokenPtr> &tokens, size_t
 	op_type = tokens[1]->Value() == "|" ? kOperatorOr : op_type;
 	op_type = tokens[1]->Value() == "&" ? kOperatorAnd : op_type;
 	if (op_type == 0) {
-		// std::cerr << "Error: Invalid operator " << tokens[1]->Value() << std::endl;
+		std::cerr << "Error: Invalid operator " << tokens[1]->Value() << std::endl;
 		return -1;
 	}
 

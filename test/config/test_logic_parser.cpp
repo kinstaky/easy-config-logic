@@ -250,17 +250,17 @@ const std::vector<std::vector<OutputInfo>> kFrontOutputsGroup = {
 		{45, kClocksOffset + 0}
 	}
 };
-const std::vector<size_t> kFrontInputGroup = {
+const std::vector<uint64_t> kFrontInputGroup = {
 	0x003f'888e,
 	0x6,
 	0xc99d'0004'0041
 };
-const std::vector<size_t> kFrontOutputGroup = {
+const std::vector<uint64_t> kFrontOutputGroup = {
 	0x0200'0005'0006,
 	0x0,
 	0x3624'0004'0044
 };
-const std::vector<size_t> kFrontLemoGroup = {
+const std::vector<uint64_t> kFrontLemoGroup = {
 	0x8000,
 	0x0,
 	0x0080'0000'0000
@@ -311,7 +311,7 @@ const std::vector<std::vector<OutputInfo>> kScalersGroup = {
 		{7, 34}
 	}
 };
-const std::vector<std::vector<size_t>> kClockFrequencyGroup = {
+const std::vector<std::vector<uint64_t>> kClockFrequencyGroup = {
 	{1, 1'000'000},
 	{1},
 	{1, 1'000'000, 5'000}
@@ -720,12 +720,12 @@ TEST(LogicParserTest, GenerateGates) {
 
 	// check port outpus
 	for (size_t i = 0; i < parser.FrontOutputSize(); ++i) {
-		const auto [port, source] = parser.FrontOutput(i);
+		const auto info = parser.FrontOutput(i);
 		// check output port index
-		EXPECT_EQ(port, kFrontOuputs[i].port)
+		EXPECT_EQ(info.port, kFrontOuputs[i].port)
 			<< "Error: output port index " << i;
 		// check identifier/gate index
-		EXPECT_EQ(source, kFrontOuputs[i].source)
+		EXPECT_EQ(info.source, kFrontOuputs[i].source)
 			<< "Error: output identifier/gate index " << i;
 	}
 
@@ -866,11 +866,11 @@ TEST(LogicParserTest, Parse) {
 				<< "Error: Front output source of group " << group << ", index " << i;
 		}
 		for (size_t i = 0; i < kFrontIoNum; ++i) {
-			EXPECT_EQ(parser.IsFrontInput(i), bool(kFrontInputGroup[group] & (1ul << i)))
+			EXPECT_EQ(parser.IsFrontInput(i), bool(kFrontInputGroup[group] & (1ull << i)))
 				<< "Error: Front input of group " << group << ", index " << i;
-			EXPECT_EQ(parser.IsFrontOutput(i), bool(kFrontOutputGroup[group] & (1ul << i)))
+			EXPECT_EQ(parser.IsFrontOutput(i), bool(kFrontOutputGroup[group] & (1ull << i)))
 				<< "Error: Front output of group " << group << ", index " << i;
-			EXPECT_EQ(parser.IsFrontLemo(i), bool(kFrontLemoGroup[group] & (1ul << i)))
+			EXPECT_EQ(parser.IsFrontLemo(i), bool(kFrontLemoGroup[group] & (1ull << i)))
 				<< "Error: Front lemo of group " << group << ", index " << i;
 		}
 

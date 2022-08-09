@@ -8,7 +8,7 @@
 int main(int argc, char **argv) {
 	if (argc != 3) {
 		std::cerr << "Error: " << argv[0] << " needs 2 parameters." << std::endl;
-		std::cout << "Usage: ./" << argv[0] << " [input_file] [output_file]" << std::endl;
+		std::cout << "Usage: " << argv[0] << " [input_file] [output_file]" << std::endl;
 		std::cout << "  input_file        -- input config file" << std::endl;
 		std::cout << "  output_file       -- output raw config file" << std::endl;
 	}

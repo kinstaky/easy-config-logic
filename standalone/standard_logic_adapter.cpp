@@ -17,7 +17,7 @@ int main() {
 
 	ecc::Lexer lexer;
 	ecc::LogicalGrammar grammar;
-	ecc::SLRSyntaxParser parser(&grammar);
+	ecc::SLRSyntaxParser<bool> parser(&grammar);
 	std::vector<ecc::TokenPtr> tokens;
 
 

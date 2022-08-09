@@ -110,7 +110,7 @@ TEST(StandardLogicTreeTest, Time) {
 	for (size_t i = 0; i < kExpression.size(); ++i) {
 		Lexer lexer;
 		LogicalGrammar grammar;
-		SLRSyntaxParser parser(&grammar);
+		SLRSyntaxParser<bool> parser(&grammar);
 		std::vector<TokenPtr> tokens;
 		lexer.Analyse(kExpression[i], tokens);
 		parser.Parse(tokens);

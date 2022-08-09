@@ -108,11 +108,11 @@ TEST(LogicComparerTest, Compare) {
 TEST(LogicComparerTest, Time) {
 	std::vector<double> time_cost;
 	size_t index = 0;
-	for (const auto &[expr0, expr1] : kTimeExpressions) {
+	for (const auto &expr_pair : kTimeExpressions) {
 		LogicComparer comparer;
 
 		auto start = std::chrono::high_resolution_clock::now();
-		EXPECT_TRUE(comparer.Compare(expr0, expr1))
+		EXPECT_TRUE(comparer.Compare(expr_pair.first, expr_pair.second))
 			<< "Error: not euqal in case " << index;
 		auto stop = std::chrono::high_resolution_clock::now();
 

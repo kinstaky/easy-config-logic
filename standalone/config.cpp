@@ -52,6 +52,10 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
+	if (argv[argc-1][0] == '-' && argv[argc-1][1] == 'h') {
+		PrintUsage(argv[0]);
+		return 0;
+	} 
 
 
 	ecc::MemoryConfig config;

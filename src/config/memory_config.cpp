@@ -56,7 +56,7 @@ int MemoryConfig::Read(LogicParser *parser) noexcept {
 
 	// read or gate config
 	for (size_t i = 0; i < parser->OrGateSize(); ++i) {
-		unsigned long or_gate = parser->OrGate(i).to_ulong();
+		unsigned long long  or_gate = parser->OrGate(i).to_ullong();
 		for (size_t j = 0; j < kFrontIoGroupNum; ++j) {
 			memory_.or_front_selection[i][j] = (or_gate >> (j<<4)) & 0xffff;
 		}
@@ -64,7 +64,7 @@ int MemoryConfig::Read(LogicParser *parser) noexcept {
 
 	// read and gate config
 	for (size_t i = 0; i < parser->AndGateSize(); ++i) {
-		unsigned long and_gate = parser->AndGate(i).to_ulong();
+		unsigned long long and_gate = parser->AndGate(i).to_ullong();
 		for (size_t j = 0; j < kFrontIoGroupNum; ++j) {
 			memory_.and_front_selection[i][j] = (and_gate >> (j<<4)) & 0xffff;
 		}
