@@ -66,5 +66,6 @@ add_subdirectory(standalone)
 
 # add test
 if (BUILD_TESTING)
+	set(INSTALL_GTEST OFF)
 	add_subdirectory(test)
 endif()

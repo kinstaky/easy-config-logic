@@ -89,3 +89,8 @@ target_link_libraries(
 	PRIVATE memory_config logic_parser
 )
 
+install(TARGETS compare DESTINATION "${CMAKE_BINARY_DIR}/bin")
+install(TARGETS standardize DESTINATION "${CMAKE_BINARY_DIR}/bin")
+install(TARGETS convert DESTINATION "${CMAKE_BINARY_DIR}/bin")
+install(TARGETS config DESTINATION "${CMAKE_BINARY_DIR}/bin")
+install(TARGETS logic_test DESTINATION "${CMAKE_BINARY_DIR}/bin")
