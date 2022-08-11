@@ -53,6 +53,24 @@ target_link_libraries(
 	PRIVATE memory_config logic_parser
 )
 
+# i2c library
+add_library(
+	i2c STATIC
+	i2c.cpp i2c.h
+)
+target_include_directories(
+	i2c
+	PUBLIC "${PROJECT_SOURCE_DIR}/standalone"
+)
+target_compile_features(
+	i2c
+	PRIVATE cxx_std_17
+)
+target_compile_options(
+	i2c
+	PRIVATE -Werror -Wall -Wextra
+)
+
 # config
 add_executable(
 	config
@@ -68,7 +86,7 @@ target_compile_options(
 )
 target_link_libraries(
 	config
-	PRIVATE memory_config logic_parser
+	PRIVATE memory_config logic_parser i2c
 )
 
 # logic test

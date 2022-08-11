@@ -448,7 +448,7 @@ uint8_t MemoryConfig::ConvertSource(size_t source) const noexcept {
 		return uint8_t(source - kDividerGatesOffset + 104);
 	} else if (source == kPrimaryClockOffset) {
 		// primary clock
-		return uint8_t(144);
+		return uint8_t(112);
 	}
 
 	std::cerr << "Error: Undefined source from LogicParser " << source << std::endl;

@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <sys/file.h>
 #include <sys/mman.h>
 
 #include <fstream>
@@ -6,8 +7,12 @@
 
 #include "config/logic_parser.h"
 #include "config/memory_config.h"
+#include "i2c.h"
 
 const size_t kMemorySize = 4096;
+const unsigned int kDividerResetAddress = 155;
+const unsigned int kDividerResetBit = 8;
+const unsigned int kDividerResetWait = 1000;
 
 void PrintUsage(const char *name) {
 	std::cout << "Usage: " << name << " [options] file\n"
@@ -18,6 +23,16 @@ void PrintUsage(const char *name) {
 		<< "  -r          Read register memory as config, default\n"
 		<< "  file        Path of config file."
 		<< std::endl;
+}
+
+
+// This function set the reset bit for 1ms and set it back to 0.
+// So the divider can work properly.
+void DividerReset(volatile uint32_t *mapped) {
+	mapped[kDividerResetAddress] |= 1 << kDividerResetBit;
+	usleep(kDividerResetWait);
+	mapped[kDividerResetAddress] &= ~(1 << kDividerResetBit);
+	return;
 }
 
 
@@ -87,13 +102,18 @@ int main(int argc, char **argv) {
 
 	std::cout << config << std::endl;
 
-	// map memory
+	// open memory file
 	int fd = open("/dev/uio0", O_RDWR);
 	if (fd < 0) {
 		std::cerr << "Error: Failed to open dev file /dev/uio0" << std::endl;
 		return -1;
 	}
-
+	// lock the address space
+	if (flock(fd, LOCK_EX | LOCK_NB)) {
+		std::cerr << "Error: Failed to get the file lock on /dev/uio0" << std::endl;
+		return -1;
+	}
+	// map memory
 	void *map_addr = mmap(NULL, kMemorySize, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	if (map_addr == MAP_FAILED) {
 		std::cerr << "Error: Failed to mmap" << std::endl;
@@ -101,7 +121,19 @@ int main(int argc, char **argv) {
 	}
 	volatile uint32_t *map = (uint32_t*)map_addr;
 
+	// write config to memory
 	config.MapMemory(map);
+	// reset divider
+	DividerReset(map);
+	// call i2c chips
+	for (size_t i = 0; i < 6; ++i) {
+		Enable_Rj45(map, i, (uint8_t)0);
+	}
+
+	// clean up
+	flock(fd, LOCK_UN);
+	munmap(map_addr, kMemorySize);
+	close(fd);
 
 	return 0;
 }
