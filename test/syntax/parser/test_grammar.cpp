@@ -9,7 +9,7 @@
 
 #include "syntax/parser/token.h"
 
-using namespace ecc;
+using namespace ecl;
 
 // first list
 // add multi grammar

@@ -6,7 +6,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace ecc {
+namespace ecl {
 
 MemoryConfig::MemoryConfig() noexcept {
 }
@@ -680,4 +680,4 @@ int MemoryConfig::MapMemory(volatile uint32_t *map) const noexcept {
 	return 0;
 }
 
-}				// namespace ecc
+}				// namespace ecl

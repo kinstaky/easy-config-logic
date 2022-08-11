@@ -13,7 +13,7 @@
 #include "syntax/logical_grammar.h"
 #include "standardize/standard_logic_tree.h"
 
-namespace ecc {
+namespace ecl {
 
 const size_t kFrontIoNum = 48;
 
@@ -558,6 +558,6 @@ private:
 	std::vector<DividerGateInfo> divider_gates_;
 };
 
-}				// namespace ecc
+}				// namespace ecl
 
 #endif			// __LOGIC_PARSER_H__

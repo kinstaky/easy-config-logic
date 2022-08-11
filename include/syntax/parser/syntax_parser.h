@@ -12,7 +12,7 @@
 #include "syntax/parser/production.h"
 #include "syntax/parser/token.h"
 
-namespace ecc {
+namespace ecl {
 
 /**
  * This struct Action represents the action of the LR syntax parse.
@@ -317,6 +317,6 @@ private:
 	ActionTable *action_table_;
 };
 
-}				// namespace ecc
+}				// namespace ecl
 
 #endif /* __SYNTAX_PARSER_H__ */

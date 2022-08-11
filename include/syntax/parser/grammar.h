@@ -14,7 +14,7 @@
 #include "syntax/parser/production.h"
 #include "syntax/parser/token.h"
 
-namespace ecc {
+namespace ecl {
 
 template<typename VarType>
 class Grammar {
@@ -277,6 +277,6 @@ protected:
 
 };
 
-}				// namespace ecc
+}				// namespace ecl
 
 #endif /* __GRAMMAR_H__ */

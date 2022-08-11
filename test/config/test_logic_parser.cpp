@@ -6,7 +6,7 @@
 
 #include <gtest/gtest.h>
 
-using namespace ecc;
+using namespace ecl;
 
 
 const std::vector<std::string> kExpressions = {

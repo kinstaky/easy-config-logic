@@ -4,7 +4,7 @@
 
 #include "syntax/parser/token.h"
 
-using namespace ecc;
+using namespace ecl;
 
 
 TEST(ProductionTest, Children) {

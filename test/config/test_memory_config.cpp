@@ -12,7 +12,7 @@
 #define TEST_DATA_DIRECTORY ""
 #endif
 
-using namespace ecc;
+using namespace ecl;
 
 const std::string kTestDataDir = TEST_DATA_DIRECTORY;
 

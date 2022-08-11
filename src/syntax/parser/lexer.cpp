@@ -10,7 +10,7 @@
 
 #include "syntax/parser/token.h"
 
-namespace ecc {
+namespace ecl {
 
 int Lexer::Analyse(const std::string &expr, std::vector<TokenPtr> &tokens) {
 	std::string value = "";
@@ -55,5 +55,5 @@ int Lexer::Analyse(const std::string &expr, std::vector<TokenPtr> &tokens) {
 	return 0;
 }
 
-}			// namespace ecc
+}			// namespace ecl
 

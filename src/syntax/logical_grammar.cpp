@@ -5,7 +5,7 @@
 #include "syntax/parser/production.h"
 #include "syntax/parser/token.h"
 
-namespace ecc {
+namespace ecl {
 
 LogicalGrammar::LogicalGrammar() noexcept
 :Grammar<bool>() {
@@ -121,4 +121,4 @@ LogicalGrammar::~LogicalGrammar() noexcept {
 }
 
 
-}					// namespace ecc
+}					// namespace ecl

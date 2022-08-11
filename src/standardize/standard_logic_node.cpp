@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-namespace ecc {
+namespace ecl {
 
 
 StandardLogicNode::StandardLogicNode(StandardLogicNode *parent, int type) noexcept
@@ -198,4 +198,4 @@ void StandardLogicNode::PrintTree(std::vector<Identifier*> id_list, std::string 
 }
 
 
-}				// namespace ecc
+}				// namespace ecl

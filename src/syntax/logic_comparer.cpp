@@ -3,7 +3,7 @@
 #include <iostream>
 #include <algorithm>
 
-namespace ecc {
+namespace ecl {
 
 LogicComparer::LogicComparer() noexcept
 : parser_{grammar_, grammar_+1}, tree_root_{nullptr, nullptr} {
@@ -316,4 +316,4 @@ void LogicComparer::PrintTree(struct Node *node, std::string prefix) {
 }
 
 
-}				// namespace ecc
+}				// namespace ecl

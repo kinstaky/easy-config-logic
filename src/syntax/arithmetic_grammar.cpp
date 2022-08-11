@@ -6,7 +6,7 @@
 #include "syntax/parser/production.h"
 #include "syntax/parser/token.h"
 
-namespace ecc {
+namespace ecl {
 
 //-----------------------------------------------------------------------------
 //	 				Add_Multi_Grammar
@@ -290,4 +290,4 @@ ArithmeticGrammar::~ArithmeticGrammar() noexcept {
 }
 
 
-}					// namespace ecc
+}					// namespace ecl

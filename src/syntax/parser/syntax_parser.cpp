@@ -8,7 +8,7 @@
 #include "syntax/parser/token.h"
 
 
-namespace ecc {
+namespace ecl {
 
 //-----------------------------------------------------------------------------
 // 									ActionTable
@@ -505,4 +505,4 @@ template class SLRSyntaxParser<bool>;
 template class SLRSyntaxParser<int>;
 template class SLRSyntaxParser<double>;
 
-} 				// namespace ecc
+} 				// namespace ecl

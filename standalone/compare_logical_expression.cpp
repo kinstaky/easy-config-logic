@@ -21,7 +21,7 @@ int main() {
 		std::getline(std::cin, line[i]);
 	}
 
-	ecc::LogicComparer comparer;
+	ecl::LogicComparer comparer;
 	if (comparer.Compare(line[0], line[1])) {
 		std::cout << "\033[0;32m" << "YES" << "\033[0m" << std::endl;
 	} else {

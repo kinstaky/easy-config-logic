@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
 	}
 
 	// read logic expressions
-	ecc::LogicParser parser;
+	ecl::LogicParser parser;
 	if (parser.Read(argv[1]) != 0) {
 		std::cerr << "Error: Parser read file " << argv[1] << " failed." << std::endl;
 		return -1;
@@ -67,18 +67,18 @@ int main(int argc, char **argv) {
 	std::vector<AndGateInfo> and_gates;
 
 	for (size_t i = 0; i < parser.FrontOutputSize(); ++i) {
-		ecc::OutputInfo info = parser.FrontOutput(i);
+		ecl::OutputInfo info = parser.FrontOutput(i);
 		OutPortsInfo new_info;
 		new_info.port = info.port;
-		if (info.source < ecc::kOrGatesOffset) {
+		if (info.source < ecl::kOrGatesOffset) {
 			// fornt io port
 			new_info.type = kTypeOnePort;
 			new_info.one_port = 1ul << info.source;
 
-		} else if (info.source < ecc::kAndGatesOffset) {
+		} else if (info.source < ecl::kAndGatesOffset) {
 			// or gate
 			new_info.type = kTypeOrGate;
-			uint64_t or_gate = parser.OrGate(info.source - ecc::kOrGatesOffset).to_ulong();
+			uint64_t or_gate = parser.OrGate(info.source - ecl::kOrGatesOffset).to_ulong();
 			size_t index = -1ul;
 			// check existence of or gate
 			for (size_t j = 0; j < or_gates.size(); ++j) {
@@ -94,15 +94,15 @@ int main(int argc, char **argv) {
 			}
 			new_info.or_gate = index;
 
-		} else if (info.source < ecc::kClocksOffset) {
+		} else if (info.source < ecl::kClocksOffset) {
 			// and gate
 			new_info.type = kTypeAndGate;
 			AndGateInfo and_gate;
-			and_gate.ports = parser.AndGate(info.source - ecc::kAndGatesOffset).to_ulong() & 0xffff'ffff'ffff;
+			and_gate.ports = parser.AndGate(info.source - ecl::kAndGatesOffset).to_ulong() & 0xffff'ffff'ffff;
 
-			for (size_t j = ecc::kFrontIoNum; j < ecc::kAndBits; ++j) {
-				if (parser.AndGate(info.source-ecc::kAndGatesOffset).test(j)) {
-					uint64_t or_gate = parser.OrGate(j-ecc::kFrontIoNum).to_ulong();
+			for (size_t j = ecl::kFrontIoNum; j < ecl::kAndBits; ++j) {
+				if (parser.AndGate(info.source-ecl::kAndGatesOffset).test(j)) {
+					uint64_t or_gate = parser.OrGate(j-ecl::kFrontIoNum).to_ulong();
 					size_t or_gate_index = -1ul;
 					// check existence of or gate
 					for (size_t k = 0; k < and_gates.size(); ++k) {

@@ -11,7 +11,7 @@
 
 #include "standardize/standard_logic_node.h"
 
-namespace ecc {
+namespace ecl {
 
 class StandardLogicTree {
 public:
@@ -107,6 +107,6 @@ private:
 };
 
 
-}					// namespace ecc
+}					// namespace ecl
 
 #endif 				// __STANDARD_LOGIC_TREE_H__

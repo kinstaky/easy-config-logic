@@ -4,7 +4,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace ecc {
+namespace ecl {
 
 LogicParser::LogicParser() {
 	Clear();
@@ -746,4 +746,4 @@ int LogicParser::GenerateDividerGate(const std::vector<TokenPtr> &tokens, size_t
 }
 
 
-}	 			// namespace ecc
+}	 			// namespace ecl

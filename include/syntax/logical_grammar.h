@@ -11,7 +11,7 @@
 #include "syntax/parser/grammar.h"
 
 
-namespace ecc {
+namespace ecl {
 
 /**
  * This class represents a logical grammar that only includes operations

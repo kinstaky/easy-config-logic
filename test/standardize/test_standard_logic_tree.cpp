@@ -12,7 +12,7 @@
 #include "syntax/parser/syntax_parser.h"
 #include "syntax/logic_comparer.h"
 
-using namespace ecc;
+using namespace ecl;
 
 
 const std::vector<std::string> kExpression = {

@@ -10,7 +10,7 @@
 #include "syntax/parser/syntax_parser.h"
 #include "syntax/logical_grammar.h"
 
-namespace ecc {
+namespace ecl {
 
 const int kMaxIdentifiers = 64;
 
@@ -151,6 +151,6 @@ private:
 	std::vector<bool> results_;
 };
 
-}				// namespace ecc
+}				// namespace ecl
 
 #endif

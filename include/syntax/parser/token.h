@@ -8,7 +8,7 @@
 #include <memory>
 #include <string>
 
-namespace ecc {
+namespace ecl {
 
 constexpr int kSymbolType_ProductionItem = -4;
 constexpr int kSymbolType_ProductionFactorySet = -3;
@@ -189,6 +189,6 @@ private:
 
 };
 
-}				// namespace ecc
+}				// namespace ecl
 
 #endif /* __TOKEN_H__ */

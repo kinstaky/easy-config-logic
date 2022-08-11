@@ -12,7 +12,7 @@
 #include "syntax/parser/token.h"
 
 
-namespace ecc {
+namespace ecl {
 
 class Lexer {
 public:
@@ -41,7 +41,7 @@ public:
 	int Analyse(const std::string &expr, std::vector<TokenPtr> &tokens);
 };
 
-}				// namespace ecc
+}				// namespace ecl
 
 
 #endif /* __LEXER_H__ */

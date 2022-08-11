@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace ecc {
+namespace ecl {
 
 
 //-----------------------------------------------------------------------------
@@ -65,4 +65,4 @@ Operator::Operator(char value) noexcept
 :Operator(std::string(1, value)) {
 }
 
-}				// namespace ecc
+}				// namespace ecl

@@ -4,7 +4,7 @@
 
 #include "syntax/parser/production.h"
 
-namespace ecc {
+namespace ecl {
 
 StandardLogicTree::StandardLogicTree(Production<bool> *production) noexcept {
 	// suppose that left hand side of the production is E, and the production

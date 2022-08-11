@@ -73,14 +73,14 @@ int main(int argc, char **argv) {
 	} 
 
 
-	ecc::MemoryConfig config;
+	ecl::MemoryConfig config;
 	if (!logic_flag) {
 		if (config.Read(argv[argc-1]) != 0) {
 			std::cerr << "Error: Memory config read file " << argv[argc-1] << " failed." << std::endl;
 			return -1;
 		}
 	} else {
-		ecc::LogicParser parser;
+		ecl::LogicParser parser;
 		if (parser.Read(argv[argc-1]) != 0) {
 			std::cerr << "Error: Parser read from file " << argv[argc-1] << " failed." << std::endl;
 			return -1;

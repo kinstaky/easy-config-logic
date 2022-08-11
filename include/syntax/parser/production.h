@@ -16,7 +16,7 @@
 
 #include "syntax/parser/token.h"
 
-namespace ecc {
+namespace ecl {
 
 template<typename EvalType>
 using ActionType = std::function<EvalType(const std::vector<Symbol*>&)>;
@@ -657,6 +657,6 @@ EvalType Evaluate(Symbol *symbol) {
 }
 
 
-}				// namespace ecc
+}				// namespace ecl
 
 #endif /* __PRODUCTION_H__ */

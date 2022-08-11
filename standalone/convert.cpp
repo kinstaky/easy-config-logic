@@ -13,14 +13,14 @@ int main(int argc, char **argv) {
 		std::cout << "  output_file       -- output raw config file" << std::endl;
 	}
 
-	ecc::LogicParser parser;
+	ecl::LogicParser parser;
 	if (parser.Read(argv[1]) != 0) {
 		std::cerr << "Error: Logic parser read from file " << argv[1] << " failed." << std::endl;
 		return -1;
 	}
 
 
-	ecc::MemoryConfig config;
+	ecl::MemoryConfig config;
 	if (config.Read(&parser) != 0) {
 		std::cerr << "Error: Read config from logic parser failed." << std::endl;
 		return -1;

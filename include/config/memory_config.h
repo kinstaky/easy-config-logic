@@ -5,7 +5,7 @@
 
 #include "config/logic_parser.h"
 
-namespace ecc {
+namespace ecl {
 
 class MemoryConfig {
 public:
@@ -170,6 +170,6 @@ private:
 };
 
 
-} 					// namespace ecc
+} 					// namespace ecl
 
 #endif				// __MEMORY_CONFIG_H__

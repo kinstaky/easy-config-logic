@@ -12,7 +12,7 @@
 
 #include "syntax/parser/token.h"
 
-namespace ecc {
+namespace ecl {
 
 constexpr size_t kMaxIdentifier = 64;
 
@@ -315,6 +315,6 @@ private:
 	std::bitset<kMaxIdentifier> leaves_;				// leaves
 };
 
-}					// namespace ecc
+}					// namespace ecl
 
 #endif 				// __STANDARD_LOGIC_NODE_H__

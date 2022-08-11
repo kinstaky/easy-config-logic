@@ -5,7 +5,7 @@
 
 #include <gtest/gtest.h>
 
-using namespace ecc;
+using namespace ecl;
 
 
 // expressions

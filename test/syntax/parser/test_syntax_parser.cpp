@@ -6,7 +6,7 @@
 #include "syntax/logical_grammar.h"
 #include "syntax/arithmetic_grammar.h"
 
-using namespace ecc;
+using namespace ecl;
 
 
 // check action table

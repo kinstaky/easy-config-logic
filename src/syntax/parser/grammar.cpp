@@ -10,7 +10,7 @@
 #include "syntax/parser/production.h" 
 #include "syntax/parser/token.h"
 
-namespace ecc {
+namespace ecl {
 
 //-----------------------------------------------------------------------------
 // 						Grammar
@@ -779,4 +779,4 @@ template class Grammar<bool>;
 template class Grammar<int>;
 template class Grammar<double>;
 
-}	 			// namespace ecc
+}	 			// namespace ecl

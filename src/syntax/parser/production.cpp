@@ -7,7 +7,7 @@
 #include "syntax/parser/token.h"
 
 
-namespace ecc {
+namespace ecl {
 
 //-----------------------------------------------------------------------------
 // 									ProductionBase
@@ -301,4 +301,4 @@ template class ProductionItemCollection<bool>;
 template class ProductionItemCollection<int>;
 template class ProductionItemCollection<double>;
 
-}				// namespace ecc
+}				// namespace ecl

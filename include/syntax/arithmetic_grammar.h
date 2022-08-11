@@ -7,7 +7,7 @@
 #include "syntax/parser/token.h"
 #include "syntax/parser/grammar.h"
 
-namespace ecc {
+namespace ecl {
 
 /**
  * This class represents a arithmetic grammar only includes the operation
@@ -60,6 +60,6 @@ private:
 	std::vector<Symbol*> symbols_;
 };
 
-}			// namespace ecc
+}			// namespace ecl
 
 #endif /* __ARITHMETIC_GRAMMAR_H__ */
