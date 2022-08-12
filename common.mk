@@ -2,6 +2,8 @@
 MAKEFLAGS += --warn-undefined-variables
 # compile macros
 CC := g++
+# use bash
+SHELL := /bin/bash
 
 # compile flags 
 CFLAGS := -std=c++17 -O3 -Werror -Wall -Wextra
