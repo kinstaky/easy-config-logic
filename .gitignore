@@ -23,6 +23,9 @@
 # !/docs/mainpage.md
 
 !/**/CMakeLists.txt
+!/**/*.mk
+!/**/Makefile
+
 
 !/README.md
 !/LICENSE
