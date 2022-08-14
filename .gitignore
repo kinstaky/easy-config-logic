@@ -22,6 +22,11 @@
 # !/docs/CMakeLists
 # !/docs/mainpage.md
 
+!/examples/
+!/examples/*.txt
+!/examples/fpga/
+!/examples/fpga/*.bit
+
 !/**/CMakeLists.txt
 !/**/*.mk
 !/**/Makefile

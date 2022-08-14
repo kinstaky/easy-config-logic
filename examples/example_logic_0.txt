@@ -1,0 +1,14 @@
+D0 = C17 / 5
+C29 = D0 & C17
+C30 = D0 & C18
+C21 = C17
+C22 = C18
+
+C25 = clock_4kHz
+C26 = clock_1kHz
+
+S0 = C17
+S1 = C18
+S2 = C29
+S3 = C30
+S4 = D0
