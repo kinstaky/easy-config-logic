@@ -4,6 +4,7 @@ OBJS :=
 
 
 PROGRAMS := compare standardize convert config logic_test
+SCALER_PROGRAMS := scaler scaler_server scaler_client
 
 .PHONY: all
 all: build-subdirs $(OBJS) install
@@ -16,6 +17,10 @@ install:
 	@for prog in $(PROGRAMS); do \
 		cp standalone/$$prog bin/$$prog; \
 	done
+	@for prog in $(SCALER_PROGRAMS); do \
+		cp standalone/scaler/$$prog bin/$$prog; \
+	done
+	
 
 .PHONY: uninstall
 uninstall:

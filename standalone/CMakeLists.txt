@@ -34,7 +34,6 @@ target_link_libraries(
 	PRIVATE standard_logic_tree logical_grammar syntax_parser lexer
 )
 
-
 # convert
 add_executable(
 	convert
@@ -112,3 +111,5 @@ install(TARGETS standardize DESTINATION "${CMAKE_BINARY_DIR}/bin")
 install(TARGETS convert DESTINATION "${CMAKE_BINARY_DIR}/bin")
 install(TARGETS config DESTINATION "${CMAKE_BINARY_DIR}/bin")
 install(TARGETS logic_test DESTINATION "${CMAKE_BINARY_DIR}/bin")
+
+add_subdirectory(scaler)

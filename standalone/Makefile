@@ -1,5 +1,5 @@
 INCLUDES := -I../include
-DIRS :=
+DIRS := scaler
 OBJS := $(patsubst %.cpp,%.o,$(wildcard *.cpp))
 
 include ../common.mk

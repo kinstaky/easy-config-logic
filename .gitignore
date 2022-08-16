@@ -9,8 +9,9 @@
 !/src/**/*.cpp
 
 !/standalone/
-!/standalone/*.cpp
-!/standalone/*.h
+!/standalone/scaler/
+!/standalone/**/*.cpp
+!/standalone/**/*.h
 
 !/test/
 !/test/**/
