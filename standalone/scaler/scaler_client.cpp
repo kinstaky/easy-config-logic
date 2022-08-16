@@ -18,7 +18,7 @@
 
 
 bool save_log = false;
-char log_file_name[32];
+char log_file_name[128];
 enum LogLevel log_level = kWarning;
 FILE *log_file = NULL;
 
