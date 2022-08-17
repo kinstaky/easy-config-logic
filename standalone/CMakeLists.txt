@@ -1,3 +1,23 @@
+# sytnax tree
+add_executable(
+	syntax_tree
+	syntax_tree.cpp
+)
+target_compile_features(
+	syntax_tree
+	PRIVATE cxx_std_17
+)
+target_compile_options(
+	syntax_tree
+	PRIVATE -Werror -Wall -Wextra
+)
+target_link_libraries(
+	syntax_tree
+	PRIVATE lexer syntax_parser logical_grammar
+)
+
+
+
 # compare
 add_executable(
 	compare
@@ -106,10 +126,10 @@ target_link_libraries(
 	PRIVATE memory_config logic_parser
 )
 
-install(TARGETS compare DESTINATION "${CMAKE_BINARY_DIR}/bin")
-install(TARGETS standardize DESTINATION "${CMAKE_BINARY_DIR}/bin")
-install(TARGETS convert DESTINATION "${CMAKE_BINARY_DIR}/bin")
-install(TARGETS config DESTINATION "${CMAKE_BINARY_DIR}/bin")
-install(TARGETS logic_test DESTINATION "${CMAKE_BINARY_DIR}/bin")
+
+install(
+	TARGETS syntax_tree compare standardize convert config logic_test
+	DESTINATION "${CMAKE_BINARY_DIR}/bin"
+)
 
 add_subdirectory(scaler)

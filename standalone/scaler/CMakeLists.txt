@@ -48,8 +48,7 @@ target_link_libraries(
 	PRIVATE Threads::Threads
 )
 
-install(TARGETS scaler DESTINATION "${CMAKE_BINARY_DIR}/bin")
-install(TARGETS scaler_client DESTINATION "${CMAKE_BINARY_DIR}/bin")
-install(TARGETS scaler_server DESTINATION "${CMAKE_BINARY_DIR}/bin")
-
-
+install(
+	TARGETS scaler scaler_client scaler_server 
+	DESTINATION "${CMAKE_BINARY_DIR}/bin"
+)

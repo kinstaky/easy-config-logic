@@ -8,7 +8,8 @@ SYNTAX_OBJS := $(patsubst %.cpp,%.o,$(call rwildcard,../src/syntax,*.cpp))
 STANDARDIZE_OBJS := $(patsubst %.cpp,%.o,$(call rwildcard,../src/standardize,*.cpp))
 CONFIG_OBJS := $(patsubst %.cpp,%.o,$(call rwildcard,../src/config,*.cpp))
 
-PROGRAMS := compare standardize convert config logic_test
+PROGRAMS := syntax_tree compare standardize convert config logic_test
+syntax_tree_OBJS := syntax_tree.o $(SYNTAX_OBJS)
 compare_OBJS := compare_logical_expression.o $(SYNTAX_OBJS)
 standardize_OBJS := standard_logic_adapter.o $(SYNTAX_OBJS) $(STANDARDIZE_OBJS)
 convert_OBJS := convert.o $(SYNTAX_OBJS) $(STANDARDIZE_OBJS) $(CONFIG_OBJS)
