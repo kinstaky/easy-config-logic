@@ -210,7 +210,7 @@ bool LogicComparer::CompareValues() {
 		bool eval1 = Evaluate(tree_root_[1], change_var);
 		
 		if (eval0 != eval1) {
-			std::cerr << "Not equal!!!" << std::endl;
+			// std::cerr << "Not equal!!!" << std::endl;
 			delete[] variables;
 			return false;
 		}

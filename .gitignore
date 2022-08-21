@@ -19,9 +19,8 @@
 !/test/**/*.cpp
 !/test/**/*.txt
 
-# !/docs/
-# !/docs/CMakeLists
-# !/docs/mainpage.md
+!/docs/
+!/docs/CMakeLists.txt
 
 !/examples/
 !/examples/*.txt
