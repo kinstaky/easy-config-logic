@@ -1,11 +1,10 @@
-INCLUDES :=
+INCLUDES := -I../../include
 DIRS :=
 OBJS := $(patsubst %.cpp,%.o,$(wildcard *.cpp))
 
 include ../../common.mk
 
-PROGRAMS := scaler scaler_server scaler_client
-
+PROGRAMS := scaler scaler_server scaler_client scaler_http_server
 
 define PROGRAM_template =
 $(1): $(1).o
@@ -24,4 +23,3 @@ distclean:
 .PHONY: clean
 clean:
 	rm -f $(OBJS) $(PROGRAMS)
-

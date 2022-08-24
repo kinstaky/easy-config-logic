@@ -3,6 +3,8 @@
 !/include/
 !/include/**/
 !/include/**/*.h
+!/include/**/*.hpp
+!/include/**/*.js
 
 !/src/
 !/src/**/
@@ -12,6 +14,8 @@
 !/standalone/scaler/
 !/standalone/**/*.cpp
 !/standalone/**/*.h
+!/standalone/**/*.js
+!/standalone/**/*.html
 
 !/test/
 !/test/**/

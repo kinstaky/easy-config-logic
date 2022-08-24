@@ -80,7 +80,7 @@ uint32_t FillScalerResponse(char *payload, uint32_t size, uint32_t index) {
 }
 
 
-volatile sig_atomic_t keep_going = 1;
+volatile sig_atomic_t keep_running = 1;
 int sockfd = -1;
 void SigIntHandler(int) {
 	if (sockfd != -1) {
@@ -88,7 +88,7 @@ void SigIntHandler(int) {
 	}
 	Log("Press Ctrl+C to quit.", kInfo);
 	printf("You press Ctrl+C to quit.\n");
-	keep_going = 0;
+	keep_running = 0;
 }
 
 
@@ -109,7 +109,7 @@ void GetScalerValue(uint32_t *scaler_value) {
 void *RefreshScreen(void*) {
 	signal(SIGINT, SigIntHandler);
 	uint32_t scaler_value[kScalerNum];
-	while (keep_going) {
+	while (keep_running) {
 		Log("RefreshScreen start of loop", kDebug);
 		if (system("clear") != 0) {
 			char msg[256];
@@ -131,15 +131,14 @@ void *RefreshScreen(void*) {
 
 
 // update Scaler array cyclically function, call by pthread_creates
-void *UpdateScalerArray(void *vargp) {
+void *UpdateScalerArray(void*) {
 	signal(SIGINT, SigIntHandler);
-	time_t mark_time = *((time_t*)vargp);
 	time_t now_time = time(NULL);
-	uint64_t seconds = now_time - mark_time;
+	uint64_t seconds = now_time;
 	while (seconds % kRecordPeriod != 0) {
 		usleep(900000);
 		now_time = time(NULL);
-		seconds = now_time - mark_time;
+		seconds = now_time;
 		if (kDebug <= log_level) {
 			char msg[256];
 			sprintf(msg, "now second is %llu\n", (long long unsigned int)seconds);
@@ -147,7 +146,7 @@ void *UpdateScalerArray(void *vargp) {
 		}
 	}
 	// now the second is mutiple of RecordPeriod, and then update the Scaler array cyclically
-	while (keep_going) {
+	while (keep_running) {
 
 		// 	calculate the scalr rates
 		uint32_t scaler_value[kScalerNum];
@@ -186,71 +185,96 @@ void *UpdateScalerArray(void *vargp) {
 
 		usleep(kRecordPeriod*1000000-10000);			// 10ms for the program latency
 		now_time = time(NULL);
-		seconds = now_time - mark_time;
+		seconds = now_time;
 		while (seconds % kRecordPeriod != 0) {
 			usleep(100000);							// wait for 100ms to let sec be multiple of RecordPeriod
 			now_time = time(NULL);
-			seconds = now_time - mark_time;
+			seconds = now_time;
 		}
 	}
 	return NULL;
 }
 
 
+void PrintVersion() {
+	printf("scaler_server 2.0\n");
+	printf("Part of the easy-config-logic, produced by pwl");
+	return;
+}
 
 
 void PrintUsage(const char *name) {
-	printf("Usage: %s  port [log file] [log level]\n", name);
-	printf("  port         Set the listening port.\n");
+	printf("Usage: %s [options] port [log file] [log level]\n", name);
+	printf("Options:\n");
+	printf("  -h           Print this help and exit.\n");
+	printf("  -v           Print version and exit.\n");
+	printf("  -p           Print scaler values on screen.\n");
+	printf("  port         Set the listening port, necessary.\n");
 	printf("  log file     Set the log file path, do not log if not set.\n");
 	printf("  log level    Set the log level: error, warning, info, debug, default is warning.\n");
 	return;
 }
 
-// int sockfd = -1;
+
+// flags
+bool print_on_screen = false;
+
+void ParseArguments(int argc, char **argv, int &pos_argc, char **&pos_argv) {
+	pos_argc = argc-1;
+	for (int i = 1; i < argc; ++i) {
+		if (argv[i][0] == '-') {
+			for (size_t j = 1; j < strlen(argv[i]); ++j) {
+				if (argv[i][j] == 'h') {
+					PrintUsage(argv[0]);
+					exit(0);
+				}
+				if (argv[i][j] == 'v') {
+					PrintVersion();
+					exit(0);
+				}
+				if (argv[i][j] == 'p') {
+					print_on_screen = true;
+				} else {
+					fprintf(stderr, "Error: Invalid option: %c", argv[i][j]);
+				}
+			}
+		} else {
+			// option must in front of positional arguments
+			break;
+		}
+		--pos_argc;
+	}
+	pos_argv = argv + (argc - pos_argc);
+	return;
+} 
 
 
 int main(int argc, char **argv) {
 	signal(SIGINT, SigIntHandler);
 
-	if (argc < 2 || argc > 4) {
+	int pos_argc;
+	char **pos_argv;
+	ParseArguments(argc, argv, pos_argc, pos_argv);
+
+	if (pos_argc == 0 || pos_argc > 3) {
 		fprintf(stderr, "Error: Invalid argument number.\n");
 		PrintUsage(argv[0]);
 		return -1;
 	}
-	switch (argc) {
-		case 2:
-			if (strcmp(argv[1], "-h") == 0) {
+
+	char *port_name = pos_argv[0];
+	if (pos_argc > 1) {
+		// save log and set log file name
+		save_log = true;
+		strcpy(log_file_name, pos_argv[1]);
+		if (pos_argc > 2) {
+			// save log in specific level
+			if (SetLogLevel(pos_argv[2], log_level) != 0) {
 				PrintUsage(argv[0]);
-				return 0;
-			}
-			save_log = false;
-			break;
-		case 3:
-			save_log = true;
-			strcpy(log_file_name, argv[2]);
-			break;
-		case 4:
-			save_log = true;
-			strcpy(log_file_name, argv[2]);
-			if (strcmp(argv[3], "error") == 0) {
-				log_level = kError;
-			} else if (strcmp(argv[3], "warning") == 0) {
-				log_level = kWarning;
-			} else if (strcmp(argv[3], "info") == 0) {
-				log_level = kInfo;
-			} else if (strcmp(argv[3], "debug") == 0) {
-				log_level = kDebug;
-			} else {
-				fprintf(stderr, "Error: Invalid log level %s. Argument 3 should be one of the following:\nerror, warning, info, debug\n", argv[3]);
 				return -1;
 			}
-			break;
-		default:
-			fprintf(stderr, "Error: Should not be here: %s line %d.\n", __FILE__, __LINE__);
-			return -1;
+		}
 	}
-
 
     const int memory_size = 4096;
 
@@ -281,20 +305,6 @@ int main(int argc, char **argv) {
     }
     mapped = (uint32_t*)map_addr;
 
-	
-	// set the time zero point 2022.06.01 00:00:00
-	struct tm date20220601;
-	date20220601.tm_year = 122;
-	date20220601.tm_mon = 5;
-	date20220601.tm_mday = 1;
-	date20220601.tm_hour = 0;
-	date20220601.tm_min = 0;
-	date20220601.tm_sec = 0;
-	time_t mark_time = mktime(&date20220601);
-	char msg[64];
-	sprintf(msg, "Set mark time %s", ctime(&mark_time));
-	Log(msg, kDebug);
-
 
 	// inititalize the mutex
 	int mutex_init = pthread_mutex_init(&scaler_array_mutex, NULL);
@@ -319,7 +329,7 @@ int main(int argc, char **argv) {
 	hints.ai_flags = AI_PASSIVE;				// set localhost IP
 
 
-	int rv = getaddrinfo(NULL, argv[1], &hints, &servinfo);
+	int rv = getaddrinfo(NULL, port_name, &hints, &servinfo);
 	if (rv != 0) {
 		char msg[256];
 		sprintf(msg, "getaddrinfo: %s", gai_strerror(rv));
@@ -356,18 +366,20 @@ int main(int argc, char **argv) {
 
 	// update the Scaler array cyclically
 	pthread_t update_scaler_array_thread;
-	pthread_create(&update_scaler_array_thread, NULL, UpdateScalerArray, (void*)&mark_time);
+	pthread_create(&update_scaler_array_thread, NULL, UpdateScalerArray, NULL);
 
-
+	
 	// refresh the screen cyclically
- 	// pthread_t refresh_screen_thread;
-	// pthread_create(&refresh_screen_thread, NULL, RefreshScreen, NULL);
+	pthread_t refresh_screen_thread;
+	if (print_on_screen) {
+		pthread_create(&refresh_screen_thread, NULL, RefreshScreen, NULL);
+	}
 
 
 	struct sockaddr_storage their_addr;
 	socklen_t addr_len = sizeof their_addr;
 	char response[kBufferSize], request[kBufferSize];
-	while (keep_going) {
+	while (keep_running) {
 		// receive request
 		int numbytes = recvfrom(sockfd, request, kBufferSize-1, 0, (struct sockaddr*)&their_addr, &addr_len);
 		if (numbytes == -1) {
@@ -399,7 +411,7 @@ int main(int argc, char **argv) {
 			}
 
 			// calculate seconds since mark time point
-			uint64_t sec = now_time - mark_time;
+			uint64_t sec = now_time;
 
 			// loan the response
 			struct DateResponse *dateResponse = (struct DateResponse*)response;
@@ -423,7 +435,7 @@ int main(int argc, char **argv) {
 			struct ScalerRequest *ScalerRequest = (struct ScalerRequest*)request;
 			if (kDebug <= log_level) {
 				char msg[256];
-				time_t requestTime = mark_time + ScalerRequest->seconds;
+				time_t requestTime = ScalerRequest->seconds;
 				sprintf(msg, "Server get request for array of %d Scaler rates starts from %s", ScalerRequest->size, ctime(&requestTime));
 				Log(msg, kDebug);
 			}
@@ -495,7 +507,9 @@ int main(int argc, char **argv) {
 	}
 	close(sockfd);
 
-	// pthread_join(refresh_screen_thread, NULL);
+	if (print_on_screen) {
+		pthread_join(refresh_screen_thread, NULL);
+	}
 	pthread_join(update_scaler_array_thread, NULL);
 	if (save_log && log_file) {
 		fclose(log_file);

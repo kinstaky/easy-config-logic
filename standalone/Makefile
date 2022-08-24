@@ -34,4 +34,5 @@ distclean:
 .PHONY: clean
 clean:
 	rm -f $(OBJS) $(PROGRAMS)
+	make -C scaler clean
 
