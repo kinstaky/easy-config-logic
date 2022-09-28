@@ -7,6 +7,7 @@
 #define __PRODUCTION_H__
 
 #include <exception>
+#include <stdexcept>
 #include <functional>
 #include <map>
 #include <memory>

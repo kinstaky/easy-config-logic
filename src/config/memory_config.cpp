@@ -680,4 +680,13 @@ int MemoryConfig::MapMemory(volatile uint32_t *map) const noexcept {
 	return 0;
 }
 
+
+uint8_t MemoryConfig::Rj45Enable(size_t index) const noexcept {
+	if (index > 5) {
+		return 0;
+	}
+	return uint8_t(memory_.rj45_enable[index/2] >> (index % 2 * 8));
+}
+
+
 }				// namespace ecl

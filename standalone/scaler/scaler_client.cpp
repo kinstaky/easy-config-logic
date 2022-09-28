@@ -39,25 +39,6 @@ void Log(const char *info, enum LogLevel level) {
 	return;
 }
 
-int SetLogLevel(char *level) {
-	bool set_log_level = false;
-	for (size_t i = 0; i < 4; ++i) {
-		if (strcmp(level, log_level_name[i]) == 0) {
-			log_level = LogLevel(kError+i);
-			set_log_level = true;
-			break;
-		}
-	}
-	if (!set_log_level) {
-		// this argument doesn't match any log level name
-		fprintf(stderr, "Error: Invalid log level %s.", level);
-		fprintf(stderr, "Log level should be one of following:\n"
-			"error, warning, info, debug.\n");
-		return -1;
-	}
-	return 0;
-}
-
 
 char data_path[96];
 const char record_time_file_name[] = "client-recorded-time.txt";
@@ -103,17 +84,81 @@ uint64_t LoadRecordTime() {
 
 
 
-bool scaler_save_in_binary = true;
+
+
+void PrintVersion() {
+	printf("scaler_client 2.0\n");
+	printf("Part of the easy-config-logic, produced by pwl");
+	return;
+}
+
+
+void PrintUsage(const char *name) {
+	printf("Usage: %s [options] host port [data path] [log file] [log level] \n", name);
+	printf("Options:\n");
+	printf("  -h           Print this help and exit.\n");
+	printf("  -v           Print version and exit.\n");
+	printf("  -t           Record scaler values in text(in binary default).\n");
+	// printf("  -p           Print scaler value on screen.\n");
+	// printf("  -s           Run http server for visual scaler values.\n");
+	printf("  host         Set the host to connect to, necessary.\n");
+	printf("  port         Set the port to connect to, necessary.\n");
+	printf("  data path    Set the path to record data and time, default is this directory(.).\n");
+	printf("  log file     Set the log file path, do not log if not set.\n");
+	printf("  log level    Set the log level: error, warning, info or debug, default is warning.\n");
+	return;
+}
+
+
+// flags
+bool save_scaler_in_binary = true;
+bool print_on_screen = false;
+bool run_http_server = false;
+
+void ParseArguments(int argc, char **argv, int &pos_argc, char **&pos_argv) {
+	pos_argc = argc-1;
+	for (int i = 1; i < argc; ++i) {
+		if (argv[i][0] == '-') {
+			for (size_t j = 1; j < strlen(argv[i]); ++j) {
+				if (argv[i][j] == 'h') {
+					PrintUsage(argv[0]);
+					exit(0);
+				}
+				if (argv[i][j] == 'v') {
+					PrintVersion();
+					exit(0);
+				}
+				if (argv[i][j] == 't') {
+					save_scaler_in_binary = false;
+				} else if (argv[i][j] == 'p') {
+					print_on_screen = true;
+				} else if (argv[i][j] == 's') {
+					run_http_server = false;
+				} else {
+					fprintf(stderr, "Error: Invalid option: %c", argv[i][j]);
+				}
+			}
+		} else {
+			// option must in front of positional arguments
+			break;
+		}
+		--pos_argc;
+	}
+	pos_argv = argv + (argc - pos_argc);
+	return;
+} 
+
+
 
 int WriteScalerValueText(uint32_t size, char *raw, uint64_t *record_time_ptr) {
 	// generate file name according to the date
 	time_t now_time = time(NULL);
-	char date_file_name[128];
-	sprintf(date_file_name, "%s/", data_path);
-	strftime(date_file_name+strlen(date_file_name), 32, "%Y%m%d.txt", localtime(&now_time));
-	
+	char file_name[128];
+	sprintf(file_name, "%s/", data_path);
+	strftime(file_name+strlen(file_name), 32, "%Y%m%d.txt", localtime(&now_time));
+
 	// open file
-	FILE *data_file = fopen(date_file_name, "a");
+	FILE *data_file = fopen(file_name, "a");
 	if (data_file == NULL) {
 		char msg[256];
 		sprintf(msg, "Client open data file %s", strerror(errno));		
@@ -148,12 +193,32 @@ int WriteScalerValueText(uint32_t size, char *raw, uint64_t *record_time_ptr) {
 int WriteScalerValueBinary(uint32_t size, char *raw, uint64_t *record_time_ptr) {
 	// generate file name according to the date
 	time_t now_time = time(NULL);
-	char date_file_name[128];
-	sprintf(date_file_name, "%s/", data_path);
-	strftime(date_file_name+strlen(date_file_name), 32, "%Y%m%d.bin", localtime(&now_time));
-	
+	tm *now_tm = localtime(&now_time);
+	int local_hour = now_tm->tm_hour;
+	int local_min = now_tm->tm_min;
+	int local_sec = now_tm->tm_sec;
+	size_t now_seconds = ((local_hour * 60 + local_min) * 60) + local_sec;
+	char file_name[128];
+	sprintf(file_name, "%s/", data_path);
+	strftime(file_name+strlen(file_name), 32, "%Y%m%d.bin", localtime(&now_time));
+
+	if (!access(file_name, F_OK)) {
+		// file not exists, create it
+		FILE *file = fopen(file_name, "wb");
+		uint64_t fill_second = (uint64_t)now_time - now_seconds;
+		uint32_t empty_scalers[32];
+		memset((char*)empty_scalers, 0, sizeof(empty_scalers));
+		// fill time and scalers at first as place holders
+		for (size_t i = 0; i < 86400; i++) {
+			fwrite((char*)&fill_second, sizeof(uint64_t), 1, file);
+			fwrite((char*)empty_scalers, sizeof(uint32_t), kScalerNum, file);
+			fill_second++;
+		}
+		fclose(file);
+	}
+
 	// open file
-	FILE *data_file = fopen(date_file_name, "ab");
+	FILE *data_file = fopen(file_name, "ab");
 	if (data_file == NULL) {
 		char msg[256];
 		sprintf(msg, "Client open binary data file %s", strerror(errno));		
@@ -163,6 +228,9 @@ int WriteScalerValueBinary(uint32_t size, char *raw, uint64_t *record_time_ptr) 
 	}
 	
 	// write data
+	// size of one data point
+	size_t offset = sizeof(uint64_t) + sizeof(uint32_t) * kScalerNum;
+	fseek(data_file, offset * now_seconds, SEEK_SET);
 	fwrite(raw, sizeof(struct ScalerData)*size, 1, data_file);
 
 	struct ScalerData *data = (struct ScalerData *)raw; 
@@ -180,7 +248,7 @@ int WriteScalerValueBinary(uint32_t size, char *raw, uint64_t *record_time_ptr) 
 
 
 int WriteScalerValue(uint32_t size, char *raw, uint64_t *record_time_ptr) {
-	if (scaler_save_in_binary) {
+	if (save_scaler_in_binary) {
 		return WriteScalerValueBinary(size, raw, record_time_ptr);
 	} else {
 		return WriteScalerValueText(size, raw, record_time_ptr);
@@ -188,7 +256,7 @@ int WriteScalerValue(uint32_t size, char *raw, uint64_t *record_time_ptr) {
 }
 
 
-volatile sig_atomic_t keep_going = 1;
+volatile sig_atomic_t keep_running = 1;
 int sockfd = -1;
 void SigIntHandler(int) {
 	if (sockfd != -1) {
@@ -196,84 +264,43 @@ void SigIntHandler(int) {
 	}
 	Log("Press Ctrl+C to quit.", kInfo);
 	printf("You press Ctrl+C to quit.\n");
-	exit(1);
-}
-
-
-void PrintUsage(const char *name) {
-	printf("Usage: %s [options] host port [data path] [log file] [log level] \n", name);
-	printf("Options:\n");
-	printf("  -t           Record scaler values in text(in binary default).\n");
-	printf("  -h           Print this help information.\n");
-	printf("  host         Set the host to connect to, necessary.\n");
-	printf("  port         Set the port to connect to, necessary.\n");
-	printf("  data path    Set the path to record data and time, default is this directory(.).\n");
-	printf("  log file     Set the log file path, do not log if not set.\n");
-	printf("  log level    Set the log level: error, warning, info or debug, default is warning.\n");
-	return;
+	keep_running = 0;
 }
 
 
 int main(int argc, char **argv) {
-	if (argc < 2 || argc > 7) {
+	signal(SIGINT, SigIntHandler);
+	
+	int pos_argc;
+	char **pos_argv;
+	ParseArguments(argc, argv, pos_argc, pos_argv);
+
+	if (pos_argc < 2 || pos_argc > 5) {
 		fprintf(stderr, "Error: Invalid argument number.\n");
 		PrintUsage(argv[0]);
 		return -1;
 	}
-	if (argv[1][0] == '-') {
-		if (strlen(argv[1]) != 2) {
-			fprintf(stderr, "Error: Unknown option %s", argv[1]);
-			PrintUsage(argv[0]);
-			return -1;
-		}
 
-		if (argv[1][1] == 'h') {
-			PrintUsage(argv[0]);
-			return 0;
-		}
-		if (argv[1][1] == 't') {
-			scaler_save_in_binary = false;
-		} else {
-			fprintf(stderr, "Error: Unknown option %s", argv[1]);
-			PrintUsage(argv[0]);
-			return -1;
-		}
-	}
-	int args_start = scaler_save_in_binary ? 1 : 2;
-	if (argc < args_start + 2) {
-		fprintf(stderr, "Error: Invalid argument number, host and port is necessary.\n");
-		PrintUsage(argv[0]);
-		return -1;
-	}
-	char *host_name = argv[args_start];
-	char *port_name = argv[args_start+1];
-	if (argc >= args_start + 3) {
+	char *host_name = pos_argv[0];
+	char *port_name = pos_argv[1];
+	if (pos_argc > 2) {
 		// set data path
-		strcpy(data_path, argv[args_start+2]);
+		strcpy(data_path, pos_argv[2]);
 		
-		if (argc >= args_start + 4) {
+		if (pos_argc > 3) {
 			// save log
 			save_log = true;
-			strcpy(log_file_name, argv[args_start+3]);
+			strcpy(log_file_name, pos_argv[3]);
 
-			if (argc >= args_start + 5) {
+			if (pos_argc > 4) {
 				// save log in specific level
-				if (SetLogLevel(argv[args_start+4]) != 0) {
-					PrintUsage(argv[0]);
-					return -1;
-				}
-
-				if (argc > args_start + 6) {
-					fprintf(stderr, "Error: Unknown argument: %s\n", argv[args_start+5]);
+				if (SetLogLevel(pos_argv[4], log_level) != 0) {
 					PrintUsage(argv[0]);
 					return -1;
 				}
 			}
 		}
 	}
-
-
-	signal(SIGINT, SigIntHandler);
 
 	// check address information
 	struct addrinfo hints;
@@ -320,22 +347,7 @@ int main(int argc, char **argv) {
 	}
 
 	Log("Client prepare to request...", kDebug);
-		
 
-	// set the time zero point 2022.06.01 00:00:00
-	struct tm date20220601;
-	date20220601.tm_year = 122;
-	date20220601.tm_mon = 5;
-	date20220601.tm_mday = 1;
-	date20220601.tm_hour = 0;
-	date20220601.tm_min = 0;
-	date20220601.tm_sec = 0;
-	time_t mark_time = mktime(&date20220601);
-	if (kDebug <= log_level) {
-		char msg[256];
-		sprintf(msg, "Set mark time %s", ctime(&mark_time));
-		Log(msg, kDebug);
-	}
 
 	
 	// at first, get the server time and calculate the offset
@@ -348,7 +360,7 @@ int main(int argc, char **argv) {
 	// send date request for 3 times
 	struct DateRequest *date_request = (struct DateRequest*)request;
 	date_request->header.type = kTypeDateRequest;
-	for (size_t i = 0; i != 3 && keep_going; ++i) {
+	for (size_t i = 0; i != 3 && keep_running; ++i) {
 		time_t send_time = time(NULL);
 
 		// send date request
@@ -375,7 +387,7 @@ int main(int argc, char **argv) {
 
 		time_t receive_time = time(NULL); 
 		
-		uint64_t client_time = (receive_time - send_time) / 2 + (send_time - mark_time);
+		uint64_t client_time = (receive_time - send_time) / 2 + send_time;
 		uint64_t server_time = date_response->seconds;
 		uint64_t offset = client_time - server_time;
 		offset_num++;
@@ -383,7 +395,7 @@ int main(int argc, char **argv) {
 
 		if (kInfo <= log_level) {
 			time_t client_time_t = (time_t)((send_time+receive_time)/2);
-			time_t server_time_t = (time_t)(mark_time+server_time);
+			time_t server_time_t = (time_t)(server_time);
 			char msg[256];
 			sprintf(msg, "Client time %s", ctime(&client_time_t));
 			sprintf(msg+strlen(msg), "Server time %s", ctime(&server_time_t));			
@@ -400,12 +412,12 @@ int main(int argc, char **argv) {
 	}
 
 	// send scalar request periodically
-	while (keep_going) {
+	while (keep_running) {
 		// get log seconds
 		uint64_t record_time = LoadRecordTime();
 		if (record_time == 0) {
 			time_t now_time = time(NULL);
-			uint64_t now_seconds = now_time - mark_time - offset_time;
+			uint64_t now_seconds = now_time - offset_time;
 			record_time = now_seconds - now_seconds % kRecordPeriod;
 		}
 		// fill scalar request
@@ -457,7 +469,7 @@ int main(int argc, char **argv) {
 
 			// check if there are more data
 			time_t now_time = time(NULL);
-			uint64_t now_seconds = now_time - mark_time;
+			uint64_t now_seconds = now_time;
 			if (record_time + offset_time + 10 < now_seconds) continue;				// there more date to access, no need to wait
 
 		} else if (response_status == 1) {									// empty response

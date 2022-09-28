@@ -3,8 +3,8 @@ DIRS := src standalone
 OBJS :=
 
 
-PROGRAMS := compare standardize convert config logic_test
-SCALER_PROGRAMS := scaler scaler_server scaler_client
+PROGRAMS := syntax_tree compare standardize convert config logic_test
+SCALER_PROGRAMS := scaler scaler_server scaler_client scaler_http_server
 
 .PHONY: all
 all: build-subdirs $(OBJS) install

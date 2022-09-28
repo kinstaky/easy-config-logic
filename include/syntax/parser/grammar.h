@@ -248,7 +248,7 @@ public:
 	/// exceptsafe Shall not throw exceptions.
 	///
 	inline ProductionFactorySet<VarType>* ProductionSet(size_t index) const noexcept {
-		if (index < 0 || index >= production_sets_.size()) {
+		if (index >= production_sets_.size()) {
 			return nullptr;
 		}
 		return production_sets_[index];
