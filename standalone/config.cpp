@@ -128,6 +128,7 @@ int main(int argc, char **argv) {
 	// call i2c chips
 	for (size_t i = 0; i < 6; ++i) {
 		Enable_Rj45(map, i, config.Rj45Enable(i));
+//		 printf("rj45 enable of %u is %u\n", i, config.Rj45Enable(i));
 	}
 
 	// clean up
