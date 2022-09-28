@@ -164,6 +164,15 @@ public:
 	///
 	uint8_t ConvertSource(size_t source) const noexcept;
 
+
+	/// @brief get the rj45 enable flag 
+	///
+	/// @param[in] index index of the rj45 port group, 0 for A0-A7, 1 for A8-A15,
+	/// 	2 for B0-B7, 3 for B8-B15, 4 for C0-C7, 5 for C8-C15
+	/// @returns enable flag if index is valid, 0 otherwise
+	/// 
+	uint8_t Rj45Enable(size_t index) const noexcept;
+
 private:
 	Memory memory_;
 

@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
 	DividerReset(map);
 	// call i2c chips
 	for (size_t i = 0; i < 6; ++i) {
-		Enable_Rj45(map, i, (uint8_t)0);
+		Enable_Rj45(map, i, config.Rj45Enable(i));
 	}
 
 	// clean up
