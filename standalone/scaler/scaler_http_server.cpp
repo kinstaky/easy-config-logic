@@ -10,6 +10,7 @@
 #include "external/json.hpp"
 
 const size_t kScalerNum = 32;
+const size_t kInvalidIndex = 86401;
 
 std::string data_path;
 
@@ -24,7 +25,7 @@ size_t SearchIndex(std::ifstream &fin, uint64_t search) {
 	fin.seekg(index * (sizeof(uint64_t) + sizeof(uint32_t)*kScalerNum));
 	fin.read((char*)&read_time, sizeof(uint64_t));
 	if (read_time != search) {
-		return -1ull;
+		return kInvalidIndex;
 	}
 	return index;
 }
@@ -86,7 +87,7 @@ void HandleRealtimeRequest(const httplib::Request &request, httplib::Response &r
 	// or search for it if all data in one file
 	size_t first_end_index = same_file ? SearchIndex(first_fin, end_time) : 86400;
 	
-	if (first_start_index == -1ull || first_end_index == -1ull) {
+	if (first_start_index == kInvalidIndex || first_end_index == kInvalidIndex) {
 		// check index
 		response_json["status"] = 1;
 	} else {
@@ -113,7 +114,7 @@ void HandleRealtimeRequest(const httplib::Request &request, httplib::Response &r
 		// suppose file number won't be over two
 		size_t second_end_index = SearchIndex(second_fin, end_time);
 
-		if (second_end_index == -1ull) {
+		if (second_end_index == kInvalidIndex) {
 			// check index
 			response_json["status"] = 1;			
 		} else {
