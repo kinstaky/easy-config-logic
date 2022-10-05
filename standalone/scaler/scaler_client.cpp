@@ -508,7 +508,7 @@ int main(int argc, char **argv) {
 		uint64_t last_seconds = time(NULL);
 		usleep(kRecordPeriod * kScalerStackSize * 1000000 - 30000);
 		uint64_t now_seconds = time(NULL);
-		while (now_seconds < last_seconds + kRecordPeriod + kScalerStackSize) {
+		while (now_seconds < last_seconds + kRecordPeriod * kScalerStackSize) {
 			usleep(100000);
 			now_seconds = time(NULL);
 		}
