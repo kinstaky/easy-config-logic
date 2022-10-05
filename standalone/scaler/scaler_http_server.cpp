@@ -25,6 +25,7 @@ size_t SearchIndex(std::ifstream &fin, uint64_t search) {
 	fin.seekg(index * (sizeof(uint64_t) + sizeof(uint32_t)*kScalerNum));
 	fin.read((char*)&read_time, sizeof(uint64_t));
 	if (read_time != search) {
+		std::cerr << "Warning: read time " << read_time << ", search " << search << "\n";
 		return kInvalidIndex;
 	}
 	return index;
@@ -86,15 +87,19 @@ void HandleRealtimeRequest(const httplib::Request &request, httplib::Response &r
 	// end index in first file is the last one if data is in two files
 	// or search for it if all data in one file
 	size_t first_end_index = same_file ? SearchIndex(first_fin, end_time) : 86400;
+	// std::cout << "first start index " << first_start_index
+	// 	<< " first end index " << first_end_index << std::endl;
 	
 	if (first_start_index == kInvalidIndex || first_end_index == kInvalidIndex) {
 		// check index
+		std::cerr << "Warning: Invalid index\n";
 		response_json["status"] = 1;
 	} else {
 		for (size_t i = 0; i < kScalerNum; ++i) {
 			response_json["scalers"].push_back(nlohmann::json::array());
 		}
 		if (ReadData(first_fin, first_start_index, first_end_index, response_json)) {
+			std::cerr << "Warning: read data failed.\n";
 			response_json["status"] = 1;
 		}
 	}
@@ -134,7 +139,7 @@ void HandleRealtimeRequest(const httplib::Request &request, httplib::Response &r
 }
 
 void HandleHistoryRequest(const httplib::Request &request, httplib::Response &response) {
-	auto start = std::chrono::high_resolution_clock::now();
+	// auto start = std::chrono::high_resolution_clock::now();
 
 	// CORS
 	response.set_header("Access-Control-Allow-Origin", "*");
@@ -210,8 +215,10 @@ void HandleHistoryRequest(const httplib::Request &request, httplib::Response &re
 	response.set_content(response_json.dump(), "text/plain");
 
 	// time cost
-	auto stop = std::chrono::high_resolution_clock::now();
-	std::cout << "Handle history request cost " << std::chrono::duration_cast<std::chrono::milliseconds>(stop-start).count() << " ms" << std::endl;
+	// auto stop = std::chrono::high_resolution_clock::now();
+	// std::cout << "Handle history request cost "
+	// 	<< std::chrono::duration_cast<std::chrono::milliseconds>(stop-start).count()
+	// 	<< " ms" << std::endl;
 	return;
 }
 

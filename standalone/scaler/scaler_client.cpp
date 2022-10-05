@@ -198,16 +198,21 @@ int WriteScalerValueBinary(uint32_t size, char *raw, uint64_t *record_time_ptr) 
 	int local_min = now_tm->tm_min;
 	int local_sec = now_tm->tm_sec;
 	size_t now_seconds = ((local_hour * 60 + local_min) * 60) + local_sec;
+	size_t first_second_today = (size_t)now_time - now_seconds;
+	
+	struct ScalerData *data = (struct ScalerData *)raw; 
+	size_t index = data[size-1].seconds - first_second_today;
+
 	char file_name[128];
 	sprintf(file_name, "%s/", data_path);
 	strftime(file_name+strlen(file_name), 32, "%Y%m%d.bin", localtime(&now_time));
 
-	if (!access(file_name, F_OK)) {
+	if (access(file_name, F_OK)) {
 		// file not exists, create it
 		FILE *file = fopen(file_name, "wb");
 		uint64_t fill_second = (uint64_t)now_time - now_seconds;
 		uint32_t empty_scalers[32];
-		memset((char*)empty_scalers, 0, sizeof(empty_scalers));
+		memset((char*)empty_scalers, 0, sizeof(uint32_t)*32);
 		// fill time and scalers at first as place holders
 		for (uint64_t i = 0; i < 86400; i++) {
 			fwrite((char*)&fill_second, sizeof(uint64_t), 1, file);
@@ -217,8 +222,9 @@ int WriteScalerValueBinary(uint32_t size, char *raw, uint64_t *record_time_ptr) 
 		fclose(file);
 	}
 
+
 	// open file
-	FILE *data_file = fopen(file_name, "ab");
+	FILE *data_file = fopen(file_name, "rb+");
 	if (data_file == NULL) {
 		char msg[256];
 		sprintf(msg, "Client open binary data file %s", strerror(errno));		
@@ -230,10 +236,10 @@ int WriteScalerValueBinary(uint32_t size, char *raw, uint64_t *record_time_ptr) 
 	// write data
 	// size of one data point
 	size_t offset = sizeof(uint64_t) + sizeof(uint32_t) * kScalerNum;
-	fseek(data_file, offset * now_seconds, SEEK_SET);
+	fseek(data_file, offset * index, SEEK_SET);
 	fwrite(raw, sizeof(struct ScalerData)*size, 1, data_file);
 
-	struct ScalerData *data = (struct ScalerData *)raw; 
+	
 	if (kDebug <= log_level) {
 		char msg[256];
 		sprintf(msg, "Write seconds begin from %llu, size %d\n", (long long unsigned int)data[0].seconds, size);
@@ -242,6 +248,7 @@ int WriteScalerValueBinary(uint32_t size, char *raw, uint64_t *record_time_ptr) 
 	fclose(data_file);
 
 	*record_time_ptr = data[size-1].seconds + kRecordPeriod;
+	// printf("write time %lu at index %lu with size %u, scaler 0 is %u\n", data[size-1].seconds, index, size, data[size-1].scaler[0]);
 
 	return 0;
 }
@@ -479,8 +486,9 @@ int main(int argc, char **argv) {
 			// check if there are more data
 			time_t now_time = time(NULL);
 			uint64_t now_seconds = now_time;
+			// printf("record time %lu, offset_time %lu, now_seconds %lu\n", record_time, offset_time, now_seconds);
 			// there are more data to access, no need to wait
-			if (record_time + offset_time + 10 < now_seconds) {
+			if (record_time + offset_time < now_seconds) {
 				Log("Client can get more data.\n", kDebug);
 				continue;
 			}
@@ -497,7 +505,13 @@ int main(int argc, char **argv) {
 		
 
 		// otherwise wait for some time
-		sleep(kRecordPeriod * kScalerStackSize);
+		uint64_t last_seconds = time(NULL);
+		usleep(kRecordPeriod * kScalerStackSize * 1000000 - 30000);
+		uint64_t now_seconds = time(NULL);
+		while (now_seconds < last_seconds + kRecordPeriod + kScalerStackSize) {
+			usleep(100000);
+			now_seconds = time(NULL);
+		}
 	}
 
 
