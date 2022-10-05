@@ -135,6 +135,7 @@ void *UpdateScalerArray(void*) {
 	signal(SIGINT, SigIntHandler);
 	time_t now_time = time(NULL);
 	uint64_t seconds = now_time;
+	uint64_t last_seconds = seconds;
 	while (seconds % kRecordPeriod != 0) {
 		usleep(900000);
 		now_time = time(NULL);
@@ -184,9 +185,10 @@ void *UpdateScalerArray(void*) {
 
 
 		usleep(kRecordPeriod*1000000-10000);			// 10ms for the program latency
+		last_seconds = seconds;
 		now_time = time(NULL);
 		seconds = now_time;
-		while (seconds % kRecordPeriod != 0) {
+		while (seconds % kRecordPeriod != 0 || seconds == last_seconds) {
 			usleep(100000);							// wait for 100ms to let sec be multiple of RecordPeriod
 			now_time = time(NULL);
 			seconds = now_time;
@@ -414,8 +416,8 @@ int main(int argc, char **argv) {
 			uint64_t sec = now_time;
 
 			// loan the response
-			struct DateResponse *dateResponse = (struct DateResponse*)response;
-			dateResponse->seconds = sec;
+			struct DateResponse *date_response = (struct DateResponse*)response;
+			date_response->seconds = sec;
 
 			// send response
 			ssize_t numbytes = sendto(sockfd, response, sizeof(struct DateResponse), 0, (struct sockaddr*)&their_addr, addr_len);
@@ -432,18 +434,18 @@ int main(int argc, char **argv) {
 			}
 
 		} else if (header->type == kTypeScalerRequest) {												// Scaler request
-			struct ScalerRequest *ScalerRequest = (struct ScalerRequest*)request;
+			struct ScalerRequest *scaler_request = (struct ScalerRequest*)request;
 			if (kDebug <= log_level) {
 				char msg[256];
-				time_t requestTime = ScalerRequest->seconds;
-				sprintf(msg, "Server get request for array of %d Scaler rates starts from %s", ScalerRequest->size, ctime(&requestTime));
+				time_t requestTime = scaler_request->seconds;
+				sprintf(msg, "Server get request for array of %d Scaler rates starts from %s", scaler_request->size, ctime(&requestTime));
 				Log(msg, kDebug);
 			}
 
 
 			// search for requested time
-			uint64_t request_seconds = ScalerRequest->seconds;
-			uint32_t request_size = ScalerRequest->size;
+			uint64_t request_seconds = scaler_request->seconds;
+			uint32_t request_size = scaler_request->size;
 			pthread_mutex_lock(&scaler_array_mutex);
 			uint64_t head_seconds = scaler_array[scaler_array_head].seconds;
 			uint64_t tail_seconds = head_seconds + (scaler_array_size-1) * kRecordPeriod;

@@ -209,7 +209,7 @@ int WriteScalerValueBinary(uint32_t size, char *raw, uint64_t *record_time_ptr) 
 		uint32_t empty_scalers[32];
 		memset((char*)empty_scalers, 0, sizeof(empty_scalers));
 		// fill time and scalers at first as place holders
-		for (size_t i = 0; i < 86400; i++) {
+		for (uint64_t i = 0; i < 86400; i++) {
 			fwrite((char*)&fill_second, sizeof(uint64_t), 1, file);
 			fwrite((char*)empty_scalers, sizeof(uint32_t), kScalerNum, file);
 			fill_second++;
@@ -283,6 +283,7 @@ int main(int argc, char **argv) {
 
 	char *host_name = pos_argv[0];
 	char *port_name = pos_argv[1];
+	strcpy(data_path, ".");
 	if (pos_argc > 2) {
 		// set data path
 		strcpy(data_path, pos_argv[2]);
@@ -459,19 +460,30 @@ int main(int argc, char **argv) {
 		}
 
 		uint32_t response_status = scaler_response->status;
+		char msg[256];
+		sprintf(msg, "Client get response status %u\n", response_status);
+		Log(msg, kDebug);
+
 		if (response_status == 0 || response_status == 2) {
-			// 0 - normal response, 2 - beginning of array response.(The request time was outdated, so the server gave back serveral scalar data at he beginning of the array.)
+
+			// 0 - normal response, 2 - beginning of array response.(The request
+			// time was outdated, so the server gave back serveral scalar data at
+			// he beginning of the array.)
 			// write the scalar data to file
 			int status = WriteScalerValue(scaler_response->size, response+sizeof(ScalerResponse), &record_time);
 			if (!status) {
+				Log("WriteScalerValue success.\n", kDebug);
 				SaveRecordTime(record_time);
 			}
 
 			// check if there are more data
 			time_t now_time = time(NULL);
 			uint64_t now_seconds = now_time;
-			if (record_time + offset_time + 10 < now_seconds) continue;				// there more date to access, no need to wait
-
+			// there are more data to access, no need to wait
+			if (record_time + offset_time + 10 < now_seconds) {
+				Log("Client can get more data.\n", kDebug);
+				continue;
+			}
 		} else if (response_status == 1) {									// empty response
 			// do nothing
 
