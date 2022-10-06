@@ -271,6 +271,12 @@ void ParseArguments(int argc, char **argv, int &pos_argc, char **&pos_argv) {
 int main(int argc, char **argv) {
 	signal(SIGINT, SigIntHandler);
 
+	if (argc == 1) {
+		fprintf(stderr, "Error: Should at least print scaler value or run server.\n");
+		PrintUsage(argv[0]);
+		return -1;
+	}
+
 	int pos_argc;
 	char **pos_argv;
 	ParseArguments(argc, argv, pos_argc, pos_argv);
