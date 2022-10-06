@@ -4,7 +4,7 @@ OBJS :=
 
 
 PROGRAMS := syntax_tree compare standardize convert config logic_test
-SCALER_PROGRAMS := scaler scaler_server scaler_client scaler_http_server
+SCALER_PROGRAMS := scaler_server scaler_client
 
 .PHONY: all
 all: build-subdirs $(OBJS) install

@@ -226,12 +226,12 @@ void PrintVersion() {
 
 
 void PrintUsage(const char *name) {
-	printf("Usage: %s [options] port [log file] [log level]\n", name);
+	printf("Usage: %s [options] [port] [log file] [log level]\n", name);
 	printf("Options:\n");
 	printf("  -h           Print this help and exit.\n");
 	printf("  -v           Print version and exit.\n");
 	printf("  -p           Print scaler values on screen.\n");
-	printf("  port         Set the listening port, necessary.\n");
+	printf("  port         Set the listening port, necessary for server.\n");
 	printf("  log file     Set the log file path, do not log if not set.\n");
 	printf("  log level    Set the log level: error, warning, info, debug, default is warning.\n");
 	return;
@@ -275,22 +275,26 @@ int main(int argc, char **argv) {
 	char **pos_argv;
 	ParseArguments(argc, argv, pos_argc, pos_argv);
 
-	if (pos_argc == 0 || pos_argc > 3) {
+	if (pos_argc > 3) {
 		fprintf(stderr, "Error: Invalid argument number.\n");
 		PrintUsage(argv[0]);
 		return -1;
 	}
 
 	char *port_name = pos_argv[0];
-	if (pos_argc > 1) {
-		// save log and set log file name
-		save_log = true;
-		strcpy(log_file_name, pos_argv[1]);
-		if (pos_argc > 2) {
-			// save log in specific level
-			if (SetLogLevel(pos_argv[2], log_level) != 0) {
-				PrintUsage(argv[0]);
-				return -1;
+	bool run_server = false;
+	if (pos_argc > 0) {
+		run_server = true;
+		if (pos_argc > 1) {
+			// save log and set log file name
+			save_log = true;
+			strcpy(log_file_name, pos_argv[1]);
+			if (pos_argc > 2) {
+				// save log in specific level
+				if (SetLogLevel(pos_argv[2], log_level) != 0) {
+					PrintUsage(argv[0]);
+					return -1;
+				}
 			}
 		}
 	}
@@ -347,42 +351,6 @@ int main(int argc, char **argv) {
 	hints.ai_socktype = SOCK_DGRAM;
 	hints.ai_flags = AI_PASSIVE;				// set localhost IP
 
-
-	int rv = getaddrinfo(NULL, port_name, &hints, &servinfo);
-	if (rv != 0) {
-		char msg[256];
-		sprintf(msg, "getaddrinfo: %s", gai_strerror(rv));
-		Log(msg, kError);
-		fprintf(stderr, "Error: %s\n", msg);
-		exit(-1);
-	}
-	// loop to find available socket
-	for (p = servinfo; p != NULL; p = p->ai_next) {
-		if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
-			char msg[256];
-			sprintf(msg, "Server faild to socket: %s", strerror(errno));
-			Log(msg, kWarning);
-			continue;
-		}
-		if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-			close(sockfd);
-			char msg[256];
-			sprintf(msg, "Server faild to bind: %s", strerror(errno));
-			Log(msg, kWarning);
-			continue;
-		}
-
-		break;			// success to bind one of the sockets
-	}
-	freeaddrinfo(servinfo);
-	if (p == NULL) {		// loop all but failed
-		Log("Server failed to bind", kError);
-		fprintf(stderr, "Error: Server failed to bind\n");
-		exit(-1);
-	}
-	Log("server: waiting for recvfrom...", kInfo);
-
-
 	// update the Scaler array cyclically
 	pthread_t update_scaler_array_thread;
 	pthread_create(&update_scaler_array_thread, NULL, UpdateScalerArray, NULL);
@@ -394,137 +362,173 @@ int main(int argc, char **argv) {
 		pthread_create(&refresh_screen_thread, NULL, RefreshScreen, NULL);
 	}
 
-
-	struct sockaddr_storage their_addr;
-	socklen_t addr_len = sizeof their_addr;
-	char response[kBufferSize], request[kBufferSize];
-	while (keep_running) {
-		// receive request
-		int numbytes = recvfrom(sockfd, request, kBufferSize-1, 0, (struct sockaddr*)&their_addr, &addr_len);
-		if (numbytes == -1) {
+	if (run_server) {
+		int rv = getaddrinfo(NULL, port_name, &hints, &servinfo);
+		if (rv != 0) {
 			char msg[256];
-			sprintf(msg, "Server recvfrom: %s", strerror(errno));
-			Log(msg, kWarning);
-			continue;
+			sprintf(msg, "getaddrinfo: %s", gai_strerror(rv));
+			Log(msg, kError);
+			fprintf(stderr, "Error: %s\n", msg);
+			exit(-1);
 		}
-
-		// display packet information
-		char dst[INET6_ADDRSTRLEN];
-		if (kDebug <= log_level) {
-			inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), dst, sizeof dst);
-			char msg[256];
-			sprintf(msg, "[Debug] server: got packet from %s and it's %d bytes long\n", dst, numbytes);
-			Log(msg, kDebug);
-		}
-
-
-		// check header
-		struct RequestHeader *header = (struct RequestHeader*)request;
-
-		if (header->type == kTypeDateRequest) {						// date request
-			time_t now_time = time(NULL);
-			if (kDebug <= log_level) {
+		// loop to find available socket
+		for (p = servinfo; p != NULL; p = p->ai_next) {
+			if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
 				char msg[256];
-				sprintf(msg, "server: now time is %s", ctime(&now_time));
-				Log(msg, kDebug);
-			}
-
-			// calculate seconds since mark time point
-			uint64_t sec = now_time;
-
-			// loan the response
-			struct DateResponse *date_response = (struct DateResponse*)response;
-			date_response->seconds = sec;
-
-			// send response
-			ssize_t numbytes = sendto(sockfd, response, sizeof(struct DateResponse), 0, (struct sockaddr*)&their_addr, addr_len);
-			if (numbytes == -1) {
-				char msg[256];
-				sprintf(msg, "Server sendto date response: %s", strerror(errno));
+				sprintf(msg, "Server faild to socket: %s", strerror(errno));
 				Log(msg, kWarning);
 				continue;
 			}
-			if (kDebug <= log_level) {
+			if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
+				close(sockfd);
 				char msg[256];
-				sprintf(msg, "Server sent packet to %s and %d bytes long\n", dst, uint32_t(sizeof(struct DateResponse)));
-				Log(msg, kDebug);
+				sprintf(msg, "Server faild to bind: %s", strerror(errno));
+				Log(msg, kWarning);
+				continue;
 			}
 
-		} else if (header->type == kTypeScalerRequest) {												// Scaler request
-			struct ScalerRequest *scaler_request = (struct ScalerRequest*)request;
-			if (kDebug <= log_level) {
-				char msg[256];
-				time_t requestTime = scaler_request->seconds;
-				sprintf(msg, "Server get request for array of %d Scaler rates starts from %s", scaler_request->size, ctime(&requestTime));
-				Log(msg, kDebug);
-			}
-
-
-			// search for requested time
-			uint64_t request_seconds = scaler_request->seconds;
-			uint32_t request_size = scaler_request->size;
-			pthread_mutex_lock(&scaler_array_mutex);
-			uint64_t head_seconds = scaler_array[scaler_array_head].seconds;
-			uint64_t tail_seconds = head_seconds + (scaler_array_size-1) * kRecordPeriod;
-
-			if (request_seconds <= tail_seconds) {																// request <= tail
-				// fill Scaler response
-				uint32_t index = scaler_array_head;
-				index += request_seconds < head_seconds ? 0 : (request_seconds - head_seconds) / kRecordPeriod;		// request < head ?
-				index %= kMaxScalerArraySize;																	// roll back
-				if (request_seconds + (request_size-1) * kRecordPeriod > tail_seconds) {							// request size over the record 
-					request_size = (tail_seconds - request_seconds) / kRecordPeriod + 1;
-				}
-				uint32_t sendbytes = FillScalerResponse(response, request_size, index);
-
-				// edit the response status if request < head (actually not necessary in current stage)
-				if (request_seconds < head_seconds) {
-					struct ScalerResponse *sp = (struct ScalerResponse*)response;
-					sp->status = 2;
-				}
-
-				ssize_t numbytes = sendto(sockfd, response, sendbytes, 0, (struct sockaddr*)&their_addr, addr_len);
-				if (numbytes == -1) {
-					char msg[256];
-					sprintf(msg, "Server sendto whole scaler response: %s", strerror(errno));
-					Log(msg, kWarning);
-					pthread_mutex_unlock(&scaler_array_mutex);
-					continue;
-				}
-				if (kDebug <= log_level) {
-					char msg[256];
-					sprintf(msg, "Server sendto Scaler response with %d bytes long and data size %d from array index %d\n", (int)numbytes, request_size, index);
-					Log(msg, kDebug);
-				}		
-	
-			} else {																							// tail < request 
-				uint32_t sendbytes = FillEmptyScalerResponse(response);
-				ssize_t numbytes = sendto(sockfd, response, sendbytes, 0, (struct sockaddr*)&their_addr, addr_len);
-				if (numbytes == -1) {
-					char msg[256];
-					sprintf(msg, "Server sendto empty scaler response: %s", strerror(errno));
-					Log(msg, kWarning);
-					pthread_mutex_unlock(&scaler_array_mutex);
-					continue;
-				}
-
-				if (kDebug <= log_level) {
-					char msg[256];
-					sprintf(msg, "Server sendto empty scaler response in %d bytes long.\n", (int)numbytes);
-					Log(msg, kDebug);
-				}
-			}
-			pthread_mutex_unlock(&scaler_array_mutex);
-		} else {
-			char msg[256];
-			sprintf(msg, "Error: Unknown header type %d\n", header->type);
-			Log(msg, kWarning);
-			continue;
+			break;			// success to bind one of the sockets
 		}
+		freeaddrinfo(servinfo);
+		if (p == NULL) {		// loop all but failed
+			Log("Server failed to bind", kError);
+			fprintf(stderr, "Error: Server failed to bind\n");
+			exit(-1);
+		}
+		Log("server: waiting for recvfrom...", kInfo);
+
+		struct sockaddr_storage their_addr;
+		socklen_t addr_len = sizeof their_addr;
+		char response[kBufferSize], request[kBufferSize];
+		while (keep_running) {
+			// receive request
+			int numbytes = recvfrom(sockfd, request, kBufferSize-1, 0, (struct sockaddr*)&their_addr, &addr_len);
+			if (numbytes == -1) {
+				char msg[256];
+				sprintf(msg, "Server recvfrom: %s", strerror(errno));
+				Log(msg, kWarning);
+				continue;
+			}
+
+			// display packet information
+			char dst[INET6_ADDRSTRLEN];
+			if (kDebug <= log_level) {
+				inet_ntop(their_addr.ss_family, get_in_addr((struct sockaddr *)&their_addr), dst, sizeof dst);
+				char msg[256];
+				sprintf(msg, "[Debug] server: got packet from %s and it's %d bytes long\n", dst, numbytes);
+				Log(msg, kDebug);
+			}
 
 
+			// check header
+			struct RequestHeader *header = (struct RequestHeader*)request;
+
+			if (header->type == kTypeDateRequest) {						// date request
+				time_t now_time = time(NULL);
+				if (kDebug <= log_level) {
+					char msg[256];
+					sprintf(msg, "server: now time is %s", ctime(&now_time));
+					Log(msg, kDebug);
+				}
+
+				// calculate seconds since mark time point
+				uint64_t sec = now_time;
+
+				// loan the response
+				struct DateResponse *date_response = (struct DateResponse*)response;
+				date_response->seconds = sec;
+
+				// send response
+				ssize_t numbytes = sendto(sockfd, response, sizeof(struct DateResponse), 0, (struct sockaddr*)&their_addr, addr_len);
+				if (numbytes == -1) {
+					char msg[256];
+					sprintf(msg, "Server sendto date response: %s", strerror(errno));
+					Log(msg, kWarning);
+					continue;
+				}
+				if (kDebug <= log_level) {
+					char msg[256];
+					sprintf(msg, "Server sent packet to %s and %d bytes long\n", dst, uint32_t(sizeof(struct DateResponse)));
+					Log(msg, kDebug);
+				}
+
+			} else if (header->type == kTypeScalerRequest) {												// Scaler request
+				struct ScalerRequest *scaler_request = (struct ScalerRequest*)request;
+				if (kDebug <= log_level) {
+					char msg[256];
+					time_t requestTime = scaler_request->seconds;
+					sprintf(msg, "Server get request for array of %d Scaler rates starts from %s", scaler_request->size, ctime(&requestTime));
+					Log(msg, kDebug);
+				}
+
+
+				// search for requested time
+				uint64_t request_seconds = scaler_request->seconds;
+				uint32_t request_size = scaler_request->size;
+				pthread_mutex_lock(&scaler_array_mutex);
+				uint64_t head_seconds = scaler_array[scaler_array_head].seconds;
+				uint64_t tail_seconds = head_seconds + (scaler_array_size-1) * kRecordPeriod;
+
+				if (request_seconds <= tail_seconds) {																// request <= tail
+					// fill Scaler response
+					uint32_t index = scaler_array_head;
+					index += request_seconds < head_seconds ? 0 : (request_seconds - head_seconds) / kRecordPeriod;		// request < head ?
+					index %= kMaxScalerArraySize;																	// roll back
+					if (request_seconds + (request_size-1) * kRecordPeriod > tail_seconds) {							// request size over the record 
+						request_size = (tail_seconds - request_seconds) / kRecordPeriod + 1;
+					}
+					uint32_t sendbytes = FillScalerResponse(response, request_size, index);
+
+					// edit the response status if request < head (actually not necessary in current stage)
+					if (request_seconds < head_seconds) {
+						struct ScalerResponse *sp = (struct ScalerResponse*)response;
+						sp->status = 2;
+					}
+
+					ssize_t numbytes = sendto(sockfd, response, sendbytes, 0, (struct sockaddr*)&their_addr, addr_len);
+					if (numbytes == -1) {
+						char msg[256];
+						sprintf(msg, "Server sendto whole scaler response: %s", strerror(errno));
+						Log(msg, kWarning);
+						pthread_mutex_unlock(&scaler_array_mutex);
+						continue;
+					}
+					if (kDebug <= log_level) {
+						char msg[256];
+						sprintf(msg, "Server sendto Scaler response with %d bytes long and data size %d from array index %d\n", (int)numbytes, request_size, index);
+						Log(msg, kDebug);
+					}		
+		
+				} else {																							// tail < request 
+					uint32_t sendbytes = FillEmptyScalerResponse(response);
+					ssize_t numbytes = sendto(sockfd, response, sendbytes, 0, (struct sockaddr*)&their_addr, addr_len);
+					if (numbytes == -1) {
+						char msg[256];
+						sprintf(msg, "Server sendto empty scaler response: %s", strerror(errno));
+						Log(msg, kWarning);
+						pthread_mutex_unlock(&scaler_array_mutex);
+						continue;
+					}
+
+					if (kDebug <= log_level) {
+						char msg[256];
+						sprintf(msg, "Server sendto empty scaler response in %d bytes long.\n", (int)numbytes);
+						Log(msg, kDebug);
+					}
+				}
+				pthread_mutex_unlock(&scaler_array_mutex);
+			} else {
+				char msg[256];
+				sprintf(msg, "Error: Unknown header type %d\n", header->type);
+				Log(msg, kWarning);
+				continue;
+			}
+
+
+		}
+		close(sockfd);
 	}
-	close(sockfd);
+	
 
 	if (print_on_screen) {
 		pthread_join(refresh_screen_thread, NULL);

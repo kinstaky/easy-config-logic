@@ -4,7 +4,7 @@ OBJS := $(patsubst %.cpp,%.o,$(wildcard *.cpp))
 
 include ../../common.mk
 
-PROGRAMS := scaler scaler_server scaler_client scaler_http_server
+PROGRAMS := scaler_server scaler_client
 
 define PROGRAM_template =
 $(1): $(1).o
