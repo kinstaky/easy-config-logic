@@ -88,7 +88,21 @@ void SigIntHandler(int) {
 	}
 	Log("Press Ctrl+C to quit.", kInfo);
 	printf("You press Ctrl+C to quit.\n");
+	
+	// stop
 	keep_running = 0;
+
+	// switch to primary screen
+	if (print_on_screen) {
+		if (system("tput rmcup") != 0) {
+			Log("tput rmcup failed.", kError);
+			printf(
+				"Please type `tput rmcup` or printf '\e[2J\e[?47l\e8'` by"
+				"yourself to switch back to the primary screen if you are in the"
+				"second screen.\n"
+			);
+		}
+	}
 }
 
 
@@ -110,6 +124,9 @@ void GetScalerValue(uint32_t *scaler_value) {
 void *RefreshScreen(void*) {
 	signal(SIGINT, SigIntHandler);
 	uint32_t scaler_value[kScalerNum];
+	if (system("tput smcup") != 0) {
+		fprintf(stderr, "Error: bash command tput smcup failed.\n");
+	}
 	while (keep_running) {
 		Log("RefreshScreen start of loop", kDebug);
 		if (system("clear") != 0) {
@@ -125,7 +142,7 @@ void *RefreshScreen(void*) {
 			printf("%2d%15d\n", i, scaler_value[i]);
 		}
 		Log("RefreshScreen end of loop", kDebug);
-		usleep(1000000);
+		usleep(500000);
 	}
 	return NULL;
 }
