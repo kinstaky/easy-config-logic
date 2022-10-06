@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <signal.h>
 #include <unistd.h>
 #include <stdint.h>
 #include <sys/file.h>
@@ -10,6 +11,18 @@
 const size_t kScalerNum = 32;
 const size_t kScalersOffset = 156;
 const unsigned int pclkFrequency = 100000000;
+
+void SigIntHandler(int) {
+	if (system("tput rmcup") != 0) {
+		fprintf(stderr, "Error: bash command tput rmcup failed.\n");
+		fprintf(stderr, "Please type `tput rmcup` or printf '\e[2J\e[?47l\e8'`"
+			"by yourself to switch back to the primary screen.\n");
+		exit(-1);
+	}
+	// printf("You press Ctrl+C to quit.\n");
+	exit(0);
+}
+
 
 int main() {
     const int memory_size = 4096;
@@ -33,7 +46,10 @@ int main() {
     }
     volatile uint32_t *mapped = (unsigned int *)map_addr;
 
-
+	if (system("tput smcup") != 0) {
+		fprintf(stderr, "Error: bash command tput smcup failed.\n");
+	}
+	signal(SIGINT, SigIntHandler);
 	uint32_t scaler_value[kScalerNum];
 	while (1) {
 		for (size_t i = 0; i < kScalerNum; i++) {
