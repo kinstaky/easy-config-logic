@@ -64,7 +64,7 @@ int main() {
 		for (size_t i = 0; i < kScalerNum; i++) {
 			printf("%2u%15d\n", (uint32_t)i, scaler_value[i]);
 		}
-		usleep(100000);
+		usleep(500000);
 	}
 
 	return 0;
