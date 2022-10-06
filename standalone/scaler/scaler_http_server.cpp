@@ -51,7 +51,7 @@ int ReadData(std::ifstream &fin, size_t start, size_t end, nlohmann::json &json)
 
 
 void HandleRealtimeRequest(const httplib::Request &request, httplib::Response &response) {
-	auto start = std::chrono::high_resolution_clock::now();
+	// auto start = std::chrono::high_resolution_clock::now();
 
 	response.set_header("Access-Control-Allow-Origin", "*");
 	
@@ -134,8 +134,8 @@ void HandleRealtimeRequest(const httplib::Request &request, httplib::Response &r
 	response.set_content(response_json.dump(), "text/plain");
 
 	// time cost
-	auto stop = std::chrono::high_resolution_clock::now();
-	std::cout << "Handle realtime request cost " << std::chrono::duration_cast<std::chrono::milliseconds>(stop-start).count() << " ms" << std::endl;
+	// auto stop = std::chrono::high_resolution_clock::now();
+	// std::cout << "Handle realtime request cost " << std::chrono::duration_cast<std::chrono::milliseconds>(stop-start).count() << " ms" << std::endl;
 }
 
 void HandleHistoryRequest(const httplib::Request &request, httplib::Response &response) {
