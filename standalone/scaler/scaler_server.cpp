@@ -82,6 +82,8 @@ uint32_t FillScalerResponse(char *payload, uint32_t size, uint32_t index) {
 
 volatile sig_atomic_t keep_running = 1;
 int sockfd = -1;
+// arguments
+bool print_on_screen = false;
 void SigIntHandler(int) {
 	if (sockfd != -1) {
 		close(sockfd);
@@ -235,9 +237,6 @@ void PrintUsage(const char *name) {
 	return;
 }
 
-
-// flags
-bool print_on_screen = false;
 
 void ParseArguments(int argc, char **argv, int &pos_argc, char **&pos_argv) {
 	pos_argc = argc-1;
