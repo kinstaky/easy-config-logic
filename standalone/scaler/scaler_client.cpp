@@ -1,5 +1,6 @@
 #include <errno.h>
 #include <netdb.h>
+#include <pthread.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,29 +17,40 @@
 
 #include "scaler_defs.h"
 
+//-----------------------------------------------------------------------------
+//	 								log
+//-----------------------------------------------------------------------------
 
 bool save_log = false;
 char log_file_name[128];
 enum LogLevel log_level = kWarning;
 FILE *log_file = NULL;
+pthread_mutex_t log_mutex;
 
 void Log(const char *info, enum LogLevel level) {
 	if (!save_log || level > log_level) {
 		return;
 	}
+	pthread_mutex_lock(&log_mutex);
 	if (!log_file) {
 		log_file = fopen(log_file_name, "w");
 		if (!log_file) {
 			fprintf(stderr, "Error: Could not open log file %s.\n", log_file_name);
+			pthread_mutex_unlock(&log_mutex);
 			exit(-1);
 		}
 	}
 	time_t now_time = time(NULL);
 	fprintf(log_file, "%s[%c%s] %s\n", ctime(&now_time), log_level_name[level][0]-32, log_level_name[level]+1, info);
 	fflush(log_file);
+	pthread_mutex_unlock(&log_mutex);
 	return;
 }
 
+
+//-----------------------------------------------------------------------------
+//	 								record time
+//-----------------------------------------------------------------------------
 
 char data_path[96];
 const char record_time_file_name[] = "client-recorded-time.txt";
@@ -58,6 +70,7 @@ void SaveRecordTime(uint64_t second) {
 	fprintf(recorded_time_file, "%llu\n", (long long unsigned int)second);
 	fclose(recorded_time_file);
 }
+
 
 uint64_t LoadRecordTime() {
 	uint64_t sec;
@@ -83,12 +96,13 @@ uint64_t LoadRecordTime() {
 }
 
 
-
-
+//-----------------------------------------------------------------------------
+//	 								arguments
+//-----------------------------------------------------------------------------
 
 void PrintVersion() {
-	printf("scaler_client 2.0\n");
-	printf("Part of the easy-config-logic, produced by pwl");
+	printf("scaler_client 2.1.0\n");
+	printf("Part of the easy-config-logic, produced by pwl\n");
 	return;
 }
 
@@ -99,7 +113,7 @@ void PrintUsage(const char *name) {
 	printf("  -h           Print this help and exit.\n");
 	printf("  -v           Print version and exit.\n");
 	printf("  -t           Record scaler values in text(in binary default).\n");
-	// printf("  -p           Print scaler value on screen.\n");
+	printf("  -p           Print scaler value on screen.\n");
 	// printf("  -s           Run http server for visual scaler values.\n");
 	printf("  host         Set the host to connect to, necessary.\n");
 	printf("  port         Set the port to connect to, necessary.\n");
@@ -133,7 +147,7 @@ void ParseArguments(int argc, char **argv, int &pos_argc, char **&pos_argv) {
 				} else if (argv[i][j] == 'p') {
 					print_on_screen = true;
 				} else if (argv[i][j] == 's') {
-					run_http_server = false;
+					run_http_server = true;
 				} else {
 					fprintf(stderr, "Error: Invalid option: %c", argv[i][j]);
 				}
@@ -149,6 +163,9 @@ void ParseArguments(int argc, char **argv, int &pos_argc, char **&pos_argv) {
 } 
 
 
+//-----------------------------------------------------------------------------
+//	 								write value to file
+//-----------------------------------------------------------------------------
 
 int WriteScalerValueText(uint32_t size, char *raw, uint64_t *record_time_ptr) {
 	// generate file name according to the date
@@ -263,21 +280,78 @@ int WriteScalerValue(uint32_t size, char *raw, uint64_t *record_time_ptr) {
 }
 
 
+//-----------------------------------------------------------------------------
+//	 								signal
+//-----------------------------------------------------------------------------
+
 volatile sig_atomic_t keep_running = 1;
 int sockfd = -1;
 void SigIntHandler(int) {
+	// close socket
 	if (sockfd != -1) {
 		close(sockfd);
 	}
 	Log("Press Ctrl+C to quit.", kInfo);
 	printf("You press Ctrl+C to quit.\n");
+	
+	// stop main loop
 	keep_running = 0;
+	
+	// switch to primary screen
+	if (print_on_screen) {
+		if (system("tput rmcup") != 0) {
+			Log("tput rmcup failed.", kError);
+			printf(
+				"Please type `tput rmcup` or printf '\e[2J\e[?47l\e8'` by"
+				"yourself to switch back to the primary screen if you are in the"
+				"second screen.\n"
+			);
+		}
+	}
 }
 
 
+//-----------------------------------------------------------------------------
+//	 							display on screen
+//-----------------------------------------------------------------------------
+pthread_mutex_t scaler_array_mutex;
+uint32_t current_scaler_value[kScalerNum];
+
+void* RefreshScreen(void*) {
+	if (system("tput smcup") != 0) {
+		Log("bash command tput smcup failed.", kError);
+		fprintf(stderr, "Error: bash command tput smcup failed.\n");
+	}
+	while (keep_running) {
+		if (system("clear") != 0) {
+			Log("system clear failed.", kError);
+			return NULL;
+		}
+		printf("scalar      counts\n");
+		pthread_mutex_lock(&scaler_array_mutex);
+		for (size_t i = 0; i < kScalerNum; i++) {
+			printf("%2u%15d\n", (uint32_t)i, current_scaler_value[i]);
+		}
+		pthread_mutex_unlock(&scaler_array_mutex);
+		usleep(500000);
+	}
+	return NULL;
+}
+
+void UpdateScalerValue(uint32_t size, struct ScalerData *data) {
+	pthread_mutex_lock(&scaler_array_mutex);
+	for (size_t i = 0; i < kScalerNum; ++i) {
+		current_scaler_value[i] = data[size-1].scaler[i];
+	}
+	pthread_mutex_unlock(&scaler_array_mutex);
+}
+
+
+//-----------------------------------------------------------------------------
+//	 							main loop
+//-----------------------------------------------------------------------------
+
 int main(int argc, char **argv) {
-	signal(SIGINT, SigIntHandler);
-	
 	int pos_argc;
 	char **pos_argv;
 	ParseArguments(argc, argv, pos_argc, pos_argv);
@@ -309,6 +383,24 @@ int main(int argc, char **argv) {
 			}
 		}
 	}
+
+	if (pthread_mutex_init(&log_mutex, NULL) != 0) {
+		fprintf(stderr, "Error: Failed to initialize log mutex.\n");
+		return -1;
+	}
+
+	pthread_t refresh_screen_thread;
+	if (print_on_screen) {
+		if (pthread_mutex_init(&scaler_array_mutex, NULL) != 0) {
+			Log("Initialize scaler array mutex failed.\n", kError);
+			fprintf(stderr, "Error: Initialize scaler array mutex failed.\n");
+			print_on_screen = false;
+		} else {
+			// initialize mutex success, create refresh screen thread
+			pthread_create(&refresh_screen_thread, NULL, RefreshScreen, NULL);
+		}
+	}
+
 
 	// check address information
 	struct addrinfo hints;
@@ -419,6 +511,9 @@ int main(int argc, char **argv) {
 		Log(msg, kDebug);
 	}
 
+
+	signal(SIGINT, SigIntHandler);
+
 	// send scalar request periodically
 	while (keep_running) {
 		// get log seconds
@@ -491,6 +586,12 @@ int main(int argc, char **argv) {
 			if (record_time + offset_time < now_seconds) {
 				Log("Client can get more data.\n", kDebug);
 				continue;
+			} else {
+				// get the present scaler data, update it
+				UpdateScalerValue(
+					scaler_response->size,
+					(struct ScalerData*)(response+sizeof(ScalerResponse))
+				);
 			}
 		} else if (response_status == 1) {									// empty response
 			// do nothing
@@ -514,10 +615,13 @@ int main(int argc, char **argv) {
 		}
 	}
 
-
-
 	freeaddrinfo(servinfo);
 	close(sockfd);
+
+	if (print_on_screen) {
+		pthread_join(refresh_screen_thread, NULL);
+	}
+
 	if (save_log && log_file) {
 		fclose(log_file);
 	}
