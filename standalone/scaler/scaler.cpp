@@ -38,6 +38,7 @@ int main() {
 	while (1) {
 		for (size_t i = 0; i < kScalerNum; i++) {
 			scaler_value[i] = (mapped[kScalersOffset+i] >> 12) & 0xfffff;
+			scaler_value[i] = scaler_value[i] > 0 ? scaler_value[i] - 1 : 0;
 		}
 		if (system("clear") != 0) {
 			fprintf(stderr, "Error: bash command clear failed\n");
