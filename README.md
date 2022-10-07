@@ -40,5 +40,5 @@ Suppose build with make
 ```bash
 ./bin/config -l examples/example_logic_0.txt
 ```
-For more information, read the full document: https://github.io/kinstaky/easy-config-logic-doc/
+For more information, read the full document: https://kinstaky.github.io/easy-config-logic-doc/
 
