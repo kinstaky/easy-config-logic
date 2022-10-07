@@ -219,7 +219,7 @@ void *UpdateScalerArray(void*) {
 
 
 void PrintVersion() {
-	printf("scaler_server 2.0\n");
+	printf("scaler_server 2.1.3\n");
 	printf("Part of the easy-config-logic, produced by pwl");
 	return;
 }

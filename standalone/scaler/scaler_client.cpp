@@ -108,7 +108,7 @@ uint64_t LoadRecordTime() {
 //-----------------------------------------------------------------------------
 
 void PrintVersion() {
-	printf("scaler_client 2.1.1\n");
+	printf("scaler_client 2.1.3\n");
 	printf("Part of the easy-config-logic, produced by pwl\n");
 	return;
 }
