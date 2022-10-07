@@ -1,41 +1,27 @@
+# binary file
 *
+!*.*
 
-!/include/
-!/include/**/
-!/include/**/*.h
-!/include/**/*.hpp
-!/include/**/*.js
+# C/C++ build outputs
+.build/
+bins
+gens
+libs
+objs
 
-!/src/
-!/src/**/
-!/src/**/*.cpp
+# make build files
+*.o
+standalone
+*.log
+*.bin
+20*.txt
+client-recorded-time.txt
 
-!/standalone/
-!/standalone/scaler/
-!/standalone/**/*.cpp
-!/standalone/**/*.h
-!/standalone/**/*.js
-!/standalone/**/*.html
+# cmake build files
+build/
 
-!/test/
-!/test/**/
-!/test/**/*.h
-!/test/**/*.cpp
-!/test/**/*.txt
+# Visual Studio Code artifacts
+.vscode/*
 
-!/docs/
-!/docs/CMakeLists.txt
-
-!/examples/
-!/examples/*.txt
-!/examples/fpga/
-!/examples/fpga/*.bit
-
-!/**/CMakeLists.txt
-!/**/*.mk
-!/**/Makefile
-
-
-!/README.md
-!/LICENSE
-!/.gitignore
+# pixie sdk log
+Pixie16Msg.log%     

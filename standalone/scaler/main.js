@@ -33,7 +33,34 @@ timeRangeSelect.onchange = () => setRealtimeChart();
 var myChart = echarts.init(document.getElementById('chart'), 'vintage');
 window.onresize = () => myChart.resize();
 
+// status bar
 const statusDisplay = document.getElementById('status');
+
+// scaler value
+const showScalerValueButton = document.getElementById('show-scaler-value');
+let showScalerValue = false;
+showScalerValueButton.onclick = () => {
+		if (showScalerValue) {
+			showScalerValue = false;
+			scalerValueDiv.hidden = true;
+			showScalerValueButton.value = "+ show scaler value";
+			statusDisplay.innerText = 'hide scaler value';
+		} else {
+			showScalerValue = true;
+			scalerValueDiv.hidden = false;
+			showScalerValueButton.value = "- hide scaler value";
+			statusDisplay.innerText = 'show scaler value';
+		}
+}
+const scalerValueDiv = document.getElementById('scaler-value');
+let scalerDisplay = [];
+const scalerDisplayLine = 8;
+for (var i = 0; i < scalerDisplayLine; ++i) {
+	scalerDisplay.push(document.createElement('pre'));
+	scalerValueDiv.appendChild(scalerDisplay[i]);
+	scalerDisplay[i].innerText = `line ${i}`;
+}
+
 
 let realtimeIntervalId = 0;
 function selectMode(mode) {
@@ -65,8 +92,12 @@ function selectMode(mode) {
 			realtimeIntervalId = 0;
 		}		
 
-		statusDisplay.innerText = 'Select history';
+		// hide sclaer value and button
+		showScalerValueButton.hidden = true;
+		scalerValueDiv.hidden = true;
 
+		// status bar
+		statusDisplay.innerText = 'Select history';
 
 	} else {
 		// realtime mode
@@ -89,44 +120,15 @@ function selectMode(mode) {
 		// set chart
 		setRealtimeChart();
 
+		// show sclaer value and button
+		showScalerValueButton.hidden = false;
+		scalerValueDiv.hidden = !showScalerValue;
 
+		// status bar
 		statusDisplay.innerText = 'Select realtime';
 	}
 }
 
-
-// function fetchHistoryData(file) {
-// 	const reader = new FileReader();
-// 	reader.onload = () => {
-// 		let jsonData = JSON.parse(reader.result);
-// 		// convert seconds to time string
-// 		let time = [];
-// 		jsonData.seconds.forEach((element) => {
-// 			const calculateTime = new Date(element*1000);
-// 			// calculateTime.setTime(element*1000);
-// 			let hours = calculateTime.getHours();
-// 			let minutes = calculateTime.getMinutes();
-// 			let seconds = calculateTime.getSeconds();
-// 			time.push(`${hours}:${minutes}:${seconds}`);
-// 		});
-// 		// set chart
-// 		var updateOption = {
-// 			xAxis: {
-// 				data: time
-// 			},
-// 			series: []
-// 		};
-// 		for (var i = 0; i < scalerNum; i++) {
-// 			updateOption.series.push({
-// 				name: `scaler ${i}`,
-// 				data: jsonData.scalers[i]
-// 			});
-// 		}
-// 		myChart.setOption(updateOption);
-// 		myChart.hideLoading();
-// 	}
-// 	reader.readAsText(file);
-// }
 
 
 function setChart() {
@@ -422,6 +424,7 @@ function updateRealtimeChart() {
 				}
 				for (var i = 0; i < scalerNum; ++i) {
 					for (value of content.scalers[i]) {
+						// update scaler value in chart
 						chartScalers[i].push(value);
 						chartScalers[i].shift();
 					}
@@ -444,6 +447,26 @@ function updateRealtimeChart() {
 				// update chart
 				myChart.setOption(updateOption);
 
+
+				// update scaler value in text
+				for (var i = 0; i < scalerDisplayLine; ++i) {
+					let lineText = '';
+					let lineWidth = parseInt(scalerNum / scalerDisplayLine);
+					lineWidth += scalerNum % scalerDisplayLine == 0 ? 0 : 1;
+					for (var j = 0; j < lineWidth; ++j) {
+						const index = i*lineWidth + j;
+						if (index >= scalerNum) {
+							continue;
+						}
+						var str = `${index}`;
+						str = ' '.repeat(2-str.length) + str;
+						str += `:  ${content.scalers[index]}`;
+						str += ' '.repeat(20-str.length);
+						lineText += str;
+					}
+					scalerDisplay[i].innerText = lineText + "\n"; 
+				}
+
 			} else if (content.status == 2) {
 				// delay update 100ms
 				delayUpdateRealtimeChart(100);
@@ -461,4 +484,4 @@ function updateRealtimeChart() {
 
 // main function
 setChart();
-selectMode(0);
+selectMode(1);
