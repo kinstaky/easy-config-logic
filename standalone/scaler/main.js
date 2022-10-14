@@ -3,8 +3,10 @@ const scalerNum = 32;
 // mode chagne
 const historyButton = document.getElementById('history');
 const realtimeButton = document.getElementById('realtime');
+const settingsButton = document.getElementById('settings');
 historyButton.onclick = () => selectMode(0);
 realtimeButton.onclick = () => selectMode(1);
+settingsButton.onclick = () => selectMode(2);
 
 // history date selection
 const startDateInput = document.getElementById('start-date');
@@ -28,14 +30,6 @@ requestHistoryButton.onclick = setHistoryChart;
 const timeRangeSelect = document.getElementById('realtime-range-select');
 const timeRangeLabel = document.getElementById('realtime-range-label');
 timeRangeSelect.onchange = () => setRealtimeChart();
-
-// my chart
-var myChart = echarts.init(document.getElementById('chart'), 'vintage');
-window.onresize = () => myChart.resize();
-
-// status bar
-const statusDisplay = document.getElementById('status');
-
 // scaler value
 const showScalerValueButton = document.getElementById('show-scaler-value');
 let showScalerValue = false;
@@ -61,10 +55,58 @@ for (var i = 0; i < scalerDisplayLine; ++i) {
 	scalerDisplay[i].innerText = `line ${i}`;
 }
 
+
+
+// settings
 let defaultScalerNames = [];
 for (var i = 0; i < scalerNum; ++i) {
 	defaultScalerNames.push((i).toString());
 }
+const settingsPart = document.getElementById('settings-part');
+settingsPart.hide = true;
+let scalerNameInputLines = [];
+let scalerNameInputs = [];
+for (var i = 0; i < scalerDisplayLine; ++i) {
+	scalerNameInputLines.push(document.createElement('p'));
+	settingsPart.appendChild(scalerNameInputLines[i]);
+}
+for (var i = 0; i < scalerNum; ++i) {
+	const lineIndex = parseInt(i/(scalerNum/scalerDisplayLine));
+
+	var inputLabel = `${i}:`;
+	inputLabel = ('0').repeat(3-inputLabel.length) + inputLabel;
+	const scalerInputText = document.createTextNode(inputLabel);
+	scalerNameInputLines[lineIndex].appendChild(scalerInputText);
+
+	scalerNameInputs.push(document.createElement('input'));
+	scalerNameInputs[i].setAttribute('type', 'text');
+	scalerNameInputs[i].setAttribute('id', `scaler-${i}`);
+	scalerNameInputs[i].setAttribute('label', "hello");
+	scalerNameInputs[i].setAttribute('style', "margin-left:10px; margin-right:10px")
+	scalerNameInputLines[lineIndex].appendChild(scalerNameInputs[i]);
+}
+const resetSettingsButton = document.getElementById('reset-settings');
+resetSettingsButton.hidden = true;
+resetSettingsButton.onclick = () => resetSettings();
+resetSettingsButton.setAttribute('style', "margin:10px");
+const defaultSettingsButton = document.getElementById('default-settings');
+defaultSettingsButton.hidden = true;
+defaultSettingsButton.onclick = () => defaultSettings();
+defaultSettingsButton.setAttribute('style', "margin:10px");
+const saveSettingsButton = document.getElementById('save-settings');
+saveSettingsButton.hidden = true;
+saveSettingsButton.onclick = () => saveSettings();
+saveSettingsButton.setAttribute('style', "margin:10px");
+
+
+// my chart
+const chartDisplay = document.getElementById('chart');
+var myChart = echarts.init(chartDisplay, 'vintage');
+window.onresize = () => myChart.resize();
+
+// status bar
+const statusDisplay = document.getElementById('status');
+
 let legendSelected = [];
 for (var i = 0; i < scalerNum; ++i) {
 	legendSelected.push(false);
@@ -78,6 +120,7 @@ function selectMode(mode) {
 		// change buttons appearance
 		historyButton.style.backgroundColor = '#29f';
 		realtimeButton.style.backgroundColor = '#fff';
+		settingsButton.style.backgroundColor = '#fff';
 		
 		// show inputs
 		startDateInput.hidden = false;
@@ -89,9 +132,15 @@ function selectMode(mode) {
 		// hide inputs
 		timeRangeSelect.hidden = true;
 		timeRangeLabel.hidden = true;
-		
+		showScalerValueButton.hidden = true;
+		scalerValueDiv.hidden = true;
+		resetSettingsButton.hidden = true;
+		defaultSettingsButton.hidden = true;
+		saveSettingsButton.hidden = true;
+		settingsPart.hidden = true;
 
 		// set chart
+		chartDisplay.hidden = false;
 		setHistoryChart();
 
 		// stop realtime interval
@@ -100,19 +149,16 @@ function selectMode(mode) {
 			realtimeIntervalId = 0;
 		}		
 
-		// hide sclaer value and button
-		showScalerValueButton.hidden = true;
-		scalerValueDiv.hidden = true;
-
 		// status bar
 		statusDisplay.innerText = 'Select history';
 
-	} else {
+	} else if (mode == 1) {
 		// realtime mode
 
 		// change button appearance
 		historyButton.style.backgroundColor = '#fff';
 		realtimeButton.style.backgroundColor = '#29f';
+		settingsButton.style.backgroundColor = '#fff';
 		
 		// show inputs
 		timeRangeSelect.hidden = false;
@@ -124,8 +170,14 @@ function selectMode(mode) {
 		startDateLabel.hidden = true;
 		endDateLabel.hidden = true;
 		requestHistoryButton.hidden = true;
+		resetSettingsButton.hidden = true;
+		defaultSettingsButton.hidden = true;
+		saveSettingsButton.hidden = true;
+		settingsPart.hidden = true;
+
 
 		// set chart
+		chartDisplay.hidden = false;
 		setRealtimeChart();
 
 		// show sclaer value and button
@@ -134,9 +186,46 @@ function selectMode(mode) {
 
 		// status bar
 		statusDisplay.innerText = 'Select realtime';
+	} else {
+		// settings mode
+
+		// change button appearance
+		historyButton.style.backgroundColor = '#fff';
+		realtimeButton.style.backgroundColor = '#fff';
+		settingsButton.style.backgroundColor = '#29f';
+		
+		// show inputs
+		resetSettingsButton.hidden = false;
+		defaultSettingsButton.hidden = false;
+		saveSettingsButton.hidden = false;
+		settingsPart.hidden = false;
+
+		// hide inputs
+		startDateInput.hidden = true;
+		endDateInput.hidden = true;
+		startDateLabel.hidden = true;
+		endDateLabel.hidden = true;
+		requestHistoryButton.hidden = true;
+		timeRangeSelect.hidden = true;
+		timeRangeLabel.hidden = true;
+		showScalerValueButton.hidden = true;
+		scalerValueDiv.hidden = true;
+
+		// hide chart
+		chartDisplay.hidden = true;
+
+		// stop realtime interval
+		if (realtimeIntervalId != 0) {
+			clearInterval(realtimeIntervalId);
+			realtimeIntervalId = 0;
+		}
+
+		resetSettings();
+
+		// status bar
+		statusDisplay.innerText = 'Select settings';
 	}
 }
-
 
 
 function setChart() {
@@ -545,7 +634,6 @@ async function getScalerNames() {
 				for (var i = 0; i < scalerNum; ++i) {
 					legendSelected[i] = presentLegendSelected[`${presentScalerNames[i]}`];
 				}
-				console.log(legendSelected);
 				let scalerNames = [];
 				for (var i = 0; i < scalerNum; ++i) {
 					scalerNames[i] = content.names[i];
@@ -567,7 +655,7 @@ async function getScalerNames() {
 }
 
 
-function setScalerNames() {
+function setScalerNames(scalerNames) {
 	let requestContent = {
 		"request": "set-scaler-names",
 		"names": []
@@ -593,13 +681,39 @@ function setScalerNames() {
 			if (content.status == 0) {
 
 			} else {
-				throw new Error("Set server names failed!");
+				throw new Error("Set scaler names failed!");
 			}
 		})
 		.catch((error) => {
 			console.error(error);
 			statusDisplay.innerText = `${error.name}: ${error.message}`;
 		})
+}
+
+
+function resetSettings() {
+	const presentScalerNames = myChart.getOption().legend[0].data;
+	for (var i = 0; i < scalerNum; ++i) {
+		scalerNameInputs[i].setAttribute('value', presentScalerNames[i]);
+	}
+	statusDisplay.innerText = 'reset settings';
+}
+
+
+function defaultSettings() {
+	for (var i = 0; i < scalerNum; ++i) {
+		scalerNameInputs[i].setAttribute('value', defaultScalerNames[i]);
+	}
+	statusDisplay.innerText = 'default settings';
+}
+
+function saveSettings() {
+	let scalerNames = [];
+	for (var i = 0; i < scalerNum; ++i) {
+		scalerNames.push(scalerNameInputs[i].value);
+	}
+	setScalerNames(scalerNames);
+	statusDisplay.innerText = 'save settings';
 }
 
 
