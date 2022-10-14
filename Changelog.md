@@ -1,5 +1,9 @@
 # Change log
 
+## 2.1.4 (developing)
++ rewrite scaler in fpga
++ read scaler names from file in visual mode
+
 ## 2.1.3
 + Add displaying scaler value in webpage in realtime mode below the realtime chart.
 + Add change log.

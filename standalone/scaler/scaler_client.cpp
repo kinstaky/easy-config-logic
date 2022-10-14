@@ -488,6 +488,7 @@ void HandleRealtimeRequest(const httplib::Request &request, httplib::Response &r
 	// std::cout << "Handle realtime request cost " << std::chrono::duration_cast<std::chrono::milliseconds>(stop-start).count() << " ms" << std::endl;
 }
 
+
 void HandleHistoryRequest(const httplib::Request &request, httplib::Response &response) {
 	// auto start = std::chrono::high_resolution_clock::now();
 
@@ -495,7 +496,7 @@ void HandleHistoryRequest(const httplib::Request &request, httplib::Response &re
 	response.set_header("Access-Control-Allow-Origin", "*");
 	
 	nlohmann::json body = nlohmann::json::parse(request.body);
-	std::cout << body.dump(2) << std::endl;
+	// std::cout << body.dump(2) << std::endl;
 
 	// calculate start and end date
 	std::string start_date = body["start"];
@@ -573,6 +574,47 @@ void HandleHistoryRequest(const httplib::Request &request, httplib::Response &re
 }
 
 
+void HandleSettingsRequest(const httplib::Request &request, httplib::Response &response) {
+	// CORS
+	response.set_header("Access-Control-Allow-Origin", "*");
+	
+	nlohmann::json body = nlohmann::json::parse(request.body);
+	// std::cout << body.dump(2) << std::endl;
+
+	nlohmann::json response_json;
+	response_json["status"] = 0;
+
+	if (body["request"] == "get-scaler-names") {
+		std::cout << "request get scaler names" << std::endl;
+		// read scaler names from config file
+		std::ifstream scaler_names_config("scaler-names.json");
+		if (!scaler_names_config.good()) {
+			// error return status 1
+			std::cerr << "Error: open file scaler-names.json failed.\n";
+			response_json["status"] = 1;
+		} else {
+			nlohmann::json scaler_names;
+			scaler_names_config >> scaler_names;
+			for (size_t i = 0; i < kScalerNum; ++i) {
+				response_json["names"].push_back(scaler_names["names"][i]);
+			}
+			std::cout << response_json.dump(2) << std::endl;
+		}
+		scaler_names_config.close();
+	} else if (body["request"] == "set-scaler-names") {
+		std::cerr << "Error: to do.\n";
+		response_json["status"] = 1;	
+	} else {
+		std::cerr << "Error: invalid request " << body["request"] << "\n";
+		response_json["status"] = 1;
+	}
+
+	response.set_content(response_json.dump(), "text/plain");
+	std::cout << "response " << response_json.dump(2) << std::endl;
+	return;
+}
+
+
 /// @brief run http server for the scaler visual
 ///
 /// @returns NULL
@@ -580,6 +622,7 @@ void HandleHistoryRequest(const httplib::Request &request, httplib::Response &re
 void* HttpServer(void*) {
 	server.Post("/history", HandleHistoryRequest);
 	server.Post("/realtime", HandleRealtimeRequest);
+	server.Post("/settings", HandleSettingsRequest);
 	server.listen("localhost", 12308);
 	return NULL;
 }

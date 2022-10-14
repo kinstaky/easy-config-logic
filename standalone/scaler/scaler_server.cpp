@@ -115,7 +115,7 @@ void GetScalerValue(uint32_t *scaler_value) {
 
 	for (uint32_t i = 0; i < kScalerNum; ++i) {
 		scaler_value[i] = (mapped[kScalersOffset+i] >> 12) & 0xfffff;
-		scaler_value[i] = scaler_value[i] > 0 ? scaler_value[i] - 1 : 0;
+		// scaler_value[i] = scaler_value[i] > 0 ? scaler_value[i] - 1 : 0;
 	}
 
 	return;

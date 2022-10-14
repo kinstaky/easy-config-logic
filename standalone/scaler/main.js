@@ -61,6 +61,14 @@ for (var i = 0; i < scalerDisplayLine; ++i) {
 	scalerDisplay[i].innerText = `line ${i}`;
 }
 
+let defaultScalerNames = [];
+for (var i = 0; i < scalerNum; ++i) {
+	defaultScalerNames.push((i).toString());
+}
+let legendSelected = [];
+for (var i = 0; i < scalerNum; ++i) {
+	legendSelected.push(false);
+}
 
 let realtimeIntervalId = 0;
 function selectMode(mode) {
@@ -181,15 +189,15 @@ function setChart() {
 	for (var i = 0; i < scalerNum; i++) {
 		option.series.push(
 			{
-				name: `scaler ${i}`,
+				name: `${defaultScalerNames[i]}`,
 				type: 'line',
 				symbol: 'none',
 				sampling: 'lttb',
 				data: []
 			}
 		)
-		option.legend.data.push(`scaler ${i}`);
-		option.legend.selected[`scaler ${i}`] = false;
+		option.legend.data.push(`${defaultScalerNames[i]}`);
+		option.legend.selected[`${defaultScalerNames[i]}`] = legendSelected[i];
 	}
 
 	// Display the chart using the configuration items and data just specified.
@@ -197,10 +205,31 @@ function setChart() {
 }
 
 
+function updateChartScalerNames(scalerNames) {
+	var updateOption = {
+		series: [],
+		legend: {
+			data: [],
+			selected: {}
+		}
+	};
+	for (var i = 0; i < scalerNum; i++) {
+		updateOption.series.push({
+			name: `${scalerNames[i]}`,
+			data: []
+		})
+		updateOption.legend.data.push(`${scalerNames[i]}`);
+		updateOption.legend.selected[`${scalerNames[i]}`] = legendSelected[i];	
+	}
+	// update chart
+	myChart.setOption(updateOption);
+}
+
+
 let chartTime = [];
 let chartScalers = [];
 
-function fetchHistoryData() {
+async function fetchHistoryData() {
 	// request scaler values
 	const requestContent = {
 		"start": startDateInput.value,
@@ -242,7 +271,7 @@ function fetchHistoryData() {
 		})
 }
 
-function setHistoryChart() {
+async function setHistoryChart() {
 	// check date input
 	if (startDateInput.value == "") {
 		statusDisplay.innerText = "Please select the start date.";
@@ -263,6 +292,9 @@ function setHistoryChart() {
 	const startSeconds = startDate.getTime() - 8*3600*1000;
 	// const endDate = new Date(endDateInput.value);
 	// const dataSize = (endDate.getTime() - startDate.getTime())/1000 + 86400;
+
+	const scalerNames = await getScalerNames();
+	updateChartScalerNames(scalerNames);
 
 	// fetch history data from http server
 	fetchHistoryData()
@@ -290,7 +322,7 @@ function setHistoryChart() {
 			};
 			for (var i = 0; i < scalerNum; i++) {
 				updateOption.series.push({
-					name: `scaler ${i}`,
+					name: `${scalerNames[i]}`,
 					data: chartScalers[i]
 				});
 			}
@@ -306,7 +338,7 @@ function setHistoryChart() {
 // let chartScalers = [];
 let expectedTime = 0;
 
-function setRealtimeChart() {
+async function setRealtimeChart() {
 	const timeRange = parseInt(timeRangeSelect.value);
 	const nowTime = new Date();
 	const nowSecond = parseInt(nowTime.getTime()/1000);
@@ -323,6 +355,12 @@ function setRealtimeChart() {
 		chartTime.push(`${h}:${m}:${s}`);
 	}
 
+	// get scaler names
+	const scalerNames = await getScalerNames();
+	// update scaler namesl
+	updateChartScalerNames(scalerNames);
+	// console.log(updateOption);
+	
 	// request scaler values
 	const requestContent = {
 		"start": nowSecond-timeRange,
@@ -357,7 +395,7 @@ function setRealtimeChart() {
 				if (realtimeIntervalId != 0) {
 					clearInterval(realtimeIntervalId);
 				}
-				realtimeIntervalId = setInterval(updateRealtimeChart, 1000);
+				realtimeIntervalId = setInterval(updateRealtimeChart, 1000, scalerNames);
 			} else if (content.status == 2) {
 				// delay 100ms
 				setTimeout(setRealtimeChart, 100);
@@ -380,7 +418,7 @@ function delayUpdateRealtimeChart(delay) {
 }
 
 
-function updateRealtimeChart() {
+function updateRealtimeChart(scalerNames) {
 	const nowTime = new Date();
 	const nowSecond = parseInt(nowTime.getTime()/1000);
 
@@ -439,8 +477,8 @@ function updateRealtimeChart() {
 				};
 				for (var i = 0; i < scalerNum; i++) {
 					updateOption.series.push({
-						name: `scaler ${i}`,
-						data: chartScalers[i]
+						name: `${scalerNames[i]}`,
+						data: chartScalers[i],
 					});
 				}
 
@@ -458,10 +496,10 @@ function updateRealtimeChart() {
 						if (index >= scalerNum) {
 							continue;
 						}
-						var str = `${index}`;
-						str = ' '.repeat(2-str.length) + str;
+						var str = `${scalerNames[index]}`;
+						str = ' '.repeat(8-str.length) + str;
 						str += `:  ${content.scalers[index]}`;
-						str += ' '.repeat(20-str.length);
+						str += ' '.repeat(30-str.length);
 						lineText += str;
 					}
 					scalerDisplay[i].innerText = lineText + "\n"; 
@@ -478,6 +516,90 @@ function updateRealtimeChart() {
 			console.error(error);
 			statusDisplay.innerText = `${error.name}: ${error.message}`;
 		});	
+}
+
+
+async function getScalerNames() {
+	const requestContent = {
+		"request": "get-scaler-names"
+	};
+	const request = new Request('http://localhost:12308/settings',
+		{
+			method: 'POST',
+			body: JSON.stringify(requestContent)
+		}
+	);
+
+	return fetch(request)
+		.then((response) => {
+			if (response.status == 200) {
+				return response.json();
+			} else {
+				throw new Error("Something went wrong on server!");
+			}
+		})
+		.then((content) => {
+			if (content.status == 0) {
+				const presentScalerNames = myChart.getOption().legend[0].data;
+				const presentLegendSelected = myChart.getOption().legend[0].selected;
+				for (var i = 0; i < scalerNum; ++i) {
+					legendSelected[i] = presentLegendSelected[`${presentScalerNames[i]}`];
+				}
+				console.log(legendSelected);
+				let scalerNames = [];
+				for (var i = 0; i < scalerNum; ++i) {
+					scalerNames[i] = content.names[i];
+				}
+				return scalerNames;
+			} else {
+				throw new Error("Get scaler names from server failed!");
+			}
+		})
+		.catch((error) => {
+			console.error(error);
+			statusDisplay.innerText = `${error.name}: ${error.message}`;
+			let scalerNames = [];
+			for (var i = 0; i < scalerNum; ++i) {
+				scalerNames.push(defaultScalerNames[i]);
+			}
+			return scalerNames;
+		})
+}
+
+
+function setScalerNames() {
+	let requestContent = {
+		"request": "set-scaler-names",
+		"names": []
+	};
+	for (var i = 0; i < scalerNum; ++i) {
+		requestContent["names"].push(scalerNames[i]);
+	}
+	const request = new Request('http://localhost:12308/settings',
+		{
+			method: 'POST',
+			body: JSON.stringify(requestContent)
+		}
+	);
+	fetch(request)
+		.then((response) => {
+			if (response.status == 200) {
+				return response.json();
+			} else {
+				throw new Error("Something went wrong on server!");
+			}
+		})
+		.then((content) => {
+			if (content.status == 0) {
+
+			} else {
+				throw new Error("Set server names failed!");
+			}
+		})
+		.catch((error) => {
+			console.error(error);
+			statusDisplay.innerText = `${error.name}: ${error.message}`;
+		})
 }
 
 
