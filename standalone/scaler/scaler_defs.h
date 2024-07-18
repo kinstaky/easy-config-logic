@@ -7,42 +7,22 @@ const int kRecordPeriod = 1;
 
 const size_t kScalerNum = 32;
 const size_t kScalersOffset = 156;
-const size_t kScalerStackSize = 1;
-const size_t kMaxScalerArraySize = kScalerNum * kScalerStackSize * 600;
+const size_t kMaxScalerArraySize = 256;
 const size_t kBufferSize = 2048;
 
 
-const uint32_t kTypeDateRequest = 1;
-const uint32_t kTypeScalerRequest = 2;
-
-
-struct RequestHeader {
-	uint32_t type;
-};
-
-struct DateRequest {
-	struct RequestHeader header;
-};
-
-
-struct DateResponse {
-	uint64_t seconds;
-};
-
 struct ScalerRequest {
-	struct RequestHeader header;
-	uint32_t size;
-	uint64_t seconds;
+	uint64_t client_time;
+	uint64_t request_time;
+};
+
+struct ScalerResponse {
+	uint32_t status;
 };
 
 struct ScalerData {
 	uint64_t seconds;
 	uint32_t scaler[kScalerNum];
-};
-
-struct ScalerResponse {
-	uint32_t status;
-	uint32_t size;
 };
 
 enum LogLevel {

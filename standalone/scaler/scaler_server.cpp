@@ -51,18 +51,22 @@ uint32_t scaler_array_size = 0;
 pthread_mutex_t scaler_array_mutex;
 
 
-uint32_t FillEmptyScalerResponse(char *payload) {
-	struct ScalerResponse *scaler_response = (struct ScalerResponse*)payload;
-	scaler_response->status = 1;
-	scaler_response->size = 0;
-	return sizeof(struct ScalerResponse);
-}
+/// @brief fill scaler response
+///
+/// @param[in] payload payload of the scaler reponse
+/// @param[in] size size of scaler data to response
+/// @param[in] index start index of the scaler array to copy
+/// @param[in] client_time client time in request
+/// @return 
+uint32_t FillScalerResponse(
+	char *payload,
+	uint32_t size,
+	uint32_t index,
+	uint64_t client_time
+) {
 
-
-uint32_t FillScalerResponse(char *payload, uint32_t size, uint32_t index) {
 	struct ScalerResponse *scaler_response = (struct ScalerResponse*)payload;
 	scaler_response->status = 0;
-	scaler_response->size = size;
 	char *scaler_data = payload + sizeof(struct ScalerResponse);
 	if (index + size <= kMaxScalerArraySize) {
 		memcpy(scaler_data, scaler_array+index, sizeof(struct ScalerData)*size);
@@ -71,12 +75,34 @@ uint32_t FillScalerResponse(char *payload, uint32_t size, uint32_t index) {
 		// and second part at the beginning of the array.
 		uint32_t first_part_size = kMaxScalerArraySize - index;
 		uint32_t second_part_size = size - first_part_size;
-		uint32_t first_part_bytes = sizeof(struct ScalerData) * first_part_size;
+		uint32_t first_part_bytes =
+			sizeof(struct ScalerData) * first_part_size;
 
-		memcpy(scaler_data, scaler_array+index, first_part_bytes);
-		memcpy(scaler_data+first_part_bytes, scaler_array, sizeof(struct ScalerData)*second_part_size);
+		memcpy(
+			scaler_data,
+			scaler_array + index,
+			first_part_bytes
+		);
+		memcpy(
+			scaler_data + first_part_bytes,
+			scaler_array,
+			sizeof(struct ScalerData) * second_part_size
+		);
 	}
-	return (sizeof(struct ScalerResponse) + sizeof(struct ScalerData)*size);
+
+	// convert the time to client time
+	uint64_t head_seconds = scaler_array[scaler_array_head].seconds;
+	uint64_t tail_seconds = head_seconds +
+		(scaler_array_size-1) * kRecordPeriod;
+	uint64_t client_start_time = client_time -
+		(tail_seconds - scaler_array[index].seconds);
+
+	struct ScalerData *data = (ScalerData*)scaler_data;
+	for (size_t i = 0; i < size; ++i) {
+		data[i].seconds = client_start_time + i;
+	}
+
+	return (sizeof(struct ScalerResponse) + sizeof(struct ScalerData) * size);
 }
 
 
@@ -115,7 +141,6 @@ void GetScalerValue(uint32_t *scaler_value) {
 
 	for (uint32_t i = 0; i < kScalerNum; ++i) {
 		scaler_value[i] = (mapped[kScalersOffset+i] >> 12) & 0xfffff;
-		// scaler_value[i] = scaler_value[i] > 0 ? scaler_value[i] - 1 : 0;
 	}
 
 	return;
@@ -178,9 +203,6 @@ void *UpdateScalerArray(void*) {
 		uint32_t index = scaler_array_tail;
 		scaler_array[scaler_array_tail].seconds = seconds;
 		memcpy(scaler_array[scaler_array_tail].scaler, scaler_value, sizeof(uint32_t)*kScalerNum);
-		// for (uint32_t i = 0; i != kScalerNum; i++) {
-		// 	scaler_array[scaler_array_tail].Scaler[i] = ScalerRate[i];
-		// }
 		if (scaler_array_size == kMaxScalerArraySize) {			// array is full
 			scaler_array_tail++;
 			scaler_array_tail = scaler_array_tail == kMaxScalerArraySize ? 0 : scaler_array_tail;
@@ -408,7 +430,15 @@ int main(int argc, char **argv) {
 		char response[kBufferSize], request[kBufferSize];
 		while (keep_running) {
 			// receive request
-			int numbytes = recvfrom(sockfd, request, kBufferSize-1, 0, (struct sockaddr*)&their_addr, &addr_len);
+			int numbytes = recvfrom(
+				sockfd,
+				request,
+				kBufferSize - 1,
+				0,
+				(struct sockaddr*)&their_addr,
+				&addr_len
+			);
+
 			if (numbytes == -1) {
 				char msg[256];
 				sprintf(msg, "Server recvfrom: %s", strerror(errno));
@@ -426,110 +456,71 @@ int main(int argc, char **argv) {
 			}
 
 
-			// check header
-			struct RequestHeader *header = (struct RequestHeader*)request;
-
-			if (header->type == kTypeDateRequest) {						// date request
-				time_t now_time = time(NULL);
-				if (kDebug <= log_level) {
-					char msg[256];
-					sprintf(msg, "server: now time is %s", ctime(&now_time));
-					Log(msg, kDebug);
-				}
-
-				// calculate seconds since mark time point
-				uint64_t sec = now_time;
-
-				// loan the response
-				struct DateResponse *date_response = (struct DateResponse*)response;
-				date_response->seconds = sec;
-
-				// send response
-				ssize_t numbytes = sendto(sockfd, response, sizeof(struct DateResponse), 0, (struct sockaddr*)&their_addr, addr_len);
-				if (numbytes == -1) {
-					char msg[256];
-					sprintf(msg, "Server sendto date response: %s", strerror(errno));
-					Log(msg, kWarning);
-					continue;
-				}
-				if (kDebug <= log_level) {
-					char msg[256];
-					sprintf(msg, "Server sent packet to %s and %d bytes long\n", dst, uint32_t(sizeof(struct DateResponse)));
-					Log(msg, kDebug);
-				}
-
-			} else if (header->type == kTypeScalerRequest) {												// Scaler request
-				struct ScalerRequest *scaler_request = (struct ScalerRequest*)request;
-				if (kDebug <= log_level) {
-					char msg[256];
-					time_t requestTime = scaler_request->seconds;
-					sprintf(msg, "Server get request for array of %d Scaler rates starts from %s", scaler_request->size, ctime(&requestTime));
-					Log(msg, kDebug);
-				}
-
-
-				// search for requested time
-				uint64_t request_seconds = scaler_request->seconds;
-				uint32_t request_size = scaler_request->size;
-				pthread_mutex_lock(&scaler_array_mutex);
-				uint64_t head_seconds = scaler_array[scaler_array_head].seconds;
-				uint64_t tail_seconds = head_seconds + (scaler_array_size-1) * kRecordPeriod;
-
-				if (request_seconds <= tail_seconds) {																// request <= tail
-					// fill Scaler response
-					uint32_t index = scaler_array_head;
-					index += request_seconds < head_seconds ? 0 : (request_seconds - head_seconds) / kRecordPeriod;		// request < head ?
-					index %= kMaxScalerArraySize;																	// roll back
-					if (request_seconds + (request_size-1) * kRecordPeriod > tail_seconds) {							// request size over the record 
-						request_size = (tail_seconds - request_seconds) / kRecordPeriod + 1;
-					}
-					uint32_t sendbytes = FillScalerResponse(response, request_size, index);
-
-					// edit the response status if request < head (actually not necessary in current stage)
-					if (request_seconds < head_seconds) {
-						struct ScalerResponse *sp = (struct ScalerResponse*)response;
-						sp->status = 2;
-					}
-
-					ssize_t numbytes = sendto(sockfd, response, sendbytes, 0, (struct sockaddr*)&their_addr, addr_len);
-					if (numbytes == -1) {
-						char msg[256];
-						sprintf(msg, "Server sendto whole scaler response: %s", strerror(errno));
-						Log(msg, kWarning);
-						pthread_mutex_unlock(&scaler_array_mutex);
-						continue;
-					}
-					if (kDebug <= log_level) {
-						char msg[256];
-						sprintf(msg, "Server sendto Scaler response with %d bytes long and data size %d from array index %d\n", (int)numbytes, request_size, index);
-						Log(msg, kDebug);
-					}		
-		
-				} else {																							// tail < request 
-					uint32_t sendbytes = FillEmptyScalerResponse(response);
-					ssize_t numbytes = sendto(sockfd, response, sendbytes, 0, (struct sockaddr*)&their_addr, addr_len);
-					if (numbytes == -1) {
-						char msg[256];
-						sprintf(msg, "Server sendto empty scaler response: %s", strerror(errno));
-						Log(msg, kWarning);
-						pthread_mutex_unlock(&scaler_array_mutex);
-						continue;
-					}
-
-					if (kDebug <= log_level) {
-						char msg[256];
-						sprintf(msg, "Server sendto empty scaler response in %d bytes long.\n", (int)numbytes);
-						Log(msg, kDebug);
-					}
-				}
-				pthread_mutex_unlock(&scaler_array_mutex);
-			} else {
+			struct ScalerRequest *scaler_request = (struct ScalerRequest*)request;
+			if (kDebug <= log_level) {
 				char msg[256];
-				sprintf(msg, "Error: Unknown header type %d\n", header->type);
-				Log(msg, kWarning);
-				continue;
+				time_t client_time = scaler_request->client_time;
+
+				sprintf(
+					msg,
+					"Server get request for offset time %lld starts from %s",
+					(long long unsigned int)scaler_request->request_time,
+					ctime(&client_time)
+				);
+				Log(msg, kDebug);
 			}
 
+
+			pthread_mutex_lock(&scaler_array_mutex);
+			uint64_t request_index = scaler_request->request_time / kRecordPeriod;
+			uint32_t fill_index = scaler_array_head;
+			if (request_index < scaler_array_size) {
+				fill_index += scaler_array_size - request_index - 1;
+				fill_index %= kMaxScalerArraySize;
+			}
+			uint32_t sendbytes = FillScalerResponse(
+				response,
+				1,
+				fill_index,
+				scaler_request->client_time
+			);
+			
+			// edit the response status if request < head (actually not necessary in current stage)
+			if (request_index >= scaler_array_size) {
+				struct ScalerResponse *sp = (struct ScalerResponse*)response;
+				sp->status = 1;
+			}
+
+			numbytes = sendto(
+				sockfd,
+				response,
+				sendbytes,
+				0,
+				(struct sockaddr*)&their_addr,
+				addr_len
+			);
+			
+			if (numbytes == -1) {
+				char msg[256];
+				sprintf(msg, "Server sendto whole scaler response: %s", strerror(errno));
+				Log(msg, kWarning);
+				pthread_mutex_unlock(&scaler_array_mutex);
+				continue;
+			}
+			if (kDebug <= log_level) {
+				char msg[256];
+				sprintf(
+					msg,
+					"Server sendto Scaler response with %d bytes long \
+					and data size %d from array index %d\n",
+					(int)numbytes,
+					1,
+					fill_index
+				);
+				Log(msg, kDebug);
+			}
+
+			pthread_mutex_unlock(&scaler_array_mutex);
 
 		}
 		close(sockfd);

@@ -737,7 +737,9 @@ int main(int argc, char **argv) {
 
 	char dst[INET6_ADDRSTRLEN];
 	if (kDebug <= log_level) {
-		inet_ntop(p->ai_family, get_in_addr((struct sockaddr*)p->ai_addr), dst, sizeof dst);
+		inet_ntop(p->ai_family, get_in_addr((struct sockaddr*)p->ai_addr),
+			dst, sizeof dst);
+		
 		char msg[256];
 		sprintf(msg, "Client prepare to send to %s", dst);
 		Log(msg, kDebug);
@@ -750,147 +752,105 @@ int main(int argc, char **argv) {
 	struct sockaddr_storage their_addr;						// receive address information
 	socklen_t addr_len = sizeof their_addr;					// address length
 	char request[kBufferSize], response[kBufferSize];		// request and response
-	size_t offset_num = 0;									// offset numbers, to calculate the average offset
-	uint64_t offset_sum = 0;									// offset sum, to calculate the average offset
-	// send date request for 3 times
-	struct DateRequest *date_request = (struct DateRequest*)request;
-	date_request->header.type = kTypeDateRequest;
-	for (size_t i = 0; i != 3 && keep_running; ++i) {
-		time_t send_time = time(NULL);
-
-		// send date request
-		numbytes = sendto(sockfd, request, sizeof(struct DateRequest), 0, p->ai_addr, p->ai_addrlen);
-		if (numbytes == -1) {
-			char msg[256];
-			sprintf(msg, "Client sendto date request failed: %s", strerror(errno));
-			Log(msg, kWarning);
-			continue;
-		}
-		Log("Client sent date request.", kDebug);
-
-		// receive date response
-		numbytes = recvfrom(sockfd, response, kBufferSize-1, 0, (struct sockaddr*)&their_addr, &addr_len);
-		if (numbytes == -1) {
-			char msg[256];
-			sprintf(msg, "Client recvform date response: %s", strerror(errno));
-			Log(msg, kWarning);
-			continue;
-		}
-		struct DateResponse *date_response = (struct DateResponse*)response;
-		Log("Client receive date response.", kDebug);
-
-
-		time_t receive_time = time(NULL); 
-		
-		uint64_t client_time = (receive_time - send_time) / 2 + send_time;
-		uint64_t server_time = date_response->seconds;
-		uint64_t offset = client_time - server_time;
-		offset_num++;
-		offset_sum += offset;
-
-		if (kInfo <= log_level) {
-			time_t client_time_t = (time_t)((send_time+receive_time)/2);
-			time_t server_time_t = (time_t)(server_time);
-			char msg[256];
-			sprintf(msg, "Client time %s", ctime(&client_time_t));
-			sprintf(msg+strlen(msg), "Server time %s", ctime(&server_time_t));			
-			Log(msg, kInfo);
-		}
-
-		if (i != 2) usleep(800000);					// sleep for 800ms
-	}
-	uint64_t offset_time = offset_sum / offset_num;
-	if (kDebug <= log_level) {
-		char msg[256];
-		sprintf(msg, "Get client and server time offset %llu seconds.", (long long unsigned int)offset_time);
-		Log(msg, kDebug);
-	}
-
 
 	signal(SIGINT, SigIntHandler);
 
 	// send scalar request periodically
 	while (keep_running) {
 		// get log seconds
-		uint64_t record_time = LoadRecordTime();
-		if (record_time == 0) {
+		uint64_t request_time = LoadRecordTime();
+		if (request_time == 0) {
 			time_t now_time = time(NULL);
-			uint64_t now_seconds = now_time - offset_time;
-			record_time = now_seconds - now_seconds % kRecordPeriod;
+			uint64_t now_seconds = now_time;
+			request_time = now_seconds - now_seconds % kRecordPeriod;
 		}
 		// fill scalar request
 		struct ScalerRequest *scaler_request = (struct ScalerRequest*)request;
-		scaler_request->header.type = kTypeScalerRequest;
-		scaler_request->size = kScalerStackSize;
-		scaler_request->seconds = record_time;
+		scaler_request->client_time = time(NULL);
+
+		if (scaler_request->client_time < request_time) {
+			// wait seconds 
+			usleep(kRecordPeriod * 1000000 - 30000);
+			uint64_t now_seconds = time(NULL);
+			while (now_seconds < request_time) {
+				usleep(100000);
+				now_seconds = time(NULL);
+			}
+			continue;
+		}
+		scaler_request->request_time =
+			scaler_request->client_time - request_time;
 
 		// send scalar request
-		numbytes = sendto(sockfd, request, sizeof(struct ScalerRequest), 0, p->ai_addr, p->ai_addrlen);
+		numbytes = sendto(sockfd, request, sizeof(struct ScalerRequest),
+			0, p->ai_addr, p->ai_addrlen);
+		
 		if (numbytes == -1) {
 			char msg[256];
-			sprintf(msg, "Client sendto scaler request failed: %s", strerror(errno));
+			sprintf(msg, "Client sendto scaler request failed: %s",
+				strerror(errno));
 			Log(msg, kWarning);
 			continue;
 		}
 		if (kDebug <= log_level) {
 			char msg[256];
-			sprintf(msg, "Client send scalar request in %u bytes, type %u, size %u, seconds %llu\n",
-				(uint32_t)sizeof(struct ScalerRequest), scaler_request->header.type, scaler_request->size, (long long unsigned int)scaler_request->seconds
+			sprintf(
+				msg,
+				"Client send scalar request in %u bytes, client time %llu,\
+				request time %llu\n",
+				(uint32_t)sizeof(struct ScalerRequest),
+				(long long unsigned int)scaler_request->client_time,
+				(long long unsigned int)scaler_request->request_time
 			);
 		}
 
 		// receive scalar response
-		numbytes = recvfrom(sockfd, response, kBufferSize-1, 0, (struct sockaddr*)&their_addr, &addr_len);
+		numbytes = recvfrom(sockfd, response, kBufferSize-1, 0,
+			(struct sockaddr*)&their_addr, &addr_len);
+		
 		// check numbytes and response->size
 		if (numbytes == -1) {
 			char msg[256];
-			sprintf(msg, "Client recvfrom scaler requeset failed: %s", strerror(errno));
+			sprintf(msg, "Client recvfrom scaler requeset failed: %s",
+				strerror(errno));
 			Log(msg, kWarning);
 			continue;
 		}
 		struct ScalerResponse* scaler_response = (struct ScalerResponse*)response;
-		if ((size_t)numbytes != sizeof(ScalerResponse) + sizeof(ScalerData)*scaler_response->size) {
-			char msg[256];
-			sprintf(msg, "Client contradictory bytes, numbytes %d and response->size %d\n", (int)numbytes, scaler_response->size);
-			Log(msg, kWarning);
-			continue;
-		}
+		// if ((size_t)numbytes != sizeof(ScalerResponse) + sizeof(ScalerData)*scaler_response->size) {
+		// 	char msg[256];
+		// 	sprintf(msg, "Client contradictory bytes, numbytes %d and response->size %d\n", (int)numbytes, scaler_response->size);
+		// 	Log(msg, kWarning);
+		// 	continue;
+		// }
 
 		uint32_t response_status = scaler_response->status;
 		char msg[256];
 		sprintf(msg, "Client get response status %u\n", response_status);
 		Log(msg, kDebug);
 
-		if (response_status == 0 || response_status == 2) {
-
-			// 0 - normal response, 2 - beginning of array response.(The request
-			// time was outdated, so the server gave back serveral scalar data at
-			// he beginning of the array.)
-			// write the scalar data to file
-			int status = WriteScalerValue(scaler_response->size, response+sizeof(ScalerResponse), &record_time);
-			if (!status) {
+		ScalerData *response_data = (ScalerData*)(response + sizeof(ScalerResponse));
+		if (response_status == 0) {
+			// 0, normal response, just check the response seconds and reqeust seconds
+			if (response_data[0].seconds == request_time) {
+				if (!WriteScalerValue(1, (char*)response_data, &request_time)) {
+					Log("WriteScalerValue success.\n", kDebug);
+					SaveRecordTime(request_time);
+				} else {
+					continue;
+				}
+			}
+		} else if (response_status == 1) {
+			// 1, beinging of array reponse. The request is outdated, so
+			// the server gives the oldest time.
+			if (!WriteScalerValue(1, (char*)response_data, &request_time)) {
 				Log("WriteScalerValue success.\n", kDebug);
-				SaveRecordTime(record_time);
+				SaveRecordTime(request_time);
 			}
-
-			// check if there are more data
-			time_t now_time = time(NULL);
-			uint64_t now_seconds = now_time;
-			// printf("record time %lu, offset_time %lu, now_seconds %lu\n", record_time, offset_time, now_seconds);
-			// there are more data to access, no need to wait
-			if (record_time + offset_time < now_seconds) {
-				Log("Client can get more data.\n", kDebug);
+			if (request_time < scaler_request->client_time) {
+				// now can get more data, don't sleep
 				continue;
-			} else {
-				// get the present scaler data, update it
-				UpdateScalerValue(
-					scaler_response->size,
-					(struct ScalerData*)(response+sizeof(ScalerResponse))
-				);
 			}
-		} else if (response_status == 1) {									// empty response
-			// do nothing
-
 		} else {
 			char msg[256];
 			sprintf(msg, "Client get invalid scalar response status %d", response_status);
@@ -898,13 +858,10 @@ int main(int argc, char **argv) {
 			continue;
 		}
 
-		
-
-		// otherwise wait for some time
-		uint64_t last_seconds = time(NULL);
-		usleep(kRecordPeriod * kScalerStackSize * 1000000 - 30000);
+		// wait for some time
+		usleep(kRecordPeriod * 1000000 - 30000);
 		uint64_t now_seconds = time(NULL);
-		while (now_seconds < last_seconds + kRecordPeriod * kScalerStackSize) {
+		while (now_seconds < request_time) {
 			usleep(100000);
 			now_seconds = time(NULL);
 		}
