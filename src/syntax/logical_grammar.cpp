@@ -11,7 +11,7 @@ LogicalGrammar::LogicalGrammar() noexcept
 :Grammar<bool>() {
 
 	// terminals
-	Symbol *identifier = new Symbol(kSymbolType_Identifier);
+	Symbol *identifier = new Symbol(kSymbolType_Variable);
 	Operator *op_or = new Operator('|');
 	Operator *op_and = new Operator('&');
 	Operator *op_left_bracket = new Operator('(');
@@ -112,13 +112,5 @@ LogicalGrammar::LogicalGrammar() noexcept
 	symbols_.push_back(production_set_e);
 	symbols_.push_back(production_set_t);
 }
-
-
-LogicalGrammar::~LogicalGrammar() noexcept {
-	for (auto s : symbols_) {
-		delete s;
-	}
-}
-
 
 }					// namespace ecl

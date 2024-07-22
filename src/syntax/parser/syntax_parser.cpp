@@ -83,7 +83,7 @@ int SyntaxParser<VarType>::FindSymbol(TokenPtr token) noexcept {
 			continue;
 		}
 		
-		if (token->Type() == kSymbolType_Identifier) {
+		if (token->Type() == kSymbolType_Variable) {
 			return i;
 		} else if (token->Type() == kSymbolType_Operator) {
 			Operator *op = (Operator*)symbol_list_[i];
@@ -101,7 +101,7 @@ int SyntaxParser<VarType>::FindSymbol(TokenPtr token) noexcept {
 template<typename VarType> 
 int SyntaxParser<VarType>::AttachIdentifier(const std::string &name, void *var_ptr) noexcept {
 	if (!var_ptr) return -1;
-	for (Identifier *id : identifier_list_) {
+	for (Variable *id : identifier_list_) {
 		if (id->Value() == name) {
 			// found the identifier match the name
 			id->Attach(var_ptr);
@@ -220,7 +220,7 @@ SLRSyntaxParser<VarType>::SLRSyntaxParser(Grammar<VarType> *grammar)
 			} else {
 				// check symbol type
 				int stype = this->symbol_list_[s]->Type();
-				if (stype == kSymbolType_Identifier || stype == kSymbolType_Operator) {
+				if (stype == kSymbolType_Variable || stype == kSymbolType_Operator) {
 
 					// shift action for identifier
 					action_table_->SetAction(c, s, Action::kTypeShift, collection);
@@ -328,8 +328,8 @@ int SLRSyntaxParser<VarType>::Parse(const std::vector<TokenPtr> &tokens) {
 	std::stack<Symbol*> processing_symbols;
 
 	// add identifier
-	if (tokens[0]->Type() == kSymbolType_Identifier) {
-		this->identifier_list_.push_back(new Identifier(tokens[0]->Value()));
+	if (tokens[0]->Type() == kSymbolType_Variable) {
+		this->identifier_list_.push_back(new Variable(tokens[0]->Value()));
 	}
 
 
@@ -355,9 +355,9 @@ int SLRSyntaxParser<VarType>::Parse(const std::vector<TokenPtr> &tokens) {
 			// shift
 			if (action->type == Action::kTypeShift) {
 				// shift the looking symbol into the processing stack
-				if (tokens[itoken]->Type() == kSymbolType_Identifier) {
+				if (tokens[itoken]->Type() == kSymbolType_Variable) {
 					// shift an identifier, find it in the identifier list
-					Identifier *id = nullptr;
+					Variable *id = nullptr;
 					for (auto i : this->identifier_list_) {
 						if (i->Value() == tokens[itoken]->Value()) {
 							id = i;
@@ -398,9 +398,9 @@ int SLRSyntaxParser<VarType>::Parse(const std::vector<TokenPtr> &tokens) {
 				}
 
 
-				if (tokens[itoken]->Type() == kSymbolType_Identifier) {
+				if (tokens[itoken]->Type() == kSymbolType_Variable) {
 					
-					Identifier *id = nullptr;
+					Variable *id = nullptr;
 					// this token is identifier, check whether this has appeared before
 					for (auto i : this->identifier_list_) {
 						if (i->Value() == tokens[itoken]->Value()) {
@@ -419,7 +419,7 @@ int SLRSyntaxParser<VarType>::Parse(const std::vector<TokenPtr> &tokens) {
 // std::cout << "    Next symbol is a NEW identifier." << std::endl;
 
 						// identifier not found, create a new one
-						id = new Identifier(tokens[itoken]->Value());
+						id = new Variable(tokens[itoken]->Value());
 						this->identifier_list_.push_back(id);
 					}				
 

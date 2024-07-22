@@ -250,7 +250,7 @@ public:
 	/// @param[in] id_list identifier list from the standard logic tree
 	/// @returns front io port or gate index if success, -1 otherwise
 	///
-	int GenerateGates(StandardLogicNode *root, const std::vector<Identifier*> &id_list) noexcept;
+	int GenerateGates(StandardLogicNode *root, const std::vector<Variable*> &id_list) noexcept;
 
 
 	/// @brief  generate an or gate
@@ -259,7 +259,7 @@ public:
 	/// @param[in] id_list identifier list from the standard logic tree
 	/// @returns or gate index, or -1 on failure
 	///
-	int GenerateOrGate(std::bitset<kMaxIdentifier> id_flag, const std::vector<Identifier*> id_list) noexcept;
+	int GenerateOrGate(std::bitset<kMaxIdentifier> id_flag, const std::vector<Variable*> id_list) noexcept;
 
 
 	/// @brief generate a clock according to the identifier name

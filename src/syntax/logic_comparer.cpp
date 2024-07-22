@@ -143,7 +143,7 @@ int LogicComparer::ParseT(Production<bool>* production, struct Node* node, int l
 		// config the node
 		node->op_type = kOperatorNull;
 		node->size = 0;
-		Identifier *id = (Identifier*)production->Child(0);
+		Variable *id = (Variable*)production->Child(0);
 		node->id = id;
 		node->cache_value = false;
 

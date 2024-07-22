@@ -295,7 +295,7 @@ public:
 	/// @param[in] os ostream
 	/// @param[in] id_list list of all identifiers in tree
 	///
-	void PrintString(std::ostream &os, std::vector<Identifier*> id_list) const noexcept;
+	void PrintString(std::ostream &os, std::vector<Variable*> id_list) const noexcept;
 
 
 	/// @brief print the node in tree structure 
@@ -303,7 +303,7 @@ public:
 	/// @param[in] id_list list of all identifiers in tree
 	/// @param[in] prefix prefix string of this node
 	///
-	void PrintTree(std::vector<Identifier*> id_list, std::string prefix = "") const noexcept;
+	void PrintTree(std::vector<Variable*> id_list, std::string prefix = "") const noexcept;
 
 
 

@@ -62,7 +62,7 @@ private:
 		int op_type;
 		size_t size;
 		struct Node* children[2];
-		Identifier *id;
+		Variable *id;
 		bool cache_value;
 		std::bitset<kMaxIdentifiers> id_flag;
 	};
@@ -143,7 +143,7 @@ private:
 	/// @param layer the layer count from the root
 	///
 	struct IdentifierInfo {
-		Identifier *id;
+		Variable *id;
 		size_t index;
 		int layer;
 	};

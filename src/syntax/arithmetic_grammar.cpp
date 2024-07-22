@@ -17,7 +17,7 @@ AddMultiGrammar::AddMultiGrammar() noexcept
 : Grammar<double>() {
 
 	// terminal symbols
-	Symbol *identifier = new Symbol(kSymbolType_Identifier);
+	Symbol *identifier = new Symbol(kSymbolType_Variable);
 	Operator *op_add = new Operator("+");
 	Operator *op_multi = new Operator("*");
 	Operator *op_left_bracket = new Operator("(");
@@ -131,15 +131,6 @@ AddMultiGrammar::AddMultiGrammar() noexcept
 }
 
 
-
-AddMultiGrammar::~AddMultiGrammar() {
-	for (auto symbol : symbols_) {
-		delete symbol;
-	}
-}
-
-
-
 //-----------------------------------------------------------------------------
 //	 			Arithmetic_Grammar
 //-----------------------------------------------------------------------------
@@ -148,7 +139,7 @@ ArithmeticGrammar::ArithmeticGrammar() noexcept
 :Grammar<double>() {
 
 	// terminal symbols
-	Symbol *identifier = new Symbol(kSymbolType_Identifier);
+	Symbol *identifier = new Symbol(kSymbolType_Variable);
 	Operator *op_add = new Operator("+");
 	Operator *op_sub = new Operator("-");
 	Operator *op_mul = new Operator("*");
@@ -280,13 +271,6 @@ ArithmeticGrammar::ArithmeticGrammar() noexcept
 	symbols_.push_back(production_set_e);
 	symbols_.push_back(production_set_t);
 	symbols_.push_back(production_set_f);
-}
-
-
-ArithmeticGrammar::~ArithmeticGrammar() noexcept {
-	for (auto symbol : symbols_) {
-		delete symbol;
-	}
 }
 
 

@@ -20,10 +20,10 @@ const std::vector<std::vector<std::string>> add_multi_grammar_first_list = {
 	{"(", ""}					// f
 };
 const std::vector<std::vector<int>> add_multi_grammar_first_type = {
-	{kSymbolType_Operator, kSymbolType_Identifier},		// s
-	{kSymbolType_Operator, kSymbolType_Identifier},		// e
-	{kSymbolType_Operator, kSymbolType_Identifier},		// t
-	{kSymbolType_Operator, kSymbolType_Identifier}		// f
+	{kSymbolType_Operator, kSymbolType_Variable},		// s
+	{kSymbolType_Operator, kSymbolType_Variable},		// e
+	{kSymbolType_Operator, kSymbolType_Variable},		// t
+	{kSymbolType_Operator, kSymbolType_Variable}		// f
 };
 const std::vector<bool> add_multi_grammar_frist_empty = {
 	false,					// s
@@ -41,10 +41,10 @@ const std::vector<std::vector<std::string>> arithmetic_grammar_first_list = {
 	{"(", ""}					// f
 };
 const std::vector<std::vector<int>> arithmetic_grammar_first_type = {
-	{kSymbolType_Operator, kSymbolType_Identifier},		// s
-	{kSymbolType_Operator, kSymbolType_Identifier},		// e
-	{kSymbolType_Operator, kSymbolType_Identifier},		// t
-	{kSymbolType_Operator, kSymbolType_Identifier}		// f
+	{kSymbolType_Operator, kSymbolType_Variable},		// s
+	{kSymbolType_Operator, kSymbolType_Variable},		// e
+	{kSymbolType_Operator, kSymbolType_Variable},		// t
+	{kSymbolType_Operator, kSymbolType_Variable}		// f
 };
 const std::vector<bool> arithmetic_grammar_frist_empty = {
 	false,					// s
@@ -61,9 +61,9 @@ const std::vector<std::vector<std::string>> logical_grammar_first_list = {
 	{"(", ""}					// t
 };
 const std::vector<std::vector<int>> logical_grammar_first_type = {
-	{kSymbolType_Operator, kSymbolType_Identifier},		// s
-	{kSymbolType_Operator, kSymbolType_Identifier},		// e
-	{kSymbolType_Operator, kSymbolType_Identifier}		// t
+	{kSymbolType_Operator, kSymbolType_Variable},		// s
+	{kSymbolType_Operator, kSymbolType_Variable},		// e
+	{kSymbolType_Operator, kSymbolType_Variable}		// t
 };
 const std::vector<bool> logical_grammar_frist_empty = {
 	false,					// s
@@ -101,6 +101,7 @@ const std::vector<std::vector<int>> arithmetic_following_type = {
 	{kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator},
 	{kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator}
 };
+
 // logical grammar
 const std::vector<std::vector<std::string>> logical_following_list = {
 	{"$"},								// s
@@ -133,7 +134,7 @@ const std::vector<std::vector<int>> add_multi_goto_table = {
 	{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1}		// I11
 };
 // arithmetci grammar
-const std::vector<std::vector<int>> airthmetic_goto_table = {};
+const std::vector<std::vector<int>> arithmetic_goto_table = {};
 // logical grammar
 const std::vector<std::vector<int>> logical_goto_table = {
 	{-1, 1, -1, 2, -1, 3, -1, 4, -1},				// I0
@@ -160,11 +161,11 @@ bool SymbolInFirst(
 	const std::vector<int> &type
 ) {
 
-	if (symbol->Type() == kSymbolType_Identifier) {
+	if (symbol->Type() == kSymbolType_Variable) {
 
 		/// check whether this symbol is an identifier
 		for (size_t i = 0; i < type.size(); ++i) {
-			if (type[i] == kSymbolType_Identifier) {
+			if (type[i] == kSymbolType_Variable) {
 				return true;
 			}
 		}
@@ -206,7 +207,7 @@ bool SymbolInFollow(
 				continue;
 			}
 			switch (symbol->Type()) {
-				case kSymbolType_Identifier:
+				case kSymbolType_Variable:
 					return true;
 				case kSymbolType_Operator:
 					if (((Operator*)symbol)->Value() == follow[i]) {
@@ -228,7 +229,7 @@ TEST(GrammarTest, NotLanguage) {
 	Grammar<bool> grammar;
 
 	// terminal symbols
-	Symbol *identifier = new Symbol(kSymbolType_Identifier);
+	Symbol *identifier = new Symbol(kSymbolType_Variable);
 	Operator *op_not = new Operator("~");
 
 	// non-terminal symbols
@@ -283,7 +284,7 @@ TEST(GrammarTest, NotLanguage) {
 	EXPECT_EQ((*production_set_e)[1]->Child(0), identifier);
 	EXPECT_EQ((*production_set_e)[0]->Child(0)->Type(), kSymbolType_Operator);
 	EXPECT_EQ((*production_set_e)[0]->Child(1)->Type(), kSymbolType_ProductionFactorySet);
-	EXPECT_EQ((*production_set_e)[1]->Child(0)->Type(), kSymbolType_Identifier);
+	EXPECT_EQ((*production_set_e)[1]->Child(0)->Type(), kSymbolType_Variable);
 
 
 	// symbol list
@@ -370,9 +371,6 @@ TEST(GrammarTest, NotLanguage) {
 	delete production_e_not_e;
 	delete production_e_id;
 }
-
-
-
 
 
 

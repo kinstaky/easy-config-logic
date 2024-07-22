@@ -21,7 +21,7 @@ StandardLogicTree::StandardLogicTree(Production<bool> *production) noexcept {
 		// now p is production 4 or 5, i.e. T -> ( E ) or T -> id
 		if (p->size() == 1) {
 			// p is production 5, and this tree contains only 1 identifier
-			id_list_.push_back((Identifier*)p->Child(0));
+			id_list_.push_back((Variable*)p->Child(0));
 			tree_root_ = new StandardLogicNode(nullptr, kOperatorNull);
 			tree_root_->AddLeaf(0);
 			// finish, get out of the loop
@@ -104,7 +104,7 @@ int StandardLogicTree::ParseT(StandardLogicNode *node, Production<bool> *product
 		ParseE(node, (Production<bool>*)production->Child(1));
 	} else {
 		// production 5
-		Identifier *id = (Identifier*)production->Child(0);
+		Variable *id = (Variable*)production->Child(0);
 		// search whether this identifier appear before
 		int index = -1;
 		for (size_t i = 0; i < id_list_.size(); ++i) {

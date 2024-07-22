@@ -13,7 +13,6 @@ using namespace ecl;
 // error inputs
 const std::string kErrorInputExpression[] = {
 	"0ac",				// ERROR: variable start with digit
-	"abc & 0",			// ERROR: variable start with digit
 	"#abc",				// ERROR: varaible start with invalid character '#'
 	"abc & @d"			// ERROR: variable start with invalid character '@'
 };
@@ -31,7 +30,11 @@ const std::string kInputExpression[] = {
 	"(Aa0_)",
 	"A | B & ( B | C)",
 	"A|B&(B|C)",
-	"(a&b)|(c&d)"
+	"(a&b)|(c&d)",
+	"a & 0",
+	"B | 10",
+	"(A|B)/5",
+	"A = (B2 & C3) / 6"
 };
 
 
@@ -46,32 +49,52 @@ const std::vector<std::string> kOutputValue[] = {
 	{"(", "Aa0_", ")"},
 	{"A", "|", "B", "&", "(", "B", "|", "C", ")"},
 	{"A", "|", "B", "&", "(", "B", "|", "C", ")"},
-	{"(", "a", "&", "b", ")", "|", "(", "c", "&", "d", ")"}
+	{"(", "a", "&", "b", ")", "|", "(", "c", "&", "d", ")"},
+	{"a", "&", "0"},
+	{"B", "|", "10"},
+	{"(", "A", "|", "B", ")", "/", "5"},
+	{"A", "=", "(", "B2", "&", "C3", ")", "/", "6"}
 };
 
 const std::vector<int> kOutputType[] = {
-	{kSymbolType_Identifier},
-	{kSymbolType_Identifier},
-	{kSymbolType_Identifier},
-	{kSymbolType_Identifier},
-	{kSymbolType_Identifier, kSymbolType_Operator, kSymbolType_Identifier},
-	{kSymbolType_Identifier, kSymbolType_Operator, kSymbolType_Identifier},
-	{kSymbolType_Operator, kSymbolType_Identifier, kSymbolType_Operator},
+	{kSymbolType_Variable},
+	{kSymbolType_Variable},
+	{kSymbolType_Variable},
+	{kSymbolType_Variable},
+	{kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Variable},
+	{kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Variable},
+	{kSymbolType_Operator, kSymbolType_Variable, kSymbolType_Operator},
 	{
-		kSymbolType_Identifier, kSymbolType_Operator, kSymbolType_Identifier,
-		kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Identifier,
-		kSymbolType_Operator, kSymbolType_Identifier, kSymbolType_Operator
+		kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Variable,
+		kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Variable,
+		kSymbolType_Operator, kSymbolType_Variable, kSymbolType_Operator
 	},
 	{
-		kSymbolType_Identifier, kSymbolType_Operator, kSymbolType_Identifier,
-		kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Identifier,
-		kSymbolType_Operator, kSymbolType_Identifier, kSymbolType_Operator
+		kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Variable,
+		kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Variable,
+		kSymbolType_Operator, kSymbolType_Variable, kSymbolType_Operator
 	},
 	{
-		kSymbolType_Operator, kSymbolType_Identifier, kSymbolType_Operator,
-		kSymbolType_Identifier, kSymbolType_Operator, kSymbolType_Operator,
-		kSymbolType_Operator, kSymbolType_Identifier, kSymbolType_Operator,
-		kSymbolType_Identifier, kSymbolType_Operator
+		kSymbolType_Operator, kSymbolType_Variable, kSymbolType_Operator,
+		kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Operator,
+		kSymbolType_Operator, kSymbolType_Variable, kSymbolType_Operator,
+		kSymbolType_Variable, kSymbolType_Operator
+	},
+	{
+		kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Literal
+	},
+	{
+		kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Literal
+	},
+	{
+		kSymbolType_Operator, kSymbolType_Variable, kSymbolType_Operator,
+		kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Operator,
+		kSymbolType_Literal
+	},
+	{
+		kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Operator,
+		kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Variable,
+		kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Literal
 	}
 };
 

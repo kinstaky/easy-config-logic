@@ -111,7 +111,7 @@ int StandardLogicNode::Depth() const noexcept {
 
 
 
-void StandardLogicNode::PrintString(std::ostream &os, std::vector<Identifier*> id_list) const noexcept {
+void StandardLogicNode::PrintString(std::ostream &os, std::vector<Variable*> id_list) const noexcept {
 	std::string op = op_type_ == kOperatorAnd ? " & " : " | ";
 	if (branches_.size()) {
 		os << std::string("(");
@@ -143,7 +143,7 @@ void StandardLogicNode::PrintString(std::ostream &os, std::vector<Identifier*> i
 }
 
 
-void StandardLogicNode::PrintTree(std::vector<Identifier*> id_list, std::string prefix) const noexcept {
+void StandardLogicNode::PrintTree(std::vector<Variable*> id_list, std::string prefix) const noexcept {
 	const std::string kBoxHorizental = "\u2500";
 	const std::string kBoxVertical = "\u2502";
 	const std::string kBoxUpRight = "\u2514";

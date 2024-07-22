@@ -14,8 +14,9 @@ constexpr int kSymbolType_ProductionItem = -4;
 constexpr int kSymbolType_ProductionFactorySet = -3;
 constexpr int kSymbolType_ProductionFactory = -2;
 constexpr int kSymbolType_Production = -1;
-constexpr int kSymbolType_Identifier = 1;
-constexpr int kSymbolType_Operator = 2;
+constexpr int kSymbolType_Operator = 1;
+constexpr int kSymbolType_Literal = 2;
+constexpr int kSymbolType_Variable = 3;
 
 /**
  * Symbol represents the base element in the context-free grammar.
@@ -104,35 +105,35 @@ typedef std::shared_ptr<Token> TokenPtr;
 
 
 /**
- * Identifier token
+ * Variable token
  *
  */
-class Identifier final : public Token {
+class Variable final : public Token {
 public:
 
 	/// @brief constructor
 	///
-	/// @param[in] value the string value of this Identifier
+	/// @param[in] name the name of this Variable
 	///
 	/// @exceptsafe Shall not throw exceptions.
 	///
-	Identifier(const std::string &value) noexcept;
+	Variable(const std::string &name) noexcept;
 
 
 	/// @brief constructor from char
 	///
-	/// @param[in] value the char value of this Operator
+	/// @param[in] name the name of this Varaible
 	///
 	/// @overload
 	///
 	/// @exceptsafe Shall not throw exceptions.
 	///
-	Identifier(char value) noexcept;
+	Variable(char name) noexcept;
 
 
 	/// @brief default destructor
 	///
-	virtual ~Identifier() = default;
+	virtual ~Variable() = default;
 
 
 	/// @brief attach variable
@@ -184,9 +185,31 @@ public:
 	/// @brief default destructor
 	///
 	virtual ~Operator() = default;
+};
 
+
+class NumberLiteral final : public Token {
+public:
+
+	/// @brief constructor from integer value
+	/// @param[in] value number literal value
+	/// 
+	NumberLiteral(int value) noexcept;
+
+
+	/// @brief default destructor
+	///
+	virtual ~NumberLiteral() = default;
+
+
+	/// @brief get literal value
+	/// @returns value
+	/// 
+	inline int Value() const noexcept {
+		return value_;
+	}
 private:
-
+	int value_;
 };
 
 }				// namespace ecl

@@ -261,7 +261,7 @@ bool LogicParser::CheckIdentifiers(const std::string &left, const std::vector<To
 	}
 	// check right side identifier
 	if (right.size() == 1) {
-		if (right[0]->Type() != kSymbolType_Identifier) {
+		if (right[0]->Type() != kSymbolType_Variable) {
 			return false;
 		}
 		if (IsClock(right[0]->Value())) {
@@ -296,7 +296,7 @@ bool LogicParser::CheckIdentifiers(const std::string &left, const std::vector<To
 					std::cerr << "Error: Undefined operator " << id->Value() << std::endl;
 					return false;
 				}
-			} else if (id->Type() == kSymbolType_Identifier) {
+			} else if (id->Type() == kSymbolType_Variable) {
 				if (!IsFrontIo(id->Value())) {
 					std::cerr << "Error: Expected identifier in front io port form " << id->Value() << std::endl;
 					return false;
@@ -356,7 +356,7 @@ bool LogicParser::CheckIoConflict(const std::string &left, const std::vector<Tok
 	if (IsFrontIo(right[0]->Value())) {
 		// not the clock
 		for (size_t i = 0; i < right.size(); ++i) {
-			if (right[i]->Type() != kSymbolType_Identifier) {
+			if (right[i]->Type() != kSymbolType_Variable) {
 				continue;
 			}
 			if (right[i]->Value() == left) {
@@ -375,13 +375,13 @@ bool LogicParser::CheckIoConflict(const std::string &left, const std::vector<Tok
 	if (!IsClock(right[0]->Value())) {
 		// not the clock
 		if (IsScaler(left) && right.size() == 1) {
-			if (right[0]->Type() != kSymbolType_Identifier) {
+			if (right[0]->Type() != kSymbolType_Variable) {
 				std::cerr << "Error: The only token is not identifier " << right[0]->Value() << std::endl;
 				return false;
 			}
 		} else {
 			for (size_t i = 0; i < right.size(); ++i) {
-				if (right[i]->Type() != kSymbolType_Identifier) {
+				if (right[i]->Type() != kSymbolType_Variable) {
 					// ignore operators
 					continue;
 				}
@@ -399,7 +399,7 @@ bool LogicParser::CheckIoConflict(const std::string &left, const std::vector<Tok
 
 	// check lemo input conflict, i.e. an input port defined as both lemo and not
 	for (size_t i = 0; i < right.size(); ++i) {
-		if (right[i]->Type() != kSymbolType_Identifier) {
+		if (right[i]->Type() != kSymbolType_Variable) {
 			continue;
 		}
 		if (IsFrontIo(right[i]->Value())) {
@@ -578,7 +578,7 @@ size_t LogicParser::IdentifierIndex(const std::string &id) const noexcept {
 }
 
 
-int LogicParser::GenerateGates(StandardLogicNode *root, const std::vector<Identifier*> &id_list) noexcept {
+int LogicParser::GenerateGates(StandardLogicNode *root, const std::vector<Variable*> &id_list) noexcept {
 	// check the operator type first
 	if (root->OperatorType() == kOperatorNull) {
 		// null means only one identifier, just return io port index
@@ -654,7 +654,7 @@ int LogicParser::GenerateGates(StandardLogicNode *root, const std::vector<Identi
 
 
 
-int LogicParser::GenerateOrGate(std::bitset<kMaxIdentifier> id_flag, std::vector<Identifier*> id_list) noexcept {
+int LogicParser::GenerateOrGate(std::bitset<kMaxIdentifier> id_flag, std::vector<Variable*> id_list) noexcept {
 	std::bitset<kOrBits> or_bits;
 	for (size_t i = 0; i < kMaxIdentifier && or_bits.count() < id_flag.count(); ++i) {
 		if (id_flag.test(i)) {

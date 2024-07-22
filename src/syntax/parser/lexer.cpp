@@ -13,43 +13,58 @@
 namespace ecl {
 
 int Lexer::Analyse(const std::string &expr, std::vector<TokenPtr> &tokens) {
+	// value
 	std::string value = "";
+	// only digits
+	bool only_digits = true;
+	// identifier starts with digits
+	bool start_with_digits = false;
+
 	for (char c : expr) {
 
 		// ignore the blank character
-		if (c == ' ')
-			continue;
+		if (c == ' ') continue;
 
-
-		if (c == '(' || c == ')' || c == '&' || c == '|') {				// the needed operator
-
-			// value not empty, add the identifier to the token list
+		if (c == '(' || c == ')' || c == '&' || c == '|' || c == '=' || c == '/') {
+			// the needed operator
+			// value not empty, add the last identifier or literal to the token list
 			if (!value.empty()) {
-				tokens.emplace_back(std::make_shared<Identifier>(value));		// add to the token list
-				value = "";							// clear the value
+				// add to the token list
+				if (only_digits) {
+					tokens.push_back(
+						std::make_shared<NumberLiteral>(atoi(value.c_str()))
+					);
+				} else {
+					if (start_with_digits) return -1;
+					tokens.push_back(std::make_shared<Variable>(value));
+				}
+				// clear the value
+				value = "";
 			}
-			tokens.emplace_back(std::make_shared<Operator>(c));
+			// add operator
+			tokens.push_back(std::make_shared<Operator>(c));
+			only_digits = true;
+			start_with_digits = false;
 
 		} else if (c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
-
-			value += c;				// appdend the letter or '_'
-
+			// appdend the letter or '_'
+			value += c;				
+			only_digits = false;
 		} else if (c >= '0' && c <= '9') {
-
-			if (value.empty())
-				return -1;
-
+			if (value.empty()) start_with_digits = true;
 			value += c;
-
 		} else {
-
 			return -1;
-
 		}
 	}
 
 	if (!value.empty()) {
-		tokens.emplace_back(std::make_shared<Identifier>(value));
+		if (only_digits) {
+			tokens.push_back(std::make_shared<NumberLiteral>(atoi(value.c_str())));
+		} else {
+			if (start_with_digits) return -1;
+			tokens.push_back(std::make_shared<Variable>(value));
+		}
 	}
 
 	return 0;

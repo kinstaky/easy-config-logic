@@ -42,7 +42,7 @@ public:
 	///
 	/// @returns id list
 	///
-	inline std::vector<Identifier*> IdList() const noexcept {
+	inline std::vector<Variable*> IdList() const noexcept {
 		return id_list_;
 	}
 
@@ -103,7 +103,7 @@ private:
 
 
 	StandardLogicNode *tree_root_;
-	std::vector<Identifier*> id_list_;
+	std::vector<Variable*> id_list_;
 };
 
 
