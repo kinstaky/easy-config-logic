@@ -9,22 +9,64 @@
 #include "syntax/parser/lexer.h"
 #include "syntax/parser/syntax_parser.h"
 #include "syntax/logical_grammar.h"
+#include "syntax/logic_downscale_grammar.h"
 
-int main() {
+int main(int argc, char **argv) {
+	std::string language = "logical";
+	if (argc > 1) {
+		language = std::string(argv[1]);		
+		bool print_usage = false;
+		// check need help?
+		if (language == "-h") {
+			print_usage = true;
+		}
+		// check language options
+		if (language != "logical" && language != "logic-downscale" && language != "-h") {
+			std::cerr << "Error: Invalid grammar: " << language << "\n";
+			print_usage = true;
+		}
+		// print usage
+		if (print_usage) {
+			std::cout << "Usage: " << argv[0] << " [grammar]\n"
+				<< "  grammar        logical(default), logic-downscale.\n";
+			return 0;
+		}
+	}
+
+
 	std::string line;
 	std::getline(std::cin, line);
 
 	// lexer analyse
 	ecl::Lexer lex;
 	std::vector<ecl::TokenPtr> tokens;
-	lex.Analyse(line, tokens);
+	int result = lex.Analyse(line, tokens);
+	if (result) {
+		std::cerr << "Error: Lexer parse failed.\n";
+		return -1;
+	}
 
-	// syntax parser parse
-	ecl::LogicalGrammar grammar;
-	ecl::SLRSyntaxParser<bool> parser(&grammar);
-	parser.Parse(tokens);
+	if (language == "logic-downscale") {
+		// grammar
+		ecl::LogicDownscaleGrammar grammar;
+		// syntax parser parse
+		ecl::SLRSyntaxParser<int> parser(&grammar);
+		// parse tokens
+		parser.Parse(tokens);
+		// print tree
+		parser.PrintTree(parser.Root());		
+		std::cout << "Layers: " << parser.Root()->Eval() << "\n";
+	} else {
+		// grammar
+		ecl::LogicalGrammar grammar;
+		// syntax parser parse
+		ecl::SLRSyntaxParser<bool> parser(&grammar);
+		// parse tokens
+		parser.Parse(tokens);
+		// print tree
+		parser.PrintTree(parser.Root());
+	}
 
-	parser.PrintTree(parser.Root());
 
 	return 0;
 }

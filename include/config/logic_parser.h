@@ -108,7 +108,12 @@ public:
 	/// @param[out] divisor extracted divisor from divider, 0 for no dividers
 	/// @returns 0 on success, -1 on failure
 	///
-	int ExtendLeftLex(const std::string &expr, std::string &left, std::vector<TokenPtr> &tokens, size_t &divisor) const noexcept;
+	int ExtendLeftLex(
+		const std::string &expr,
+		std::string &left,
+		std::vector<TokenPtr> &tokens,
+		size_t &divisor
+	) const noexcept;
 
 
 	/// @brief extend the lexer to lex the expression contians operator '/'
@@ -121,7 +126,11 @@ public:
 	/// @param[out] divisor extracted divisor, 0 for no dividers
 	/// @returns 0 on success, -1 on failure
 	///
-	int ExtendDividerLex(const std::string &expr, std::vector<TokenPtr> &tokens, size_t &divisor) const noexcept;
+	int ExtendDividerLex(
+		const std::string &expr,
+		std::vector<TokenPtr> &tokens,
+		size_t &divisor
+	) const noexcept;
 
 
 

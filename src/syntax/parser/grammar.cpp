@@ -102,7 +102,7 @@ int Grammar<VarType>::GenerateCollections(int look_ahead) noexcept {
 			}
 
 
-			// and all the other items (except for the first itme) from
+			// and all the other items (except for the first item) from
 			// the production are core items
 			while ((item = production->GenerateItems())) {
 				core_items_.push_back(item);

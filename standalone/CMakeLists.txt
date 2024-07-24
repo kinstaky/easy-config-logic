@@ -13,7 +13,7 @@ target_compile_options(
 )
 target_link_libraries(
 	syntax_tree
-	PRIVATE lexer syntax_parser logical_grammar
+	PRIVATE lexer syntax_parser logical_grammar logic_downscale_grammar
 )
 
 

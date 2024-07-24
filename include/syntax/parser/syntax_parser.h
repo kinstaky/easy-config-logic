@@ -172,8 +172,8 @@ public:
 	///
 	/// @exceptsafe Shall not throw exceptions.
 	///
-	inline std::vector<Variable*> IdentifierList() const noexcept {
-		return identifier_list_;
+	inline std::vector<Variable*> VariableList() const noexcept {
+		return variable_list_;
 	}
 
 
@@ -262,7 +262,8 @@ protected:
 	Grammar<VarType> *grammar_;
 	Production<VarType> *syntax_tree_root_;
 	std::vector<Symbol*> symbol_list_; 
-	std::vector<Variable*> identifier_list_;
+	std::vector<Variable*> variable_list_;
+	std::vector<NumberLiteral*> literal_list_;
 };
 
 

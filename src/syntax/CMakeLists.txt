@@ -26,6 +26,30 @@ target_link_libraries(
 	PUBLIC grammar
 )
 
+# logic-downscale grammar library
+add_library(
+	logic_downscale_grammar STATIC
+	logic_downscale_grammar.cpp "${SYNTAX_INCLUDE_DIR}/logic_downscale_grammar.h"
+)
+target_include_directories(
+	logic_downscale_grammar
+	PUBLIC "${PROJECT_INCLUDE_DIR}"
+)
+target_compile_features(
+	logic_downscale_grammar
+	PRIVATE cxx_std_17
+)
+target_compile_options(
+	logic_downscale_grammar
+	PRIVATE -Werror -Wall -Wextra
+)
+target_link_libraries(
+	logic_downscale_grammar
+	PUBLIC token
+	PUBLIC production
+	PUBLIC grammar
+)
+
 # arithmetic grammar library
 add_library(
 	arithmetic_grammar STATIC

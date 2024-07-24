@@ -2,14 +2,11 @@
 #include <string>
 #include <vector>
 
-
-
 #include "standardize/standard_logic_node.h"
 #include "standardize/standard_logic_tree.h"
 #include "syntax/parser/lexer.h"
 #include "syntax/parser/syntax_parser.h"
 #include "syntax/logical_grammar.h"
-
 
 int main() {
 	std::string line;
@@ -27,4 +24,6 @@ int main() {
 	ecl::StandardLogicTree tree(parser.Root());
 
 	std::cout << tree << std::endl;
+
+	return 0;
 }
