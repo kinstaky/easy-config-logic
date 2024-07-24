@@ -14,9 +14,13 @@ using namespace ecl;
 const std::string kErrorInputExpression[] = {
 	"0ac",				// ERROR: variable start with digit
 	"#abc",				// ERROR: varaible start with invalid character '#'
-	"abc & @d"			// ERROR: variable start with invalid character '@'
+	"abc & @d",			// ERROR: variable start with invalid character '@'
+	"_abc"				// ERROR: variable start with '_'
 };
-
+// parse result
+const int kErrorInputResult[] = {
+	-2, -1, -1, -3
+};
 
 
 // appropriate inputs
@@ -107,7 +111,7 @@ TEST(LexerTest, HandleErrorInput) {
 		std::vector<TokenPtr> tokens;
 		int result = lexer.Analyse(expr, tokens);
 		
-		EXPECT_EQ(result, -1)
+		EXPECT_EQ(result, kErrorInputResult[index])
 			<< "Lexical parse cannot handle the input error: #" << index
 			<< ", result " << result << ".";
 		

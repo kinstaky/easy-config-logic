@@ -35,7 +35,7 @@ int Lexer::Analyse(const std::string &expr, std::vector<TokenPtr> &tokens) {
 						std::make_shared<NumberLiteral>(atoi(value.c_str()))
 					);
 				} else {
-					if (start_with_digits) return -1;
+					if (start_with_digits) return -2;
 					tokens.push_back(std::make_shared<Variable>(value));
 				}
 				// clear the value
@@ -45,8 +45,10 @@ int Lexer::Analyse(const std::string &expr, std::vector<TokenPtr> &tokens) {
 			tokens.push_back(std::make_shared<Operator>(c));
 			only_digits = true;
 			start_with_digits = false;
-
-		} else if (c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+		} else if (c == '_') {
+			if (value.empty()) return -3;
+			value += c;
+		} else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
 			// appdend the letter or '_'
 			value += c;				
 			only_digits = false;
@@ -62,7 +64,7 @@ int Lexer::Analyse(const std::string &expr, std::vector<TokenPtr> &tokens) {
 		if (only_digits) {
 			tokens.push_back(std::make_shared<NumberLiteral>(atoi(value.c_str())));
 		} else {
-			if (start_with_digits) return -1;
+			if (start_with_digits) return -2;
 			tokens.push_back(std::make_shared<Variable>(value));
 		}
 	}
