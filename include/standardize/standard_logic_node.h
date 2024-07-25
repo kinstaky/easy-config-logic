@@ -24,8 +24,6 @@ constexpr int kOperatorAnd = 2;
 class StandardLogicNode {
 public:
 
-
-
 	/// @brief Construct a new Standard Logic Node object
 	///
 	/// @param[in] parent pointer to the parent
@@ -34,13 +32,9 @@ public:
 	StandardLogicNode(StandardLogicNode *parent, int type) noexcept;
 
 
-
-
-
 	/// @brief Destroy the Standard Logic Node object
 	///
 	~StandardLogicNode() = default;
-
 
 
 	/// @brief compare two nodes
@@ -305,6 +299,28 @@ public:
 	///
 	void PrintTree(std::vector<Variable*> id_list, std::string prefix = "") const noexcept;
 
+
+	//-------------------------------------------------------------------------
+	// 							methods for standardize
+	//-------------------------------------------------------------------------	
+
+	/// @brief standardize the tree and convert it into two layers
+	/// 	with the first layer is '&' and the second layer is '|'
+	/// @returns 0 on success, -1 on failure
+	///
+	int Standardize() noexcept;
+
+
+	/// @brief reduce the layers in tree
+	/// @returns 0 on success, -1 on failure
+	///
+	int ReduceLayers() noexcept;
+
+
+	/// @brief exchange the order of operation of two layers structure
+	/// @returns pointer to new node
+	///
+	StandardLogicNode* ExchangeOrder() noexcept;
 
 
 private:

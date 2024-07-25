@@ -94,7 +94,7 @@ bool StandardLogicNode::BranchNecessary(size_t index, StandardLogicNode *node) c
 		return false;
 	}
 	return true;
-} 
+}
 
 
 
@@ -152,7 +152,7 @@ void StandardLogicNode::PrintTree(std::vector<Variable*> id_list, std::string pr
 
 	// print the operator string first
 	std::cout << prefix << OperatorString() << std::endl;
-	
+
 	std::string children_prefix = "";
 	for (size_t i = 0; i < prefix.length(); ++i) {
 		if (prefix[i] == ' ') {
@@ -198,4 +198,219 @@ void StandardLogicNode::PrintTree(std::vector<Variable*> id_list, std::string pr
 }
 
 
-}				// namespace ecl
+int StandardLogicNode::Standardize() noexcept {
+	// reduce layers, and get the tree with only 1 or 2 layers
+	if (ReduceLayers()) return -1;
+
+	// exchange the only 2 layers if the first layer is '|' 
+	if (Depth() == 2 && op_type_ == kOperatorOr) {
+		StandardLogicNode *new_root = ExchangeOrder();
+		if (!new_root) return -1;
+		FreeChildren();
+		branches_.clear();
+		op_type_ = new_root->OperatorType();
+		leaves_ = new_root->Leaves();
+		for (size_t i = 0; i < new_root->BranchSize(); ++i) {
+			if (AddBranch(new_root->Branch(i))) {
+				new_root->Branch(i)->FreeChildren();
+				delete new_root->Branch(i);
+			}
+		}
+		delete new_root;
+	}
+
+	return 0;
+}
+
+
+int StandardLogicNode::ReduceLayers() noexcept {
+	// no need to reduce layers if there is only 1 or 2 layers
+	if (Depth() <= 2) return 0;
+
+	// depth over 3, reduce branches' layers first
+	for (size_t i = 0; i < branches_.size(); ++i) {
+		if (branches_[i]->ReduceLayers()) return -1;
+	}
+
+	// Depth equals to 3, reduce the layers from 3 to 2 in two steps: first
+	// step is exchanging the operation order of the second and the third
+	// layers; the second step is to delete the second layers and regard the
+	// nodes in the third layers as the first layers' children.
+	// For example, expression ((A & B) | (C & D)) & (E | F) is 3 layers.
+	// After the first step, it becomes ((A|C) & (B|C) & (A|D) & (B|D)) & (E|F).
+	// After the second step, it becomes (E|F) & (A|C) & (B|C) & (A|D) & (B|D).
+	bool change = true;
+	while (change) {
+		change = false;
+		for (size_t i = 0; i < branches_.size(); ++i) {
+			if (branches_[i]->Depth() == 2) {
+				// first step
+				StandardLogicNode *new_branch = branches_[i]->ExchangeOrder();
+
+				// free old branch
+				branches_[i]->FreeChildren();
+				delete branches_[i];
+				DeleteBranch(i);
+
+				// second step
+				// suppose that the new branch only contains depth one branches
+				for (size_t j = 0; j < new_branch->BranchSize(); ++j) {
+					if (AddBranch(new_branch->Branch(j))) {
+						new_branch->Branch(j)->FreeChildren();
+						delete new_branch->Branch(j);
+						return -1;
+					}
+					new_branch->Branch(j)->SetParent(this);
+				}
+				// free new branch
+				delete new_branch;
+				change = true;
+				break;
+			}
+		}
+	}
+	
+	return 0;
+
+}
+
+
+StandardLogicNode* StandardLogicNode::ExchangeOrder() noexcept {
+	size_t id_size = kMaxIdentifier;
+
+	// suppose that this node's depth is 2, and it has at least one branch
+	std::bitset<kMaxIdentifier> public_id = branches_[0]->Leaves();
+	std::bitset<kMaxIdentifier> new_leaves = 0;
+	StandardLogicNode *prev_node = new StandardLogicNode(nullptr, branches_[0]->OperatorType());
+	
+	// loop node's branches
+	for (size_t b = 1; b < branches_.size(); ++b) {
+		// calculate the new public identifiers
+		std::bitset<kMaxIdentifier> new_public_id = public_id & branches_[b]->Leaves();
+		// residual old public identifiers
+		prev_node->AddLeaves(public_id ^ new_public_id);
+		// residual new leaves
+		new_leaves = branches_[b]->Leaves() ^ new_public_id;
+
+
+		// generate new node
+		StandardLogicNode *temp_node = new StandardLogicNode(parent_, branches_[0]->OperatorType());
+		
+		// loop the new leaves
+		for (
+			size_t i = 0, loop_leaves = 0;
+			i < id_size && loop_leaves < new_leaves.count();
+			++i
+		) {
+			if (!new_leaves.test(i)) continue;
+			// loop previous node branches
+			for (size_t j = 0; j < prev_node->BranchSize(); ++j) {
+				// generate new branch
+				StandardLogicNode *new_branch =
+					new StandardLogicNode(temp_node, op_type_);
+				new_branch->AddLeaves(prev_node->Branch(j)->Leaves());
+				new_branch->AddLeaf(i);
+				temp_node->AddBranch(new_branch);
+			}
+			// loop previous node leaves
+			for (
+				size_t j = 0, loop_prev_leaves = 0;
+				j < id_size && loop_prev_leaves < prev_node->Leaves().count();
+				++j
+			) {
+				if (!prev_node->Leaves().test(j)) continue;
+				// generate new branch
+				StandardLogicNode *new_branch =
+					new StandardLogicNode(temp_node, op_type_);
+				new_branch->AddLeaf(i);
+				new_branch->AddLeaf(j);
+				temp_node->AddBranch(new_branch);
+				++loop_prev_leaves;
+			} 
+			
+			++loop_leaves;
+		}
+
+		// free previous node
+		prev_node->FreeChildren();
+		delete prev_node;
+		// upate
+		public_id = new_public_id;
+		prev_node = temp_node;
+
+	}
+
+	// loop node's leaves
+	for (
+		size_t i = 0, loop_node_leaves = 0;
+		i < id_size && loop_node_leaves < leaves_.count();
+		++i
+	) {
+		if (!leaves_.test(i)) continue;
+
+		// calculate the new public identifiers
+		std::bitset<kMaxIdentifier> new_public_id = 0;
+		if (!public_id.test(i)) {
+			// residual old public identifiers
+			prev_node->AddLeaves(public_id);
+			
+			StandardLogicNode *temp_node =
+				new StandardLogicNode(parent_, branches_[0]->OperatorType());
+
+			// loop the previous node branches
+			for (size_t j = 0; j < prev_node->BranchSize(); ++j) {
+				// generate new branches
+				StandardLogicNode *new_branch =
+					new StandardLogicNode(temp_node, op_type_);
+				new_branch->AddLeaves(prev_node->Branch(j)->Leaves());
+				new_branch->AddLeaf(i);
+				temp_node->AddBranch(new_branch);
+			}
+			// loop previous node leaves
+			for (
+				size_t j = 0, loop_prev_leaves = 0;
+				j < id_size && loop_prev_leaves < prev_node->Leaves().count();
+				++j
+			) {
+				if (!prev_node->Leaves().test(j)) {
+					continue;
+				}
+				// generate new branch
+				StandardLogicNode *new_branch =
+					new StandardLogicNode(temp_node, op_type_);
+				new_branch->AddLeaf(i);
+				new_branch->AddLeaf(j);
+				temp_node->AddBranch(new_branch);
+				++loop_prev_leaves;
+			}
+
+			// free previous node
+			prev_node->FreeChildren();
+			delete prev_node;
+			// update
+			public_id = new_public_id;
+			prev_node = temp_node;
+		} else {
+			// otherwise, new node should be nothing and has the only public identifier
+			new_public_id.set(i);
+			// free previous node
+			prev_node->FreeChildren();
+			delete prev_node;
+			// update
+			public_id = new_public_id;
+			prev_node = new StandardLogicNode(
+				parent_, branches_[0]->OperatorType()
+			);
+		}
+
+		
+		++loop_node_leaves;
+	}
+
+	// add public identifiers as leaves
+	prev_node->AddLeaves(public_id);
+	return prev_node;
+}
+
+
+}	// namespace ecl
