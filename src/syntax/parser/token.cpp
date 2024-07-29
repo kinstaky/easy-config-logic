@@ -20,8 +20,8 @@ Symbol::Symbol(int type) noexcept
 // 									Token
 //-----------------------------------------------------------------------------
 
-Token::Token(int type, const std::string &value) noexcept
-: Symbol(type), value_(value) {
+Token::Token(int type, const std::string &name) noexcept
+: Symbol(type), name_(name) {
 }
 
 
@@ -56,13 +56,13 @@ void* Variable::GetAttached() const noexcept {
 // 										Operator
 //-----------------------------------------------------------------------------
 
-Operator::Operator(const std::string &value) noexcept
-:Token(kSymbolType_Operator, value) {
+Operator::Operator(const std::string &name) noexcept
+:Token(kSymbolType_Operator, name) {
 }
 
 
-Operator::Operator(char value) noexcept
-:Operator(std::string(1, value)) {
+Operator::Operator(char name) noexcept
+:Operator(std::string(1, name)) {
 }
 
 

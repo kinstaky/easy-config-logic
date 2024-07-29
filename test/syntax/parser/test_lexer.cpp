@@ -144,10 +144,10 @@ TEST(LexerTest, Analyse) {
 		for (auto &t : tokens) {
 
 			// chekc token value
-			EXPECT_EQ(t->Value(), kOutputValue[expression_index][index])
+			EXPECT_EQ(t->Name(), kOutputValue[expression_index][index])
 				<< "Lexical parser generate token error: expression #"
 				<< expression_index << "token #" << index
-				<< ". Get token " << t->Value() << " but need "
+				<< ". Get token " << t->Name() << " but need "
 				<< kOutputValue[expression_index][index] << ".";
 
 

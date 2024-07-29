@@ -57,7 +57,7 @@ TEST(StandardLogicTreeTest, CompareValue) {
 			<< "Error: lexer analyse " << i;
 		ASSERT_EQ(parser.Parse(tokens), 0)
 			<< "Error: parser parse " << i;
-		
+
 
 		StandardLogicTree tree(parser.Root());
 
@@ -90,7 +90,7 @@ TEST(StandardLogicTreeTest, OutputString) {
 			<< "Error: lexer analyse " << i;
 		ASSERT_EQ(parser.Parse(tokens), 0)
 			<< "Error: parser parse " << i;
-		
+
 
 		StandardLogicTree tree(parser.Root());
 
@@ -118,7 +118,7 @@ TEST(StandardLogicTreeTest, Time) {
 		std::vector<TokenPtr> tokens;
 		lexer.Analyse(kExpression[i], tokens);
 		parser.Parse(tokens);
-		
+
 
 		auto start = std::chrono::high_resolution_clock::now();
 		auto stop = start;

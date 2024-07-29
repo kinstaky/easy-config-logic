@@ -173,7 +173,7 @@ bool SymbolInFirst(
 
 		// check symbols except identifier
 		for (size_t i = 0; i < type.size(); ++i) {
-			if (type[i] == symbol->Type() && first[i] == ((Token*)symbol)->Value()) {
+			if (type[i] == symbol->Type() && first[i] == ((Token*)symbol)->Name()) {
 				return true;
 			}
 		}
@@ -210,7 +210,7 @@ bool SymbolInFollow(
 				case kSymbolType_Variable:
 					return true;
 				case kSymbolType_Operator:
-					if (((Operator*)symbol)->Value() == follow[i]) {
+					if (((Operator*)symbol)->Name() == follow[i]) {
 						return true;
 					}
 					break;

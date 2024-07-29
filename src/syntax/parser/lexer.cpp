@@ -50,7 +50,7 @@ int Lexer::Analyse(const std::string &expr, std::vector<TokenPtr> &tokens) {
 			value += c;
 		} else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
 			// appdend the letter or '_'
-			value += c;				
+			value += c;
 			only_digits = false;
 		} else if (c >= '0' && c <= '9') {
 			if (value.empty()) start_with_digits = true;

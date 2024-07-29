@@ -73,7 +73,7 @@ int LogicParser::Parse(const std::string &expr) noexcept {
 	if (IsFrontIo(left_side_str)) {
 		front_outputs_.push_back(OutputInfo{left_index, size_t(generate_index)});
 		front_out_use_.set(left_index);
-		if (!IsClock(tokens[0]->Value())) {
+		if (!IsClock(tokens[0]->Name())) {
 			front_logic_output_.set(left_index);
 		}
 		if (IsLemoIo(left_side_str)) {
@@ -201,11 +201,11 @@ int LogicParser::ExtendDividerParse(const std::string &left, const std::vector<T
 		return -1;
 	}
 
-	if (right.size() == 1 && !IsClock(right[0]->Value())) {
-		size_t id_index = IdentifierIndex(right[0]->Value());
-		if (IsFrontIo(right[0]->Value())) {
+	if (right.size() == 1 && !IsClock(right[0]->Name())) {
+		size_t id_index = IdentifierIndex(right[0]->Name());
+		if (IsFrontIo(right[0]->Name())) {
 			front_in_use_.set(id_index);
-			if (IsLemoIo(right[0]->Value())) {
+			if (IsLemoIo(right[0]->Name())) {
 				front_use_lemo_.set(id_index);
 			}
 		}
@@ -217,7 +217,7 @@ int LogicParser::ExtendDividerParse(const std::string &left, const std::vector<T
 	LogicalGrammar grammar;
 	SLRSyntaxParser<bool> parser(&grammar);
 
-	if (IsDivider(right[0]->Value())) {
+	if (IsDivider(right[0]->Name())) {
 		// contains divider
 		std::vector<TokenPtr> extracted_tokens(right.begin()+2, right.end());
 		if (parser.Parse(extracted_tokens) != 0) {
@@ -241,7 +241,7 @@ int LogicParser::ExtendDividerParse(const std::string &left, const std::vector<T
 		return -1;
 	}
 
-	if (IsDivider(right[0]->Value())) {
+	if (IsDivider(right[0]->Name())) {
 		std::vector<TokenPtr> divider_tokens(right.begin(), right.begin()+2);
 		generate_index = GenerateDividerGate(divider_tokens, size_t(generate_index));
 		if (generate_index < 0) {
@@ -264,25 +264,25 @@ bool LogicParser::CheckIdentifiers(const std::string &left, const std::vector<To
 		if (right[0]->Type() != kSymbolType_Variable) {
 			return false;
 		}
-		if (IsClock(right[0]->Value())) {
+		if (IsClock(right[0]->Name())) {
 			if (!IsFrontIo(left)) {
 				// if right is clock, left must be front io port
 				return false;
 			}
-		} else if (IsDivider(right[0]->Value())) {
+		} else if (IsDivider(right[0]->Name())) {
 			if (IsDivider(left)) {
 				// if right is divider, left can be front io port, back or
 				// scaler, but can't be divider
 				return false;
 			}
-		} else if (!IsFrontIo(right[0]->Value())) {
+		} else if (!IsFrontIo(right[0]->Name())) {
 			return false;
 		}
 	} else {
 		auto id_start = right.begin();
-		if (IsDivider(right[0]->Value())) {
-			if (right[1]->Value() != "|" && right[1]->Value() != "&") {
-				std::cerr << "Error: Expected operator '|' or '&' after divider identifier " << right[1]->Value() << std::endl;
+		if (IsDivider(right[0]->Name())) {
+			if (right[1]->Name() != "|" && right[1]->Name() != "&") {
+				std::cerr << "Error: Expected operator '|' or '&' after divider identifier " << right[1]->Name() << std::endl;
 				return false;
 			}
 			std::advance(id_start, 2);
@@ -290,15 +290,15 @@ bool LogicParser::CheckIdentifiers(const std::string &left, const std::vector<To
 		for (auto it = id_start; it != right.end(); ++it) {
 			auto &id = *it;
 			if (id->Type() == kSymbolType_Operator) {
-				if (id->Value() != "|" && id->Value() != "&"
-					&& id->Value() != "(" && id->Value() != ")"
+				if (id->Name() != "|" && id->Name() != "&"
+					&& id->Name() != "(" && id->Name() != ")"
 				){
-					std::cerr << "Error: Undefined operator " << id->Value() << std::endl;
+					std::cerr << "Error: Undefined operator " << id->Name() << std::endl;
 					return false;
 				}
 			} else if (id->Type() == kSymbolType_Variable) {
-				if (!IsFrontIo(id->Value())) {
-					std::cerr << "Error: Expected identifier in front io port form " << id->Value() << std::endl;
+				if (!IsFrontIo(id->Name())) {
+					std::cerr << "Error: Expected identifier in front io port form " << id->Name() << std::endl;
 					return false;
 				}
 			} else {
@@ -345,21 +345,21 @@ bool LogicParser::CheckIoConflict(const std::string &left, const std::vector<Tok
 	}
 
 	// check whether the using divider has been defined before
-	if (IsDivider(right[0]->Value()) && !divider_use_.test(IdentifierIndex(right[0]->Value())-kDividersOffset)) {
-		std::cerr << "Error: Use of undefined divider " << right[0]->Value() << std::endl;
+	if (IsDivider(right[0]->Name()) && !divider_use_.test(IdentifierIndex(right[0]->Name())-kDividersOffset)) {
+		std::cerr << "Error: Use of undefined divider " << right[0]->Name() << std::endl;
 		return false;
 	}
 
 
 	// check input output conflict, i.e. a port is both an input and output port
 	// check itself consistent, expect no port both in left and right
-	if (IsFrontIo(right[0]->Value())) {
+	if (IsFrontIo(right[0]->Name())) {
 		// not the clock
 		for (size_t i = 0; i < right.size(); ++i) {
 			if (right[i]->Type() != kSymbolType_Variable) {
 				continue;
 			}
-			if (right[i]->Value() == left) {
+			if (right[i]->Name() == left) {
 				std::cerr << "Error: Input and output in the same port " << left << std::endl;
 				return false;
 			}
@@ -372,11 +372,11 @@ bool LogicParser::CheckIoConflict(const std::string &left, const std::vector<Tok
 		return false;
 	}
 	// check this inputs with previous outputs
-	if (!IsClock(right[0]->Value())) {
+	if (!IsClock(right[0]->Name())) {
 		// not the clock
 		if (IsScaler(left) && right.size() == 1) {
 			if (right[0]->Type() != kSymbolType_Variable) {
-				std::cerr << "Error: The only token is not identifier " << right[0]->Value() << std::endl;
+				std::cerr << "Error: The only token is not identifier " << right[0]->Name() << std::endl;
 				return false;
 			}
 		} else {
@@ -385,12 +385,12 @@ bool LogicParser::CheckIoConflict(const std::string &left, const std::vector<Tok
 					// ignore operators
 					continue;
 				}
-				if (!IsFrontIo(right[i]->Value())) {
+				if (!IsFrontIo(right[i]->Name())) {
 					// ignore dividers
 					continue;
 				}
-				if (front_out_use_.test(IdentifierIndex(right[i]->Value()))) {
-					std::cerr << "Error: Input port defined as output port before " << right[i]->Value() << std::endl;
+				if (front_out_use_.test(IdentifierIndex(right[i]->Name()))) {
+					std::cerr << "Error: Input port defined as output port before " << right[i]->Name() << std::endl;
 					return false;
 				}
 			}
@@ -402,18 +402,18 @@ bool LogicParser::CheckIoConflict(const std::string &left, const std::vector<Tok
 		if (right[i]->Type() != kSymbolType_Variable) {
 			continue;
 		}
-		if (IsFrontIo(right[i]->Value())) {
-			if (!front_in_use_.test(IdentifierIndex(right[i]->Value()))) {
+		if (IsFrontIo(right[i]->Name())) {
+			if (!front_in_use_.test(IdentifierIndex(right[i]->Name()))) {
 				continue;
 			}
-			if (front_use_lemo_.test(IdentifierIndex(right[i]->Value()))) {
-				if (!IsLemoIo(right[i]->Value())) {
-					std::cerr << "Error: Input port was defined as lemo input before " << right[i]->Value() << std::endl;
+			if (front_use_lemo_.test(IdentifierIndex(right[i]->Name()))) {
+				if (!IsLemoIo(right[i]->Name())) {
+					std::cerr << "Error: Input port was defined as lemo input before " << right[i]->Name() << std::endl;
 					return false;
 				}
 			} else {
-				if (IsLemoIo(right[i]->Value())) {
-					std::cerr << "Error: Input port wasn't defined as lemo input before " << right[i]->Value() << std::endl;
+				if (IsLemoIo(right[i]->Name())) {
+					std::cerr << "Error: Input port wasn't defined as lemo input before " << right[i]->Name() << std::endl;
 					return false;
 				}
 			}
@@ -585,18 +585,18 @@ int LogicParser::GenerateGates(StandardLogicNode *root, const std::vector<Variab
 		for (size_t i = 0; i < kMaxIdentifier; ++i) {
 			if (root->Leaves().test(i)) {
 				// found the identifier
-				if (IsFrontIo(id_list[i]->Value())) {
+				if (IsFrontIo(id_list[i]->Name())) {
 					// is front io port, add it to input used and return
-					size_t id_index = IdentifierIndex(id_list[i]->Value());
+					size_t id_index = IdentifierIndex(id_list[i]->Name());
 					front_in_use_.set(id_index);
-					if (IsLemoIo(id_list[i]->Value())) {
+					if (IsLemoIo(id_list[i]->Name())) {
 						front_use_lemo_.set(id_index);
 					}
 					return id_index;
 
-				} else if (IsClock(id_list[i]->Value())) {
+				} else if (IsClock(id_list[i]->Name())) {
 					// is clock, generate a clock
-					return GenerateClock(id_list[i]->Value());
+					return GenerateClock(id_list[i]->Name());
 				}
 			}
 		}
@@ -618,10 +618,10 @@ int LogicParser::GenerateGates(StandardLogicNode *root, const std::vector<Variab
 		for (size_t i = 0; i < kMaxIdentifier && and_bits.count() < and_leaves.count(); ++i) {
 			if (and_leaves.test(i)) {
 				// add this identifier to input used and add to the and-gate
-				size_t id_index = IdentifierIndex(id_list[i]->Value());
+				size_t id_index = IdentifierIndex(id_list[i]->Name());
 				front_in_use_.set(id_index);
 				and_bits.set(id_index);
-				if (IsLemoIo(id_list[i]->Value())) {
+				if (IsLemoIo(id_list[i]->Name())) {
 					front_use_lemo_.set(id_index);
 				}
 			}
@@ -659,10 +659,10 @@ int LogicParser::GenerateOrGate(std::bitset<kMaxIdentifier> id_flag, std::vector
 	for (size_t i = 0; i < kMaxIdentifier && or_bits.count() < id_flag.count(); ++i) {
 		if (id_flag.test(i)) {
 			// set the identifier in front input use and add to or-gate
-			size_t id_index = IdentifierIndex(id_list[i]->Value());
+			size_t id_index = IdentifierIndex(id_list[i]->Name());
 			front_in_use_.set(id_index);
 			or_bits.set(id_index);
-			if (IsLemoIo(id_list[i]->Value())) {
+			if (IsLemoIo(id_list[i]->Name())) {
 				front_use_lemo_.set(id_index);
 			}
 		}
@@ -724,12 +724,12 @@ size_t LogicParser::ParseFrequency(const std::string &clock) const noexcept {
 
 
 int LogicParser::GenerateDividerGate(const std::vector<TokenPtr> &tokens, size_t other_source) noexcept {
-	size_t divider_index = IdentifierIndex(tokens[0]->Value()) - kDividersOffset;
+	size_t divider_index = IdentifierIndex(tokens[0]->Name()) - kDividersOffset;
 	int op_type = 0;
-	op_type = tokens[1]->Value() == "|" ? kOperatorOr : op_type;
-	op_type = tokens[1]->Value() == "&" ? kOperatorAnd : op_type;
+	op_type = tokens[1]->Name() == "|" ? kOperatorOr : op_type;
+	op_type = tokens[1]->Name() == "&" ? kOperatorAnd : op_type;
 	if (op_type == 0) {
-		std::cerr << "Error: Invalid operator " << tokens[1]->Value() << std::endl;
+		std::cerr << "Error: Invalid operator " << tokens[1]->Name() << std::endl;
 		return -1;
 	}
 

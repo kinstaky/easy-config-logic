@@ -793,7 +793,9 @@ TEST(LogicParserTest, GenerateDividerGates) {
 
 		std::vector<TokenPtr> divider_tokens(tokens.begin(), tokens.begin()+2);
 
-		size_t gate_index = parser.GenerateDividerGate(divider_tokens, parser.IdentifierIndex(tokens[2]->Value()));
+		size_t gate_index = parser.GenerateDividerGate(
+			divider_tokens, parser.IdentifierIndex(tokens[2]->Name())
+		);
 
 		EXPECT_GE(gate_index, kDividerGatesOffset + 0)
 			<< "Error: Generate divider gate failed " << i;

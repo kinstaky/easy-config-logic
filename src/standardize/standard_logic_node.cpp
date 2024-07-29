@@ -131,9 +131,9 @@ void StandardLogicNode::PrintString(std::ostream &os, std::vector<Variable*> id_
 		for (size_t i = 0; i < id_list.size(); ++i) {
 			if (leaves_.test(i)) {
 				if (!is_first) {
-					os << op << id_list[i]->Value();
+					os << op << id_list[i]->Name();
 				} else {
-					os << id_list[i]->Value();
+					os << id_list[i]->Name();
 					is_first = false;
 				}
 			}
@@ -187,10 +187,12 @@ void StandardLogicNode::PrintTree(std::vector<Variable*> id_list, std::string pr
 	for (size_t i = 0; i < id_list.size(); ++i) {
 		if (leaves_.test(i)) {
 			if (printed_leaves == leaves_.count()-1) {
-				std::cout << children_prefix << kBoxUpRight << kBoxHorizental << id_list[i]->Value() << std::endl;
+				std::cout << children_prefix << kBoxUpRight << kBoxHorizental
+					<< id_list[i]->Name() << std::endl;
 				break;
 			} else {
-				std::cout << children_prefix << kBoxVerticalRight << kBoxHorizental << id_list[i]->Value() << std::endl;
+				std::cout << children_prefix << kBoxVerticalRight << kBoxHorizental
+					<< id_list[i]->Name() << std::endl;
 				++printed_leaves;
 			}
 		}
@@ -202,7 +204,7 @@ int StandardLogicNode::Standardize() noexcept {
 	// reduce layers, and get the tree with only 1 or 2 layers
 	if (ReduceLayers()) return -1;
 
-	// exchange the only 2 layers if the first layer is '|' 
+	// exchange the only 2 layers if the first layer is '|'
 	if (Depth() == 2 && op_type_ == kOperatorOr) {
 		StandardLogicNode *new_root = ExchangeOrder();
 		if (!new_root) return -1;
@@ -269,7 +271,7 @@ int StandardLogicNode::ReduceLayers() noexcept {
 			}
 		}
 	}
-	
+
 	return 0;
 
 }
@@ -282,7 +284,7 @@ StandardLogicNode* StandardLogicNode::ExchangeOrder() noexcept {
 	std::bitset<kMaxIdentifier> public_id = branches_[0]->Leaves();
 	std::bitset<kMaxIdentifier> new_leaves = 0;
 	StandardLogicNode *prev_node = new StandardLogicNode(nullptr, branches_[0]->OperatorType());
-	
+
 	// loop node's branches
 	for (size_t b = 1; b < branches_.size(); ++b) {
 		// calculate the new public identifiers
@@ -295,7 +297,7 @@ StandardLogicNode* StandardLogicNode::ExchangeOrder() noexcept {
 
 		// generate new node
 		StandardLogicNode *temp_node = new StandardLogicNode(parent_, branches_[0]->OperatorType());
-		
+
 		// loop the new leaves
 		for (
 			size_t i = 0, loop_leaves = 0;
@@ -326,8 +328,8 @@ StandardLogicNode* StandardLogicNode::ExchangeOrder() noexcept {
 				new_branch->AddLeaf(j);
 				temp_node->AddBranch(new_branch);
 				++loop_prev_leaves;
-			} 
-			
+			}
+
 			++loop_leaves;
 		}
 
@@ -353,7 +355,7 @@ StandardLogicNode* StandardLogicNode::ExchangeOrder() noexcept {
 		if (!public_id.test(i)) {
 			// residual old public identifiers
 			prev_node->AddLeaves(public_id);
-			
+
 			StandardLogicNode *temp_node =
 				new StandardLogicNode(parent_, branches_[0]->OperatorType());
 
@@ -403,7 +405,7 @@ StandardLogicNode* StandardLogicNode::ExchangeOrder() noexcept {
 			);
 		}
 
-		
+
 		++loop_node_leaves;
 	}
 

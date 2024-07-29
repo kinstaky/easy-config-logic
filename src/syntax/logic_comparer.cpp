@@ -77,7 +77,7 @@ int LogicComparer::ParseE(Production<bool> *production, struct Node* node, int l
 
 		// config the node
 		Operator *op = (Operator*)production->Child(1);
-		node->op_type = op->Value() == "|" ? kOperatorOr : kOperatorAnd;
+		node->op_type = op->Name() == "|" ? kOperatorOr : kOperatorAnd;
 		node->size = 2;
 		node->id = nullptr;
 		node->cache_value = false;
@@ -109,7 +109,7 @@ int LogicComparer::ParseE(Production<bool> *production, struct Node* node, int l
 		if (ParseT((Production<bool>*)production->Child(0), node->children[0], layer+1) != 0) {
 			return -1;
 		}
-		
+
 		// calculate identifiers flag
 		node->id_flag = node->children[0]->id_flag;
 	}
@@ -139,7 +139,7 @@ int LogicComparer::ParseT(Production<bool>* production, struct Node* node, int l
 		node->id_flag = node->children[0]->id_flag;
 	} else {
 		// production 5
-		
+
 		// config the node
 		node->op_type = kOperatorNull;
 		node->size = 0;
@@ -150,7 +150,7 @@ int LogicComparer::ParseT(Production<bool>* production, struct Node* node, int l
 		// try to find the identifier
 		int id_index = -1;
 		for (size_t i = 0; i < id_list_.size(); ++i) {
-			if (id_list_[i].id->Value() == id->Value()) {
+			if (id_list_[i].id->Name() == id->Name()) {
 				id_index = id_list_[i].index;
 				break;
 			}
@@ -169,7 +169,7 @@ int LogicComparer::ParseT(Production<bool>* production, struct Node* node, int l
 				id_list_[id_index].layer = layer;
 			}
 		}
-		
+
 		// calculate the identifier flag
 		node->id_flag = 0;
 		node->id_flag.set(id_index);
@@ -194,10 +194,10 @@ bool LogicComparer::CompareValues() {
 	// attach variables to the identifiers
 	for (size_t i = 0; i < id_list_.size(); ++i) {
 		if (tree_root_[0]->id_flag.test(id_list_[i].index)) {
-			parser_[0].AttachIdentifier(id_list_[i].id->Value(), variables+i);
+			parser_[0].AttachIdentifier(id_list_[i].id->Name(), variables+i);
 		}
 		if (tree_root_[1]->id_flag.test(id_list_[i].index)) {
-			parser_[1].AttachIdentifier(id_list_[i].id->Value(), variables+i);
+			parser_[1].AttachIdentifier(id_list_[i].id->Name(), variables+i);
 		}
 	}
 
@@ -208,14 +208,14 @@ bool LogicComparer::CompareValues() {
 		// evaluate
 		bool eval0 = Evaluate(tree_root_[0], change_var);
 		bool eval1 = Evaluate(tree_root_[1], change_var);
-		
+
 		if (eval0 != eval1) {
 			// std::cerr << "Not equal!!!" << std::endl;
 			delete[] variables;
 			return false;
 		}
 
-		
+
 		// change variables base on gray code
 		// gray code in this loop
 		size_t gray = i ^ (i>>2);
@@ -291,7 +291,12 @@ void LogicComparer::PrintTree(struct Node *node, std::string prefix) {
 	std::string op_str = "null";
 	op_str = node->op_type == kOperatorOr ? "|" : op_str;
 	op_str = node->op_type == kOperatorAnd ? "&" : op_str;
-	std::cout << prefix << op_str << ", " << node->id_flag.to_string().substr(kMaxIdentifiers - id_list_.size(), id_list_.size()) << ", " << node->cache_value << (node->id ? ", "+node->id->Value() : "") << std::endl;
+	std::cout << prefix << op_str << ", "
+		<< node->id_flag.to_string().substr(
+			kMaxIdentifiers - id_list_.size(), id_list_.size()
+		)
+		<< ", " << node->cache_value << (node->id ? ", "+node->id->Name() : "")
+		<< std::endl;
 	std::string children_prefix;
 	for (size_t i = 0; i < prefix.length(); ++i) {
 		if (prefix[i] ==  ' ') {

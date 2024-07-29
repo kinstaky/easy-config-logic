@@ -12,7 +12,7 @@ StandardLogicTree::StandardLogicTree(Production<bool> *production) noexcept {
 	//  E -> E | T
 	//  E -> E & T
 	//  E -> T
-	
+
 	Production<bool> *p;
 	// loop and find first production E that produce E|T or E&T
 	for (p = production; p->size() == 1;) {
@@ -25,7 +25,7 @@ StandardLogicTree::StandardLogicTree(Production<bool> *production) noexcept {
 			tree_root_ = new StandardLogicNode(nullptr, kOperatorNull);
 			tree_root_->AddLeaf(0);
 			// finish, get out of the loop
-			break;		 
+			break;
 		} else {
 
 			// p is production 4, just ignore the bracket
@@ -35,7 +35,7 @@ StandardLogicTree::StandardLogicTree(Production<bool> *production) noexcept {
 
 	// continue to parse E -> E | T or E -> E & T
 	if (p->size() == 3) {
-		int op_type = ((Operator*)(p->Child(1)))->Value() == "|"
+		int op_type = ((Operator*)(p->Child(1)))->Name() == "|"
 			? kOperatorOr
 			: kOperatorAnd;
 		tree_root_ = new StandardLogicNode(nullptr, op_type);
@@ -72,14 +72,14 @@ int StandardLogicTree::ParseE(StandardLogicNode *node, Production<bool> *product
 	//  1. E -> E | T
 	//  2. E -> E & T
 	//  3. E -> T
-	
+
 	if (production->size() == 3) {
 		// production 1 or 2
-		int op_type = ((Operator*)production->Child(1))->Value() == "|"
+		int op_type = ((Operator*)production->Child(1))->Name() == "|"
 			? kOperatorOr
 			: kOperatorAnd;
 		if (op_type == node->OperatorType()) {
-			// opeartor type is the same with node's, parse it E and T under 
+			// opeartor type is the same with node's, parse it E and T under
 			// the same node
 			ParseE(node, (Production<bool>*)production->Child(0));
 			ParseT(node, (Production<bool>*)production->Child(2));
