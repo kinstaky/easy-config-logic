@@ -41,6 +41,7 @@ void StandardLogicDownscaleTree::PrintString(
 	StandardLogicNode *node
 ) const noexcept {
 	if (!node) node = tree_root_;
+	bool only_leaf = node->BranchSize() == 0 && node->Leaves().count() == 1;
 	// operator string
 	std::string op = node->OperatorType() == kOperatorOr ? "|" : "&";
 	// print branches
@@ -63,7 +64,7 @@ void StandardLogicDownscaleTree::PrintString(
 			if (var_list_[i]->Name().substr(0, 2) == "_D") {
 				int downscale_index =
 					atoi(var_list_[i]->Name().substr(2).c_str());
-				os << "(";
+				if (!only_leaf) os << "(";
 				StandardLogicNode *downscale_root =
 					downscale_forest_[downscale_index];
 				if (downscale_root->BranchSize() || downscale_root->Leaves().count() > 1) {
@@ -73,7 +74,8 @@ void StandardLogicDownscaleTree::PrintString(
 				if (downscale_root->BranchSize() || downscale_root->Leaves().count() > 1) {
 					os << ")";
 				}
-				os << " / " << divisor_[downscale_index] << ")";
+				os << " / " << divisor_[downscale_index];
+				if (!only_leaf) os << ")";
 			} else {
 				os << var_list_[i]->Name();
 			}
