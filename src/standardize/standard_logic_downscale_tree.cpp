@@ -85,8 +85,6 @@ void StandardLogicDownscaleTree::PrintString(
 }
 
 
-void StandardLogicDownscaleTree::PrintTree(std::ostream &) const noexcept {
-}
 
 
 void StandardLogicDownscaleTree::ParseE(

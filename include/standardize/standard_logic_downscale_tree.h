@@ -20,6 +20,23 @@ public:
 	}
 
 
+	/// @brief get downscale tree
+	/// @returns downscale tree root nodes
+	///
+	inline const std::vector<StandardLogicNode*>& Forest() const noexcept {
+		return downscale_forest_;
+	}
+
+
+	/// @brief get divisor
+	/// @param[in] index divider index
+	/// @returns divisor for specified index, -1 for error
+	///
+	inline const int Divisor(int index) const noexcept {
+		return index >= divisor_.size() ? -1 : divisor_[index];
+	}
+
+
 	/// @brief get the variable list
 	/// @returns variable list
 	///
@@ -28,20 +45,10 @@ public:
 	}
 
 
-	/// @brief print this tree in tree structure
-	///
-	inline void PrintTree() const noexcept {
-		tree_root_->PrintTree(var_list_);
-	}
-
-
 	void PrintString(
 		std::ostream &os,
 		StandardLogicNode *node = nullptr
 	) const noexcept;
-
-
-	void PrintTree(std::ostream &os) const noexcept;
 
 
 	/// @brief overload output stream operator function of StandardLogicDownscaleTree
