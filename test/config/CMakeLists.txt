@@ -2,6 +2,11 @@
 add_executable(test_logic_parser test_logic_parser.cpp)
 target_link_libraries(test_logic_parser PRIVATE gtest_main logic_parser)
 
+# test memory
+add_executable(test_memory test_memory.cpp)
+target_include_directories(test_memory PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_link_libraries(test_memory PRIVATE gtest_main)
+
 # test memory config
 add_executable(test_memory_config test_memory_config.cpp)
 target_compile_definitions(
