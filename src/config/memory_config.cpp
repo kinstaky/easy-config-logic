@@ -23,7 +23,7 @@ void MemoryConfig::Clear() noexcept {
 }
 
 
-int MemoryConfig::Read(LogicParser *parser) noexcept {
+int MemoryConfig::Read(ConfigParser *parser) noexcept {
 	Clear();
 
 	// read front io config
@@ -95,30 +95,30 @@ int MemoryConfig::Read(LogicParser *parser) noexcept {
 	}
 
 	// read divider config
-	for (size_t i = 0; i < parser->DividerSize(); ++i) {
-		DividerInfo divider = parser->Divider(i);
-		uint8_t selection = ConvertSource(divider.source);
-		if (selection == uint8_t(-1)) {
-			std::cerr << "Error: Invalid divider source " << divider.source << std::endl;
-			return -1;
-		}
-		memory_.divider_source[divider.port+4] = selection;
-		memory_.divider_divisor[divider.port+4] = divider.divisor;
-	}
+	// for (size_t i = 0; i < parser->DividerSize(); ++i) {
+	// 	DividerInfo divider = parser->Divider(i);
+	// 	uint8_t selection = ConvertSource(divider.source);
+	// 	if (selection == uint8_t(-1)) {
+	// 		std::cerr << "Error: Invalid divider source " << divider.source << std::endl;
+	// 		return -1;
+	// 	}
+	// 	memory_.divider_source[divider.port+4] = selection;
+	// 	memory_.divider_divisor[divider.port+4] = divider.divisor;
+	// }
 
 	// read divider gate config
-	for (size_t i = 0; i < parser->DividerGateSize(); ++i) {
-		DividerGateInfo info = parser->DividerGate(i);
-		memory_.divider_gate_operator_type[i] = info.op_type == kOperatorOr ? 0 : 1;
-		memory_.divider_gate_divider_source[i] = (info.divider + 4) & 0xf;
+	// for (size_t i = 0; i < parser->DividerGateSize(); ++i) {
+	// 	DividerGateInfo info = parser->DividerGate(i);
+	// 	memory_.divider_gate_operator_type[i] = info.op_type == kOperatorOr ? 0 : 1;
+	// 	memory_.divider_gate_divider_source[i] = (info.divider + 4) & 0xf;
 
-		uint8_t selection = ConvertSource(info.source);
-		if (selection == uint8_t(-1)) {
-			std::cerr << "Error: Invalid divider gate other source " << info.divider+kDividersOffset << std::endl;
-			return -1;
-		}
-		memory_.divider_gate_other_source[i] = selection;
-	}
+	// 	uint8_t selection = ConvertSource(info.source);
+	// 	if (selection == uint8_t(-1)) {
+	// 		std::cerr << "Error: Invalid divider gate other source " << info.divider+kDividersOffset << std::endl;
+	// 		return -1;
+	// 	}
+	// 	memory_.divider_gate_other_source[i] = selection;
+	// }
 
 	// read scaler config
 	for (size_t i = 0; i < parser->ScalerSize(); ++i) {
@@ -282,7 +282,7 @@ int MemoryConfig::Read(const char* file_name) noexcept {
 }
 
 
-int MemoryConfig::TesterRead(LogicParser *parser) noexcept {
+int MemoryConfig::TesterRead(ConfigParser *parser) noexcept {
 	Clear();
 
 	// read front io config
@@ -440,18 +440,18 @@ uint8_t MemoryConfig::ConvertSource(size_t source) const noexcept {
 		// back io
 		std::cerr << "Error: Source can't be back io port." << std::endl;
 		return uint8_t(-1);
-	} else if (source < kDividerGatesOffset) {
-		// dividers
-		return uint8_t(source - kDividersOffset + 100);
-	} else if (source < kPrimaryClockOffset) {
-		// divider gates
-		return uint8_t(source - kDividerGatesOffset + 104);
+	// } else if (source < kDividerGatesOffset) {
+	// 	// dividers
+	// 	return uint8_t(source - kDividersOffset + 100);
+	// } else if (source < kPrimaryClockOffset) {
+	// 	// divider gates
+	// 	return uint8_t(source - kDividerGatesOffset + 104);
 	} else if (source == kPrimaryClockOffset) {
 		// primary clock
 		return uint8_t(112);
 	}
 
-	std::cerr << "Error: Undefined source from LogicParser " << source << std::endl;
+	std::cerr << "Error: Undefined source from ConfigParser " << source << std::endl;
 	return uint8_t(-1);
 }
 

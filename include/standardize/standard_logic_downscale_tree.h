@@ -32,8 +32,8 @@ public:
 	/// @param[in] index divider index
 	/// @returns divisor for specified index, -1 for error
 	///
-	inline const int Divisor(int index) const noexcept {
-		return index >= divisor_.size() ? -1 : divisor_[index];
+	inline int Divisor(int index) const noexcept {
+		return index >= int(divisor_.size()) ? -1 : divisor_[index];
 	}
 
 

@@ -1,6 +1,6 @@
 # test logic parser
-add_executable(test_logic_parser test_logic_parser.cpp)
-target_link_libraries(test_logic_parser PRIVATE gtest_main logic_parser)
+add_executable(test_config_parser test_config_parser.cpp)
+target_link_libraries(test_config_parser PRIVATE gtest_main config_parser)
 
 # test memory
 add_executable(test_memory test_memory.cpp)
@@ -29,5 +29,5 @@ file(
 
 # google test discover
 include(GoogleTest)
-gtest_discover_tests(test_logic_parser)
+gtest_discover_tests(test_config_parser)
 gtest_discover_tests(test_memory_config)

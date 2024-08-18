@@ -5,7 +5,7 @@
 
 #include "gtest/gtest.h"
 
-#include "config/logic_parser.h"
+#include "config/config_parser.h"
 
 
 #ifndef TEST_DATA_DIRECTORY
@@ -24,10 +24,10 @@ void CompareMomory(const MemoryConfig::Memory *memory0, const MemoryConfig::Memo
 
 		EXPECT_EQ(memory0->pl_out_enable[i], memory1->pl_out_enable[i])
 			<< "Error: pl_out_enable " << i;
-	
+
 		EXPECT_EQ(memory0->front_input_inverse[i], memory1->front_input_inverse[i])
 			<< "Error: front_input_inverse " << i;
-		
+
 		EXPECT_EQ(memory0->front_output_inverse[i], memory1->front_output_inverse[i])
 			<< "Error: front_output_inverse " << i;
 	}
@@ -55,7 +55,7 @@ void CompareMomory(const MemoryConfig::Memory *memory0, const MemoryConfig::Memo
 		EXPECT_EQ(memory0->or_multi_selection[i], memory1->or_multi_selection[i])
 			<< "Error: or_multi_selection " << i;
 	}
-	
+
 	// compare and gates
 	for (size_t i = 0; i < MemoryConfig::kAndGateNum; ++i) {
 		for (size_t j = 0; j < MemoryConfig::kFrontIoGroupNum; ++j) {
@@ -120,7 +120,7 @@ TEST(MemoryConfigTest, FileReadWrite) {
 
 
 TEST(MemoryConfigTest, ReadLogicExpression) {
-	LogicParser parser;
+	ConfigParser parser;
 	ASSERT_EQ(parser.Read(kTestDataDir + "logic_config_1.txt"), 0)
 		<< "Error: Parser read file " << kTestDataDir << "logic_config_1.txt" << " failed.";
 

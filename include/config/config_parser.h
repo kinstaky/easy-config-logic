@@ -193,7 +193,7 @@ public:
 	/// @param[in] layer current layer, 0-identifier, 1-or gate, 2-and gate
 	/// 	3-divider-or-gate, 4-divider-and-gate
 	/// @param[in] gate_info information of current layer's gates,
-	///		includes list of gates, gate index offset, maximum number of gates 
+	///		includes list of gates, gate index offset, maximum number of gates
 	/// @returns gate index (not negative) if successful, -1 on failure
 	/// @see GatesInfo
 	///
@@ -222,7 +222,7 @@ public:
 	int GenerateDivider(
 		StandardLogicDownscaleTree *tree,
 		StandardLogicNode *node,
-		const int divisor
+		const size_t divisor
 	) noexcept;
 
 
@@ -521,7 +521,7 @@ int ConfigParser::GenerateGate(
 			if (divisor < 0) return -1;
 			int gate_index = GenerateDivider(tree, downscle_node, divisor);
 			if (gate_index < 0) return -1;
-			and_bits.set(gate_index);
+			gate_bits.set(gate_index);
 		} else if (IsFrontIo(var_list[i]->Name())) {
 			// add this identifier to input used and add to the and-gate
 			size_t id_index = IdentifierIndex(var_list[i]->Name());

@@ -631,7 +631,7 @@ size_t ConfigParser::IdentifierIndex(const std::string &id) const noexcept {
 int ConfigParser::GenerateDivider(
 	StandardLogicDownscaleTree *tree,
 	StandardLogicNode *node,
-	const int divisor
+	const size_t divisor
 ) noexcept {
 	int source_index = -1;
 	if (node->OperatorType() == kOperatorNull) {
@@ -644,11 +644,11 @@ int ConfigParser::GenerateDivider(
 		GatesInfo<kAndBits> gate_info{and_gates_, kAndGatesOffset, kMaxAndGates};
 		source_index = GenerateGate(tree, node, 2, gate_info);
 	}
-	DividerInfo info{source_index, divisor};
+	DividerInfo info{size_t(source_index), divisor};
 	// check existence
 	for (size_t i = 0; i < dividers_.size(); ++i) {
 		if (
-			dividers_[i].source == source_index
+			dividers_[i].source == size_t(source_index)
 			&& dividers_[i].divisor == divisor
 		) {
 			return kDividersOffset + i;
@@ -659,6 +659,8 @@ int ConfigParser::GenerateDivider(
 		dividers_.push_back(info);
 		return kDividersOffset + dividers_.size() - 1;
 	}
+	// error
+	return -1;
 }
 
 

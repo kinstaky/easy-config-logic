@@ -7,7 +7,7 @@
 #include <iostream>
 #include <vector>
 
-#include "config/logic_parser.h"
+#include "config/config_parser.h"
 #include "config/memory_config.h"
 
 
@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
 	}
 
 	// read logic expressions
-	ecl::LogicParser parser;
+	ecl::ConfigParser parser;
 	if (parser.Read(argv[1]) != 0) {
 		std::cerr << "Error: Parser read file " << argv[1] << " failed." << std::endl;
 		return -1;

@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-#include "config/logic_parser.h"
+#include "config/config_parser.h"
 
 namespace ecl {
 
@@ -103,7 +103,7 @@ public:
 	/// @param[in] parser pointer to logic parser
 	/// @returns 0 on suceess, -1 on failure
 	///
-	int Read(LogicParser *parser) noexcept;
+	int Read(ConfigParser *parser) noexcept;
 
 
 	/// @brief read config from file
@@ -114,12 +114,12 @@ public:
 	int Read(const char *file) noexcept;
 
 
-	/// @brief read config from logic_parser for tester 
+	/// @brief read config from logic_parser for tester
 	///
 	/// @param[in] parser pointer to the logic parser
 	/// @returns 0 on success, -1 on failure
 	///
-	int TesterRead(LogicParser *parser) noexcept;
+	int TesterRead(ConfigParser *parser) noexcept;
 
 
 	/// @brief write config to file
@@ -139,7 +139,7 @@ public:
 	friend std::ostream& operator<<(std::ostream &os, const MemoryConfig &config) noexcept;
 
 
-	/// @brief write register memory to the shared memory 
+	/// @brief write register memory to the shared memory
 	///
 	/// @param[in] map address of mapped shared memroy
 	/// @returns 0 on success, -1 on failure
@@ -157,7 +157,7 @@ public:
 	}
 
 
-	/// @brief convert source index from LogicParser to memroy selection
+	/// @brief convert source index from ConfigParser to memroy selection
 	///
 	/// @param[in] source index of source from parser
 	/// @returns selection index in memroy config
@@ -165,12 +165,12 @@ public:
 	uint8_t ConvertSource(size_t source) const noexcept;
 
 
-	/// @brief get the rj45 enable flag 
+	/// @brief get the rj45 enable flag
 	///
 	/// @param[in] index index of the rj45 port group, 0 for A0-A7, 1 for A8-A15,
 	/// 	2 for B0-B7, 3 for B8-B15, 4 for C0-C7, 5 for C8-C15
 	/// @returns enable flag if index is valid, 0 otherwise
-	/// 
+	///
 	uint8_t Rj45Enable(size_t index) const noexcept;
 
 private:

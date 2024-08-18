@@ -5,7 +5,7 @@
 #include <fstream>
 #include <iostream>
 
-#include "config/logic_parser.h"
+#include "config/config_parser.h"
 #include "config/memory_config.h"
 #include "i2c.h"
 
@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
 			return -1;
 		}
 	} else {
-		ecl::LogicParser parser;
+		ecl::ConfigParser parser;
 		if (parser.Read(argv[argc-1]) != 0) {
 			std::cerr << "Error: Parser read from file " << argv[argc-1] << " failed." << std::endl;
 			return -1;
