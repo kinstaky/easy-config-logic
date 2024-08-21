@@ -27,15 +27,16 @@ struct DividerOrGateMask {
 	uint16_t front[3];
 	uint16_t or_gates;
 	uint16_t and_gates;
-	uint16_t reserve;
+	uint8_t divider;
+	uint8_t reserve;
 };
 
 struct DividerAndGateMask {
 	uint16_t front[3];
 	uint16_t or_gates;
 	uint16_t and_gates;
+	uint8_t divider;
 	uint8_t divider_or;
-	uint8_t reserve;
 };
 
 struct Scaler {
