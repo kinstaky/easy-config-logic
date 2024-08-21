@@ -12,7 +12,7 @@ target_link_libraries(compare PRIVATE logic_comparer)
 
 
 # standardize
-add_executable(standardize standard_logic_adapter.cpp)
+add_executable(standardize standardize.cpp)
 target_link_libraries(
 	standardize
 	PRIVATE
