@@ -45,6 +45,10 @@ public:
 	}
 
 
+	/// @brief print standard-downscale tree in string format
+	/// @param[in] os ostream
+	/// @param[in] node current printed node, ignore it in top level
+	///
 	void PrintString(
 		std::ostream &os,
 		StandardLogicNode *node = nullptr
@@ -60,6 +64,13 @@ public:
 		std::ostream &os,
 		const StandardLogicDownscaleTree &tree
 	) noexcept;
+
+
+	/// @brief get depth of node, consider the downscale
+	/// @param[in] node node to get depth
+	/// @returns depth, 0 for leaves, 1 for node only with leaves, etc...
+	///
+	int Depth(StandardLogicNode *node) const noexcept;
 
 private:
 	// root node of master tree

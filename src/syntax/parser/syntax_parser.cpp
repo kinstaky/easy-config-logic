@@ -348,7 +348,10 @@ int SLRSyntaxParser<VarType>::Parse(const std::vector<TokenPtr> &tokens) {
 		Action *action = action_table_->GetAction(top, look_symbol);
 
 
-		if (action->type == Action::kTypeShift || action->type == Action::kTypeGoto) {
+		if (
+			action->type == Action::kTypeShift
+			|| action->type == Action::kTypeGoto
+		) {
 
 
 // std::cout << "  Action " << (action->type == Action::kTypeShift ? "SHIFT " : "GOTO ")
@@ -371,7 +374,7 @@ int SLRSyntaxParser<VarType>::Parse(const std::vector<TokenPtr> &tokens) {
 						}
 					}
 					if (!id) {
-						std::cerr << "Error: The shifting identifier not found." << std::endl;
+						std::cerr << "Error: The shifting identifier not found.\n";
 						return -1;
 					}
 					processing_symbols.push(id);
@@ -492,10 +495,11 @@ int SLRSyntaxParser<VarType>::Parse(const std::vector<TokenPtr> &tokens) {
 
 
 		} else {
-
+			std::string name =
+				itoken == tokens.size() ? "&" : tokens[itoken]->Name();
 			std::cerr << "Error: Invalid action type: " << action->type
 				<< ", stack top symbol is " << top << ", next symbol is "
-				<< tokens[itoken]->Name() << "\n";
+				<< name << "\n";
 			return -2;
 		}
 

@@ -102,7 +102,9 @@ int StandardLogicNode::Depth() const noexcept {
 	int max_depth = -1;
 	if (branches_.size()) {
 		for (size_t i = 0; i < branches_.size(); ++i) {
-			max_depth = branches_[i]->Depth() > max_depth ? branches_[i]->Depth() : max_depth;
+			max_depth = branches_[i]->Depth() > max_depth
+				? branches_[i]->Depth()
+				: max_depth;
 		}
 	}
 	if (max_depth > 0) return max_depth+1;
@@ -200,6 +202,14 @@ void StandardLogicNode::PrintTree(std::vector<Variable*> id_list, std::string pr
 }
 
 
+void PrettyNode(StandardLogicNode *node) {
+	for (size_t i = 0; i < node->BranchSize(); ++i) {
+		PrettyNode(node->Branch(i));
+	}
+
+}
+
+
 int StandardLogicNode::Standardize() noexcept {
 	// reduce layers, and get the tree with only 1 or 2 layers
 	if (ReduceLayers()) return -1;
@@ -219,6 +229,21 @@ int StandardLogicNode::Standardize() noexcept {
 			}
 		}
 		delete new_root;
+	}
+
+	// make it pretty, and remove branch with single leaf
+	bool change = true;
+	while (change) {
+		change = false;
+		for (size_t i = 0; i < branches_.size(); ++i) {
+			size_t leaf;
+			if (branches_[i]->IsOneLeaf(leaf)) {
+				leaves_.set(leaf);
+				DeleteBranch(i);
+				change = true;
+				break;
+			}
+		}
 	}
 
 	return 0;

@@ -25,12 +25,13 @@ void ConfigParser::Clear() noexcept {
 	extern_clock_ = size_t(-1);
 	or_gates_.clear();
 	and_gates_.clear();
+	dividers_.clear();
+	divider_or_gates_.clear();
+	divider_and_gates_.clear();
 	clocks_.clear();
 	clocks_.push_back(1);
 	scalers_.clear();
 	scaler_use_ = 0;
-	dividers_.clear();
-	divider_use_ = 0;
 }
 
 
@@ -45,11 +46,9 @@ int ConfigParser::Read(const std::string &path) noexcept {
 		// readline
 		std::string line;
 		std::getline(fin, line);
-		if (line.empty()) {
-			continue;
-		}
+		if (line.empty()) continue;
 		if (Parse(line) != 0) {
-			std::cerr << "Error: Parse failure " << line << std::endl;
+			std::cerr << "Error: Parse failure " << line << "\n";
 			return -1;
 		}
 	}
@@ -78,6 +77,7 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 			<< expr << "\n";
 		return -1;
 	}
+	if (tokens.size() < 3) return -1;
 
 	// check identifiers form
 	if (!CheckIdentifiers(tokens)) {
@@ -96,40 +96,82 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 	SLRSyntaxParser<int> parser(&grammar);
 	// parse tokens
 	if (parser.Parse(tokens)) {
-		std::cerr << "Error: Parse failed: "
-			<< expr << "\n";
+		std::cerr << "Error: Parse failed: " << expr << "\n";
 		return -2;
 	}
 	// check nested downscale
 	if (parser.Eval() >= 2) {
-		std::cerr << "Error: Unable to parse expression with nested downscale expression."
-			<< expr << "\n";
+		std::cerr << "Error: Unable to parse expression"
+			<< " with nested downscale expression." << expr << "\n";
 		return -2;
 	}
+
+	// left side token name
+	std::string left_name = tokens[0]->Name();
+
 
 	// standardize
 	StandardLogicDownscaleTree tree((Production<int>*)(parser.Root()->Child(2)));
 
+	// // for debug and print tree
+	// std::cout << "Root:\n";
+	// tree.Root()->PrintTree(tree.VarList());
+	// for (size_t i = 0; i < tree.Forest().size(); ++i) {
+	// 	std::cout << "Forest " << i << ":\n";
+	// 	tree.Forest()[i]->PrintTree(tree.VarList());
+	// }
+
 	int generate_index = -1;
+	bool is_scaler = IsScaler(left_name);
 	if (tree.Root()->OperatorType() == kOperatorNull) {
-		GatesInfo<kAndBits> gate_info{and_gates_, kAndGatesOffset, kMaxAndGates};
-		generate_index = GenerateGate(&tree, tree.Root(), 0, gate_info);
+		if (parser.Eval() == 1) {
+			GatesInfo<kDividerAndBits> gate_info{
+				divider_and_gates_, kDividerAndGatesOffset, kMaxDividerAndGates
+			};
+			generate_index =
+				GenerateGate(&tree, tree.Root(), 0, gate_info, is_scaler);
+		} else {
+			GatesInfo<kAndBits> gate_info{
+				and_gates_, kAndGatesOffset, kMaxAndGates
+			};
+			generate_index =
+				GenerateGate(&tree, tree.Root(), 0, gate_info, is_scaler);
+		}
 	} else if (tree.Root()->OperatorType() == kOperatorOr) {
-		GatesInfo<kOrBits> gate_info{or_gates_, kOrGatesOffset, kMaxOrGates};
-		int layer = parser.Eval() == 0 ? 1 : 3;
-		generate_index = GenerateGate(&tree, tree.Root(), layer, gate_info);
+		if (parser.Eval() == 1) {
+			GatesInfo<kDividerOrBits> gate_info{
+				divider_or_gates_, kDividerOrGatesOffset, kMaxDividerOrGates
+			};
+			generate_index =
+				GenerateGate(&tree, tree.Root(), 3, gate_info, is_scaler);
+		} else {
+			GatesInfo<kOrBits> gate_info{
+				or_gates_, kOrGatesOffset, kMaxOrGates
+			};
+			generate_index =
+				GenerateGate(&tree, tree.Root(), 1, gate_info, is_scaler);
+		}
 	} else if (tree.Root()->OperatorType() == kOperatorAnd) {
-		GatesInfo<kAndBits> gate_info{and_gates_, kAndGatesOffset, kMaxAndGates};
-		int layer = parser.Eval() == 0 ? 2 : 4;
-		generate_index = GenerateGate(&tree, tree.Root(), layer, gate_info);
+		if (parser.Eval() == 1) {
+			GatesInfo<kDividerAndBits> gate_info{
+				divider_and_gates_, kDividerAndGatesOffset, kMaxDividerAndGates
+			};
+			generate_index =
+				GenerateGate(&tree, tree.Root(), 4, gate_info, is_scaler);
+		} else {
+			GatesInfo<kAndBits> gate_info{
+				and_gates_, kAndGatesOffset, kMaxAndGates
+			};
+			generate_index =
+				GenerateGate(&tree, tree.Root(), 2, gate_info, is_scaler);
+		}
 	}
 	if (generate_index < 0) {
 		std::cerr << "Error: Generate gates failed.\n";
 		return -1;
 	}
 
-	// left side token name
-	std::string left_name = tokens[0]->Name();
+	// left side token index
 	size_t left_index = IdentifierIndex(left_name);
 	if (IsFrontIo(left_name)) {
 		front_outputs_.push_back(OutputInfo{left_index, size_t(generate_index)});
@@ -143,7 +185,9 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 	} else if (IsBack(left_name)) {
 		back_output_ = generate_index;
 	} else if (IsScaler(left_name)) {
-		scalers_.push_back(OutputInfo{left_index-kScalersOffset, size_t(generate_index)});
+		scalers_.push_back(OutputInfo{
+			left_index-kScalersOffset, size_t(generate_index)
+		});
 		scaler_use_.set(left_index-kScalersOffset);
 	} else if (IsExternalClock(left_name)) {
 		extern_clock_ = generate_index;
@@ -151,167 +195,6 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 
 	return 0;
 }
-
-
-// int ConfigParser::ExtendLeftLex(const std::string &expr, std::string &left, std::vector<TokenPtr> &tokens, size_t &divisor) const noexcept {
-// 	std::string right;
-// 	if (LeftSideLex(expr, left, right) != 0) {
-// 		return -1;
-// 	}
-
-// 	if (ExtendDividerLex(right, tokens, divisor) != 0) {
-// 		return -1;
-// 	}
-
-// 	return 0;
-// }
-
-
-// int ConfigParser::ExtendDividerLex(const std::string &expr, std::vector<TokenPtr> &tokens, size_t &divisor) const noexcept {
-// 	tokens.clear();
-// 	divisor = 0;
-
-// 	size_t n = expr.rfind('/');
-// 	if (n == std::string::npos) {
-// 		// no divider, so the whole expression can pass to lexer
-// 		n = expr.length();
-// 	} else {
-// 		// contains divider, so extract the divisor first
-// 		// check divisor
-// 		std::string divisor_str = expr.substr(n+1, expr.length()-n-1);
-// 		for (char c : divisor_str) {
-// 			if (c == ' ') {
-// 				continue;
-// 			}
-// 			if (c < '0' || c > '9') {
-// 				return -1;
-// 			}
-// 		}
-// 		// convert string to number
-// 		std::stringstream ss;
-// 		ss << divisor_str;
-// 		ss >> divisor;
-// 		if (divisor == 0) {
-// 			return -1;
-// 		}
-// 	}
-
-// 	Lexer lexer;
-// 	if (lexer.Analyse(expr.substr(0, n), tokens) != 0) {
-// 		return -1;
-// 	}
-// 	if (tokens.empty()) {
-// 		return -1;
-// 	}
-// 	return 0;
-// }
-
-
-// int ConfigParser::LeftSideLex(const std::string &expr, std::string &left, std::string &right) const noexcept {
-// 	left = "";
-// 	right = "";
-
-// 	for (size_t i = 0; i < expr.length(); ++i) {
-// 		const char &c = expr[i];
-
-// 		// ignore the blank character
-// 		if (c == ' ') {
-// 			continue;
-// 		}
-
-// 		if (c == '=') {
-// 			if (left.empty()) {
-// 				std::cerr << "Error: Expected left hand side variable before '='" << std::endl;
-// 				return -1;
-// 			} else {
-// 				right = expr.substr(i+1, expr.length()-i-1);
-// 				return 0;
-// 			}
-// 		} else if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
-// 			left += c;
-// 		} else if (c >= '0' && c <= '9') {
-// 			left += c;
-// 		} else {
-// 			if (left.empty()) {
-// 				std::cerr << "Error: Expected expression starts with left hand side variable!" << std::endl;
-// 			} else {
-// 				std::cerr << "Error: Invalid symbol in left hand side variable: " << c << std::endl;
-// 			}
-// 			return -1;
-// 		}
-// 	}
-// 	return 0;
-// }
-
-
-// int ConfigParser::ExtendDividerParse(const std::string &left, const std::vector<TokenPtr> &right, size_t divisor) noexcept {
-// 	// check identifiers form
-// 	if (!CheckIdentifiers(left, right)) {
-// 		std::cerr << "Error: Identifiers form!" << std::endl;
-// 		return -1;
-// 	}
-// 	// check port input and output conflict
-// 	if (!CheckIoConflict(left, right)) {
-// 		std::cerr << "Error: Input output conflict!" << std::endl;
-// 		return -1;
-// 	}
-
-// 	if (IsDivider(left) && !divisor) {
-// 		std::cerr << "Error: Expected \" / divisor\" in divider expression" << std::endl;
-// 		return -1;
-// 	}
-
-// 	if (right.size() == 1 && !IsClock(right[0]->Name())) {
-// 		size_t id_index = IdentifierIndex(right[0]->Name());
-// 		if (IsFrontIo(right[0]->Name())) {
-// 			front_in_use_.set(id_index);
-// 			if (IsLemoIo(right[0]->Name())) {
-// 				front_use_lemo_.set(id_index);
-// 			}
-// 		}
-// 		return id_index;
-// 	}
-
-
-// 	// parse the right side tokens and generate the syntax tree
-// 	LogicalGrammar grammar;
-// 	SLRSyntaxParser<bool> parser(&grammar);
-
-// 	if (IsDivider(right[0]->Name())) {
-// 		// contains divider
-// 		std::vector<TokenPtr> extracted_tokens(right.begin()+2, right.end());
-// 		if (parser.Parse(extracted_tokens) != 0) {
-// 			std::cerr << "Error: Syntax parse failed" << std::endl;
-// 			return -1;
-// 		}
-// 	} else {
-// 		if (parser.Parse(right) != 0) {
-// 			std::cerr << "Error: Syntax parse failed" << std::endl;
-// 			return -1;
-// 		}
-// 	}
-
-// 	// standardize the syntax tree
-// 	StandardLogicTree tree(parser.Root());
-
-// 	// generate gates
-// 	int generate_index = GenerateGates(tree.Root(), tree.IdList());
-// 	if (generate_index < 0) {
-// 		std::cerr << "Error: Generate gates!" << std::endl;
-// 		return -1;
-// 	}
-
-// 	if (IsDivider(right[0]->Name())) {
-// 		std::vector<TokenPtr> divider_tokens(right.begin(), right.begin()+2);
-// 		generate_index = GenerateDividerGate(divider_tokens, size_t(generate_index));
-// 		if (generate_index < 0) {
-// 			std::cerr << "Error: Generate divider gate" << std::endl;
-// 			return -1;
-// 		}
-// 	}
-
-// 	return generate_index;
-// }
 
 
 bool ConfigParser::CheckIdentifiers(const std::vector<TokenPtr> &tokens) const noexcept {
@@ -322,10 +205,10 @@ bool ConfigParser::CheckIdentifiers(const std::vector<TokenPtr> &tokens) const n
 		&& !IsBack(left)
 		&& !IsExternalClock(left)
 		&& !IsScaler(left)
-		&& !IsDivider(left)
 	) {
 		return false;
 	}
+	if (tokens.size() < 3) return false;
 	// check right side identifier
 	if (tokens.size() == 3) {
 		if (tokens[2]->Type() != kSymbolType_Variable) {
@@ -629,20 +512,23 @@ size_t ConfigParser::IdentifierIndex(const std::string &id) const noexcept {
 
 
 int ConfigParser::GenerateDivider(
-	StandardLogicDownscaleTree *tree,
-	StandardLogicNode *node,
-	const size_t divisor
+	const StandardLogicDownscaleTree *tree,
+	const StandardLogicNode *node,
+	const size_t divisor,
+	const bool is_scaler
 ) noexcept {
+	if (divisor == 0) return -1;
+
 	int source_index = -1;
 	if (node->OperatorType() == kOperatorNull) {
 		GatesInfo<kAndBits> gate_info{and_gates_, kAndGatesOffset, kMaxAndGates};
-		source_index = GenerateGate(tree, node, 0, gate_info);
+		source_index = GenerateGate(tree, node, 0, gate_info, is_scaler);
 	} else if (node->OperatorType() == kOperatorOr) {
 		GatesInfo<kOrBits> gate_info{or_gates_, kOrGatesOffset, kMaxOrGates};
-		source_index = GenerateGate(tree, node, 1, gate_info);
+		source_index = GenerateGate(tree, node, 1, gate_info, is_scaler);
 	} else if (node->OperatorType() == kOperatorAnd) {
 		GatesInfo<kAndBits> gate_info{and_gates_, kAndGatesOffset, kMaxAndGates};
-		source_index = GenerateGate(tree, node, 2, gate_info);
+		source_index = GenerateGate(tree, node, 2, gate_info, is_scaler);
 	}
 	DividerInfo info{size_t(source_index), divisor};
 	// check existence

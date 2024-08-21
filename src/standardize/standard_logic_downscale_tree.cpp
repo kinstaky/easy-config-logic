@@ -33,6 +33,23 @@ StandardLogicDownscaleTree::StandardLogicDownscaleTree(
 			exit(-1);
 		}
 	}
+
+	// make it pretty, and remove single branch
+	if (tree_root_->BranchSize() == 1 && tree_root_->LeafSize() == 0) {
+		tree_root_ = tree_root_->Branch(0);
+		delete tree_root_->Parent();
+		tree_root_->SetParent(nullptr);
+	}
+	for (size_t i = 0; i < downscale_forest_.size(); ++i) {
+		if (
+			downscale_forest_[i]->BranchSize() == 1
+			&& downscale_forest_[i]->LeafSize() == 0
+		) {
+			downscale_forest_[i] = downscale_forest_[i]->Branch(0);
+			delete downscale_forest_[i]->Parent();
+			downscale_forest_[i]->SetParent(nullptr);
+		}
+	}
 }
 
 
@@ -188,6 +205,28 @@ void StandardLogicDownscaleTree::ParseF(
 	} else {
 		ParseE(node, (Production<int>*)production->Child(1));
 	}
+}
+
+
+int StandardLogicDownscaleTree::Depth(StandardLogicNode *node) const noexcept {
+	int master_depth = 0;
+	// check branches
+	for (size_t i = 0; i < node->BranchSize(); ++i) {
+		int depth = node->Branch(i)->Depth();
+		master_depth = depth > master_depth ? depth : master_depth;
+	}
+	// check leaves
+	int downscale_depth = 0;
+	for (size_t i = 0; i < kMaxIdentifier; ++i) {
+		if (!node->Leaf(i)) continue;
+		if (var_list_[i]->Name().substr(0, 2) == "_D") {
+			int index = atoi(var_list_[i]->Name().substr(2).c_str());
+			int depth = downscale_forest_[index]->Depth();
+			downscale_depth = depth > downscale_depth ? depth : downscale_depth;
+		}
+	}
+	if (node->OperatorType() == kOperatorNull) master_depth = -1;
+	return (master_depth+1) + ((downscale_depth) << 2);
 }
 
 
