@@ -10,6 +10,33 @@
 
 namespace ecl {
 
+const size_t kMaxGates[4] = {
+	kMaxOrGates,
+	kMaxAndGates,
+	kMaxDividerOrGates,
+	kMaxDividerAndGates
+};
+const size_t kGatesOffset[4] = {
+	kOrGatesOffset,
+	kAndGatesOffset,
+	kDividerOrGatesOffset,
+	kDividerAndGatesOffset
+};
+
+
+Gate::Gate(
+	uint64_t dword0,
+	uint64_t dword1,
+	uint64_t dword2,
+	uint64_t dword3
+) {
+	data_[0] = dword0;
+	data_[1] = dword1;
+	data_[2] = dword2;
+	data_[3] = dword3;
+}
+
+
 ConfigParser::ConfigParser() {
 	Clear();
 }
@@ -23,31 +50,8 @@ void ConfigParser::Clear() noexcept {
 	front_logic_output_ = 0;
 	back_output_ = size_t(-1);
 	extern_clock_ = size_t(-1);
-	or_gate_size_ = 0;
-	for (size_t i = 0; i < kMaxOrGates; ++i) {
-		for (size_t j = 0; j < kOrGateWidth; ++j) {
-			or_gates_[i][j] = 0;
-		}
-	}
-	and_gate_size_ = 0;
-	for (size_t i = 0; i < kMaxAndGates; ++i) {
-		for (size_t j = 0; j < kAndGateWidth; ++j) {
-			and_gates_[i][j] = 0;
-		}
-	}
+	for (int i = 0; i < 4; ++i) gates_[i].clear();
 	dividers_.clear();
-	divider_or_gate_size_ = 0;
-	for (size_t i = 0; i < kMaxDividerOrGates; ++i) {
-		for (size_t j = 0; j < kDividerOrGateWidth; ++j) {
-			divider_or_gates_[i][j] = 0;
-		}
-	}
-	divider_and_gate_size_ = 0;
-	for (size_t i = 0; i < kMaxDividerAndGates; ++i) {
-		for (size_t j = 0; j < kDividerAndGateWidth; ++j) {
-			divider_and_gates_[i][j] = 0;
-		}
-	}
 	clocks_.clear();
 	clocks_.push_back(1);
 	scalers_.clear();
@@ -507,7 +511,7 @@ int ConfigParser::GenerateGate(
 	std::vector<Variable*> var_list = tree->VarList();
 
 	// initialize
-	uint64_t gate_bits[4] = {0, 0, 0, 0};
+	Gate gate;
 
 	// check branches
 	for (size_t i = 0; i < node->BranchSize(); ++i) {
@@ -517,7 +521,7 @@ int ConfigParser::GenerateGate(
 		// check gate index
 		if (gate_index < 0) return -1;
 		// set bit
-		gate_bits[gate_index/64] |= 1ul << (gate_index % 64);
+		gate.Set(gate_index);
 	}
 
 	// check leaves
@@ -537,7 +541,7 @@ int ConfigParser::GenerateGate(
 			if (gate_index < 0) return -1;
 			// return index or set gate index
 			if (layer == 0) return gate_index;
-			else gate_bits[gate_index/64] |= 1ul << (gate_index % 64);
+			else gate.Set(gate_index);
 		} else if (IsFrontIo(var_list[i]->Name())) {
 			// add this identifier to input used and add to the and-gate
 			size_t id_index = IdentifierIndex(var_list[i]->Name());
@@ -547,73 +551,21 @@ int ConfigParser::GenerateGate(
 			if (IsLemoIo(var_list[i]->Name())) front_use_lemo_.set(id_index);
 			// return index or set gate bit
 			if (layer == 0) return id_index;
-			else gate_bits[id_index/64] |= 1ul << (id_index % 64);
+			else gate.Set(id_index);
 		} else if (IsClock(var_list[i]->Name())) {
 			if (layer != 0) return -1;
 			return GenerateClock(var_list[i]->Name());
 		}
 	}
 
-	if (layer == 1) {
-		// check existence
-		for (size_t i = 0; i < or_gate_size_; ++i) {
-			if (or_gates_[i][0] == gate_bits[0]) {
-				return kOrGatesOffset + i;
-			}
-		}
-		// not exist, add new one
-		if (or_gate_size_ < kMaxOrGates) {
-			or_gates_[or_gate_size_][0] = gate_bits[0];
-			++or_gate_size_;
-			return kOrGatesOffset + or_gate_size_ - 1;
-		}
-	} else if (layer == 2) {
-		// check existence
-		for (size_t i = 0; i < and_gate_size_; ++i) {
-			if (and_gates_[i][0] == gate_bits[0]) {
-				return kAndGatesOffset + i;
-			}
-		}
-		// not exist add new one
-		if (and_gate_size_ < kMaxAndGates) {
-			and_gates_[and_gate_size_][0] = gate_bits[0];
-			++and_gate_size_;
-			return kAndGatesOffset + and_gate_size_ - 1;
-		}
-	} else if (layer == 3) {
-		// check existence
-		for (size_t i = 0; i < divider_or_gate_size_; ++i) {
-			if (
-				divider_or_gates_[i][0] == gate_bits[0]
-				&& divider_or_gates_[i][1] == gate_bits[1]
-			) {
-				return kDividerOrGatesOffset + i;
-			}
-		}
-		// not exist, add new one
-		if (divider_or_gate_size_ < kMaxDividerOrGates) {
-			divider_or_gates_[divider_or_gate_size_][0] = gate_bits[0];
-			divider_or_gates_[divider_or_gate_size_][1] = gate_bits[1];
-			++divider_or_gate_size_;
-			return kDividerOrGatesOffset + divider_or_gate_size_ - 1;
-		}
-	} else if (layer == 4) {
-		// check existence
-		for (size_t i = 0; i < divider_and_gate_size_; ++i) {
-			if (
-				divider_and_gates_[i][0] == gate_bits[0]
-				&& divider_and_gates_[i][1] == gate_bits[1]
-			) {
-				return kDividerAndGatesOffset + i;
-			}
-		}
-		// not exist, add new one
-		if (divider_and_gate_size_ < kMaxDividerAndGates) {
-			divider_and_gates_[divider_and_gate_size_][0] = gate_bits[0];
-			divider_and_gates_[divider_and_gate_size_][1] = gate_bits[1];
-			++divider_and_gate_size_;
-			return kDividerAndGatesOffset + divider_and_gate_size_ - 1;
-		}
+	// check existence
+	for (size_t i = 0; i < gates_[layer-1].size(); ++i) {
+		if (gate == gates_[layer-1][i]) return kGatesOffset[layer-1] + i;
+	}
+	// not exist add new one
+	if (gates_[layer-1].size() < kMaxGates[layer-1]) {
+		gates_[layer-1].push_back(gate);
+		return kGatesOffset[layer-1] + gates_[layer-1].size() - 1;
 	}
 
 	return -1;

@@ -79,11 +79,10 @@ int main(int argc, char **argv) {
 			// or gate
 			new_info.type = kTypeOrGate;
 			size_t gate_index = info.source - ecl::kOrGatesOffset;
-			uint64_t or_gate = parser.OrGate(gate_index)[0];
 			size_t index = -1ul;
 			// check existence of or gate
 			for (size_t j = 0; j < or_gates.size(); ++j) {
-				if (or_gates[j] == or_gate) {
+				if (or_gates[j] == parser.OrGate(gate_index)->At(0)) {
 					index = j;
 					break;
 				}
@@ -91,7 +90,7 @@ int main(int argc, char **argv) {
 			// not exist
 			if (index == -1ul) {
 				index = or_gates.size();
-				or_gates.push_back(or_gate);
+				or_gates.push_back(parser.OrGate(gate_index)->At(0));
 			}
 			new_info.or_gate = index;
 
@@ -100,11 +99,11 @@ int main(int argc, char **argv) {
 			new_info.type = kTypeAndGate;
 			AndGateInfo and_gate;
 			size_t gate_index = info.source - ecl::kAndGatesOffset;
-			and_gate.ports = parser.AndGate(gate_index)[0] & 0xffff'ffff'ffff;
+			and_gate.ports = parser.AndGate(gate_index)->At(0) & 0xffff'ffff'ffff;
 
 			for (size_t j = ecl::kFrontIoNum; j < ecl::kAndBits; ++j) {
-				if ((parser.AndGate(gate_index)[0] & (1 << j)) != 0) {
-					uint64_t or_gate = parser.OrGate(j-ecl::kFrontIoNum)[0];
+				if (parser.AndGate(gate_index)->Test(j)) {
+					uint64_t or_gate = parser.OrGate(j-ecl::kFrontIoNum)->At(0);
 					size_t or_gate_index = -1ul;
 					// check existence of or gate
 					for (size_t k = 0; k < and_gates.size(); ++k) {

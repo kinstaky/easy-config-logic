@@ -98,9 +98,13 @@ int MemoryConfig::Read(ConfigParser *parser) noexcept {
 	// read or gate config
 	for (size_t i = 0; i < parser->OrGateSize(); ++i) {
 		auto mask = parser->OrGate(i);
+		if (!mask) {
+			std::cerr << "Error: Get or gate " << i << " failed.\n";
+			return -1;
+		}
 		for (int j = 0; j < 3; ++j) {
 			memory_.or_gates[i].front[j] =
-				uint16_t((mask[0] >> (16*j)) & 0xffff);
+				uint16_t((mask->At(0) >> (16*j)) & 0xffff);
 		}
 		memory_.or_gates[i].multi = 0;
 	}
@@ -108,15 +112,19 @@ int MemoryConfig::Read(ConfigParser *parser) noexcept {
 	// read and gate config
 	for (size_t i = 0; i < parser->AndGateSize(); ++i) {
 		auto mask = parser->AndGate(i);
+		if (!mask) {
+			std::cerr << "Error: Get and gate " << i << " failed.\n";
+			return -1;
+		}
 		// set front IO mask
 		for (int j = 0; j < 3; ++j) {
 			memory_.and_gates[i].front[j] =
-				uint16_t((mask[0] >> (16*j)) & 0xffff);
+				uint16_t((mask->At(0) >> (16*j)) & 0xffff);
 		}
 		// set multi mask
 		memory_.and_gates[i].multi = 0;
 		// set or gates mask
-		memory_.and_gates[i].or_gates = uint16_t((mask[0] >> 48) & 0xffff);
+		memory_.and_gates[i].or_gates = uint16_t((mask->At(0) >> 48) & 0xffff);
 	}
 
 
@@ -142,17 +150,21 @@ int MemoryConfig::Read(ConfigParser *parser) noexcept {
 	for (size_t i = 0; i < parser->DividerOrGateSize(); ++i) {
 		// get divider-or gate mask
 		auto mask = parser->DividerOrGate(i);
+		if (!mask) {
+			std::cerr << "Error: Get divider-or gate " << i << " failed.\n";
+			return -1;
+		}
 		// set front IO mask
 		for (int j = 0; j < 3; ++j) {
 			memory_.divider_or[i].front[j] =
-				uint16_t((mask[0] >> (16*j)) & 0xffff);
+				uint16_t((mask->At(0) >> (16*j)) & 0xffff);
 		}
 		// set or gates mask
-		memory_.divider_or[i].or_gates = uint16_t((mask[0] >> 48) & 0xffff);
+		memory_.divider_or[i].or_gates = uint16_t((mask->At(0) >> 48) & 0xffff);
 		// set and gates mask
-		memory_.divider_or[i].and_gates = uint16_t(mask[1] & 0xffff);
+		memory_.divider_or[i].and_gates = uint16_t(mask->At(1) & 0xffff);
 		// set divider mask
-		memory_.divider_or[i].divider = uint8_t((mask[1] >> 16) & 0xff);
+		memory_.divider_or[i].divider = uint8_t((mask->At(1) >> 16) & 0xff);
 	}
 
 
@@ -160,19 +172,24 @@ int MemoryConfig::Read(ConfigParser *parser) noexcept {
 	for (size_t i = 0; i < parser->DividerAndGateSize(); ++i) {
 		// get divider-and gate mask
 		auto mask = parser->DividerAndGate(i);
+		if (!mask) {
+			std::cerr << "Error: Get divider-and gate " << i << " failed.\n";
+			return -1;
+		}
 		// set front IO mask
 		for (int j = 0; j < 3; ++j) {
 			memory_.divider_and[i].front[j] =
-				uint16_t((mask[0] >> (16*j)) & 0xffff);
+				uint16_t((mask->At(0) >> (16*j)) & 0xffff);
 		}
 		// set or gates mask
-		memory_.divider_and[i].or_gates = uint16_t((mask[0] >> 48) & 0xffff);
+		memory_.divider_and[i].or_gates =
+			uint16_t((mask->At(0) >> 48) & 0xffff);
 		// set and gates mask
-		memory_.divider_and[i].and_gates = uint16_t(mask[1] & 0xffff);
+		memory_.divider_and[i].and_gates = uint16_t(mask->At(1) & 0xffff);
 		// set divider mask
-		memory_.divider_and[i].divider = uint8_t((mask[1] >> 16) & 0xff);
+		memory_.divider_and[i].divider = uint8_t((mask->At(1) >> 16) & 0xff);
 		// set divider-or gates mask
-		memory_.divider_and[i].divider_or = uint8_t((mask[1] >> 24) & 0xff);
+		memory_.divider_and[i].divider_or = uint8_t((mask->At(1) >> 24) & 0xff);
 	}
 
 

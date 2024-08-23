@@ -59,10 +59,79 @@ struct OutputInfo {
 	size_t port;			// port local index
 	size_t source;			// source global index
 };
+
+
 struct DividerInfo {
 	size_t source;			// source global index
 	size_t divisor;			// divisor
 };
+
+
+class Gate {
+public:
+
+	/// @brief constructor
+	/// @param[in] dword0 first double word, default is 0
+	/// @param[in] dword1 second double word, default is 0
+	/// @param[in] dword2 third double word, default is 0
+	/// @param[in] dword3 fourth double word, default is 0
+	///
+	Gate(
+		uint64_t dword0 = 0,
+		uint64_t dword1 = 0,
+		uint64_t dword2 = 0,
+		uint64_t dword3 = 0
+	);
+
+
+	/// @brief overloaded equality operator function
+	/// @param[in] other the other gate to compare
+	/// @returns true if the two gate is the same, false otherwise
+	///
+	inline bool operator==(const Gate &other) const noexcept {
+		return (data_[0] == other.data_[0])
+			&& (data_[1] == other.data_[1])
+			&& (data_[2] == other.data_[2])
+			&& (data_[3] == other.data_[3]);
+	}
+
+
+	/// @brief overloaded [] operator
+	/// @param[in] index index of double word to get, less than 4
+	/// @returns reference to specified double word
+	///
+	inline uint64_t& operator[](size_t index) noexcept {
+		return data_[index];
+	}
+
+	/// @brief get const reference to specified double word
+	/// @param[in] index index of double word to get, less than 4
+	/// @returns const reference to specified double word
+	///
+	inline const uint64_t& At(size_t index) const noexcept {
+		return data_[index];
+	}
+
+
+	/// @brief set specified bit
+	/// @param[in] index index of bit, less than 256
+	///
+	inline void Set(size_t index) noexcept {
+		if (index < 256) data_[index/64] |= 1ul << (index % 64);
+	}
+
+
+	/// @brief test specified bit
+	/// @param[in] index index of bit, less than 256
+	///
+	inline bool Test(size_t index) const noexcept {
+		return (data_[index/64] & (1ul << (index % 64))) != 0;
+	}
+
+private:
+	uint64_t data_[4];
+};
+
 
 class ConfigParser {
 public:
@@ -320,17 +389,17 @@ public:
 	/// @returns size of or gates
 	///
 	inline size_t OrGateSize() const noexcept {
-		return or_gate_size_;
+		return gates_[0].size();
 	}
 
 
-	/// @brief get or-gate bits flags by index
+	/// @brief get or-gate by index
 	/// @param[in] index index of or-gate
-	/// @returns or-gate flag in array, null if out of range
+	/// @returns pointer to selected or-gate, null if out of range
 	///
-	inline uint64_t* OrGate(size_t index) const noexcept {
-		if (index >= or_gate_size_) return nullptr;
-		return (uint64_t*)or_gates_[index];
+	inline const Gate* OrGate(size_t index) const noexcept {
+		if (index >= gates_[0].size()) return nullptr;
+		return &(gates_[0][index]);
 	}
 
 
@@ -338,17 +407,17 @@ public:
 	/// @returns size of and gates
 	///
 	inline size_t AndGateSize() const noexcept {
-		return and_gate_size_;
+		return gates_[1].size();
 	}
 
 
-	/// @brief get and-gate bits flags by index
+	/// @brief get and-gate by index
 	/// @param[in] index index of and-gate
-	/// @returns and-gate flag in array, null if out of range
+	/// @returns pointer to selected and-gate, null if out of range
 	///
-	inline uint64_t* AndGate(size_t index) const noexcept {
-		if (index >= and_gate_size_) return nullptr;
-		return (uint64_t*)and_gates_[index];
+	inline const Gate* AndGate(size_t index) const noexcept {
+		if (index >= gates_[1].size()) return nullptr;
+		return &(gates_[1][index]);
 	}
 
 
@@ -356,17 +425,17 @@ public:
 	/// @returns size of divider-or-gates
 	///
 	inline size_t DividerOrGateSize() const noexcept {
-		return divider_or_gate_size_;
+		return gates_[2].size();
 	}
 
 
-	/// @brief get divider-or-gates bits flags by index
+	/// @brief get divider-or-gates by index
 	/// @param[in] index index of divider-or-gates
-	/// @returns divider-or-gate flag in array, null if out of range
+	/// @returns pointer to selected divider-or-gate, null if out of range
 	///
-	inline uint64_t* DividerOrGate(size_t index) const noexcept {
-		if (index >= divider_or_gate_size_) return nullptr;
-		return (uint64_t*)divider_or_gates_[index];
+	inline const Gate* DividerOrGate(size_t index) const noexcept {
+		if (index >= gates_[2].size()) return nullptr;
+		return &(gates_[2][index]);
 	}
 
 
@@ -374,17 +443,17 @@ public:
 	/// @returns size of divider-and-gates
 	///
 	inline size_t DividerAndGateSize() const noexcept {
-		return divider_and_gate_size_;
+		return gates_[3].size();
 	}
 
 
-	/// @brief get divider-and-gate bits flags by index
+	/// @brief get divider-and-gate by index
 	/// @param[in] index index of divider-and-gates
-	/// @returns divider-and-gate flag in array, null if out of range
+	/// @returns pointer to selected divider-and-gate, null if out of range
 	///
-	inline uint64_t* DividerAndGate(size_t index) const noexcept {
-		if (index >= divider_and_gate_size_) return nullptr;
-		return (uint64_t*)divider_and_gates_[index];
+	inline const Gate* DividerAndGate(size_t index) const noexcept {
+		if (index >= gates_[3].size()) return nullptr;
+		return &(gates_[3][index]);
 	}
 
 
@@ -500,17 +569,8 @@ private:
 	size_t back_output_;
 	size_t extern_clock_;
 
-	// gate size
-	size_t or_gate_size_;
-	size_t and_gate_size_;
-	size_t divider_or_gate_size_;
-	size_t divider_and_gate_size_;
-
-	// gate
-	uint64_t or_gates_[kMaxOrGates][kOrGateWidth];
-	uint64_t and_gates_[kMaxAndGates][kAndGateWidth];
-	uint64_t divider_or_gates_[kMaxDividerOrGates][kDividerOrGateWidth];
-	uint64_t divider_and_gates_[kMaxDividerAndGates][kDividerAndGateWidth];
+	// or-gate, and-gate, divider-or-gate, divider-and-gate
+	std::vector<Gate> gates_[4];
 
 	// clocks
 	std::vector<size_t> clocks_;
