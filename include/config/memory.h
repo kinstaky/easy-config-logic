@@ -5,6 +5,14 @@
 
 namespace ecl {
 
+struct I2C {
+	uint32_t sda : 1;
+	uint32_t scl : 1;
+	uint32_t enable : 1;
+	uint32_t reset : 1;
+	uint32_t reserve : 28;
+};
+
 struct MultiGateMask {
 	uint16_t front[3];
 	uint8_t threshold;
@@ -47,7 +55,7 @@ struct Scaler {
 
 struct Memory {
 	// I2C
-	uint32_t i2c;
+	I2C i2c;
 	// adder test
 	uint32_t addends[2];
 	uint32_t add_sum;
@@ -56,12 +64,12 @@ struct Memory {
 	uint16_t pl_out_enable[3];
 	uint16_t front_input_inverse[3];
 	uint16_t front_output_inverse[3];
-	uint8_t front_io_source[3][16];
+	uint8_t front_io_source[48];
 
 	// back trigger all config
 	uint32_t trigger_all_out_enable;
-	uint8_t back_Mask;
-	uint8_t extern_ts_Mask;
+	uint8_t back_selection;
+	uint8_t extern_ts_selection;
 	uint16_t back_reserve;
 
 	// front IO value

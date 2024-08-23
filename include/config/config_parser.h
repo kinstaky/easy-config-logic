@@ -12,7 +12,11 @@
 
 namespace ecl {
 
+const size_t kFrontIoGroupNum = 3;
+const size_t kFrontIoGroupSize = 16;
 const size_t kFrontIoNum = 48;
+
+const size_t kMaxMultiGates = 16;
 
 const size_t kOrGatesOffset = kFrontIoNum;
 const size_t kOrBits = kFrontIoNum;
@@ -36,16 +40,19 @@ const size_t kMaxDividerAndGates = 8;
 const size_t kClocksOffset = kDividerAndGatesOffset + kMaxDividerAndGates;
 const size_t kMaxClocks = 4;
 
-const size_t kScalersOffset = kClocksOffset + kMaxClocks;
+const size_t kInternalClocksOffset = kClocksOffset + kMaxClocks;
+const size_t kMaxInternalClocks = 4;
+const size_t kExternalClockOffset = kInternalClocksOffset + kMaxInternalClocks;
+const size_t kBackOffset = kExternalClockOffset + 1;
+const size_t kZeroValueOffset = kBackOffset + 1;
+
 const size_t kMaxScalers = 32;
+const size_t kScalersOffset = 255 - kMaxScalers;
 
-const size_t kBackOffset = kScalersOffset + kMaxScalers;
-const size_t kMaxBack = 1;
-
-const size_t kExternClocksOffset = kBackOffset + kMaxBack;
-const size_t kMaxExternClocks = 1;
-
-const size_t kPrimaryClockOffset = kExternClocksOffset + kMaxExternClocks;
+const size_t kOrGateWidth = (kOrBits + 63) / 64;
+const size_t kAndGateWidth = (kAndBits + 63) / 64;
+const size_t kDividerOrGateWidth = (kDividerOrBits + 63) / 64;
+const size_t kDividerAndGateWidth = (kDividerAndBits + 63) / 64;
 
 
 struct OutputInfo {
@@ -175,20 +182,7 @@ public:
 	size_t IdentifierIndex(const std::string &id) const noexcept;
 
 
-	/// @brief gates information for GenerateGate
-	/// @tparam bits gate bits
-	/// @see GenerateGate
-	///
-	template<size_t bits>
-	struct GatesInfo {
-		std::vector<std::bitset<bits>> &gates;
-		size_t offset;
-		size_t max_gate_size;
-	};
-
-
 	/// @brief generate and, or, divider-or, divider-and gate
-	/// @tparam bits gate bit counts
 	/// @param[in] tree pointer to standard-logic-downscale-tree
 	/// @param[in] node pointer to current processing standard-logic-node
 	/// @param[in] layer current layer, 0-identifier, 1-or gate, 2-and gate
@@ -199,14 +193,12 @@ public:
 	/// @returns gate index (not negative) if successful, -1 on failure
 	/// @see GatesInfo
 	///
-	template<size_t bits>
 	int GenerateGate(
 		const StandardLogicDownscaleTree *tree,
 		const StandardLogicNode *node,
 		const int layer,
-		GatesInfo<bits> gate_info,
 		const bool is_scaler
-	);
+	) noexcept;
 
 
 	/// @brief generate a clock according to the identifier name
@@ -328,17 +320,17 @@ public:
 	/// @returns size of or gates
 	///
 	inline size_t OrGateSize() const noexcept {
-		return or_gates_.size();
+		return or_gate_size_;
 	}
 
 
 	/// @brief get or-gate bits flags by index
 	/// @param[in] index index of or-gate
-	/// @returns or-gate bits flag, 0 otherwise
+	/// @returns or-gate flag in array, null if out of range
 	///
-	inline std::bitset<kOrBits> OrGate(size_t index) const noexcept {
-		if (index >= or_gates_.size()) return 0;
-		return or_gates_[index];
+	inline uint64_t* OrGate(size_t index) const noexcept {
+		if (index >= or_gate_size_) return nullptr;
+		return (uint64_t*)or_gates_[index];
 	}
 
 
@@ -346,17 +338,17 @@ public:
 	/// @returns size of and gates
 	///
 	inline size_t AndGateSize() const noexcept {
-		return and_gates_.size();
+		return and_gate_size_;
 	}
 
 
 	/// @brief get and-gate bits flags by index
 	/// @param[in] index index of and-gate
-	/// @returns and-gate bits flag, 0 otherwise
+	/// @returns and-gate flag in array, null if out of range
 	///
-	inline std::bitset<kAndBits> AndGate(size_t index) const noexcept {
-		if (index >= and_gates_.size()) return 0;
-		return and_gates_[index];
+	inline uint64_t* AndGate(size_t index) const noexcept {
+		if (index >= and_gate_size_) return nullptr;
+		return (uint64_t*)and_gates_[index];
 	}
 
 
@@ -364,19 +356,17 @@ public:
 	/// @returns size of divider-or-gates
 	///
 	inline size_t DividerOrGateSize() const noexcept {
-		return divider_or_gates_.size();
+		return divider_or_gate_size_;
 	}
 
 
 	/// @brief get divider-or-gates bits flags by index
 	/// @param[in] index index of divider-or-gates
-	/// @returns divider-or-gate bits flag, 0 otherwise
+	/// @returns divider-or-gate flag in array, null if out of range
 	///
-	inline std::bitset<kDividerOrBits> DividerOrGate(
-		size_t index
-	) const noexcept {
-		if (index >= divider_or_gates_.size()) return 0;
-		return divider_or_gates_[index];
+	inline uint64_t* DividerOrGate(size_t index) const noexcept {
+		if (index >= divider_or_gate_size_) return nullptr;
+		return (uint64_t*)divider_or_gates_[index];
 	}
 
 
@@ -384,19 +374,17 @@ public:
 	/// @returns size of divider-and-gates
 	///
 	inline size_t DividerAndGateSize() const noexcept {
-		return divider_and_gates_.size();
+		return divider_and_gate_size_;
 	}
 
 
 	/// @brief get divider-and-gate bits flags by index
 	/// @param[in] index index of divider-and-gates
-	/// @returns divider-and-gate bits flag, 0 otherwise
+	/// @returns divider-and-gate flag in array, null if out of range
 	///
-	inline std::bitset<kDividerAndBits> DividerAndGate(
-		size_t index
-	) const noexcept {
-		if (index >= divider_and_gates_.size()) return 0;
-		return divider_and_gates_[index];
+	inline uint64_t* DividerAndGate(size_t index) const noexcept {
+		if (index >= divider_and_gate_size_) return nullptr;
+		return (uint64_t*)divider_and_gates_[index];
 	}
 
 
@@ -512,111 +500,27 @@ private:
 	size_t back_output_;
 	size_t extern_clock_;
 
-	std::vector<std::bitset<kOrBits>> or_gates_;
-	std::vector<std::bitset<kAndBits>> and_gates_;
-	std::vector<std::bitset<kDividerOrBits>> divider_or_gates_;
-	std::vector<std::bitset<kDividerAndBits>> divider_and_gates_;
+	// gate size
+	size_t or_gate_size_;
+	size_t and_gate_size_;
+	size_t divider_or_gate_size_;
+	size_t divider_and_gate_size_;
 
+	// gate
+	uint64_t or_gates_[kMaxOrGates][kOrGateWidth];
+	uint64_t and_gates_[kMaxAndGates][kAndGateWidth];
+	uint64_t divider_or_gates_[kMaxDividerOrGates][kDividerOrGateWidth];
+	uint64_t divider_and_gates_[kMaxDividerAndGates][kDividerAndGateWidth];
+
+	// clocks
 	std::vector<size_t> clocks_;
 
+	// scalers
 	std::vector<OutputInfo> scalers_;
 	std::bitset<kMaxScalers> scaler_use_;
 
 	std::vector<DividerInfo> dividers_;
 };
-
-
-
-template<size_t bits>
-int ConfigParser::GenerateGate(
-	const StandardLogicDownscaleTree* tree,
-	const StandardLogicNode *node,
-	const int layer,
-	GatesInfo<bits> gate_info,
-	const bool is_scaler
-) {
-	// get variables
-	std::vector<Variable*> var_list = tree->VarList();
-
-	// initialize
-	std::bitset<bits> gate_bits = 0;
-
-	// check branches
-	for (size_t i = 0; i < node->BranchSize(); ++i) {
-		int gate_index = -1;
-		if (tree->Depth(node->Branch(i)) >= 4) {
-			GatesInfo<kDividerOrBits> info{
-				divider_or_gates_, kDividerOrGatesOffset, kMaxDividerOrGates
-			};
-			gate_index = GenerateGate<kDividerOrBits>(
-				tree, node->Branch(i), 3, info, is_scaler
-			);
-		} else {
-			GatesInfo<kOrBits> info{
-				or_gates_, kOrGatesOffset, kMaxOrGates
-			};
-			gate_index = GenerateGate<kOrBits>(
-				tree, node->Branch(i), 1, info, is_scaler
-			);
-		}
-		if (gate_index < 0) return -1;
-		gate_bits.set(gate_index);
-	}
-
-	// check leaves
-	// expect gate bits count
-	size_t expect_count = node->LeafSize() + node->BranchSize();
-	for (
-		size_t i = 0;
-		i < kMaxIdentifier && gate_bits.count() < expect_count;
-		++i
-	) {
-		if (!node->Leaf(i)) continue;
-		if (IsDivider(var_list[i]->Name())) {
-			int divider_index = atoi(var_list[i]->Name().substr(2).c_str());
-			StandardLogicNode *downscle_node = tree->Forest().at(divider_index);
-			int divisor = tree->Divisor(divider_index);
-			// check divisor
-			if (divisor <= 0) return -1;
-			// get gate index
-			int gate_index =
-				GenerateDivider(tree, downscle_node, divisor, is_scaler);
-			// check valid
-			if (gate_index < 0) return -1;
-			// return index or set gate index
-			if (layer == 0) return gate_index;
-			else gate_bits.set(gate_index);
-		} else if (IsFrontIo(var_list[i]->Name())) {
-			// add this identifier to input used and add to the and-gate
-			size_t id_index = IdentifierIndex(var_list[i]->Name());
-			// record front IO used
-			if (!is_scaler) front_in_use_.set(id_index);
-			// record LEMO used
-			if (IsLemoIo(var_list[i]->Name())) front_use_lemo_.set(id_index);
-			// return index or set gate bit
-			if (layer == 0) return id_index;
-			else gate_bits.set(id_index);
-		} else if (IsClock(var_list[i]->Name())) {
-			if (layer != 0) return -1;
-			return GenerateClock(var_list[i]->Name());
-		}
-	}
-
-	// check existense of gate_bits
-	for (size_t i = 0; i < gate_info.gates.size(); ++i) {
-		if (gate_info.gates[i] == gate_bits) {
-			return gate_info.offset + i;
-		}
-	}
-	// not exist, add new one
-	if (gate_info.gates.size() < gate_info.max_gate_size) {
-		gate_info.gates.push_back(gate_bits);
-		return gate_info.offset + gate_info.gates.size() - 1;
-	}
-
-	return -1;
-}
-
 
 }				// namespace ecl
 

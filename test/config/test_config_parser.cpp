@@ -692,14 +692,14 @@ TEST(ConfigParserTest, GenerateGates) {
 
 	// check or gates
 	for (size_t i = 0; i < parser.OrGateSize(); ++i) {
-		EXPECT_EQ(parser.OrGate(i), kOrGates[i])
-			<< "Error: Or gate " << i;
+		std::bitset<kOrBits> gate = parser.OrGate(i)[0];
+		EXPECT_EQ(gate, kOrGates[i]) << "Error: Or gate " << i;
 	}
 
 	// check and gates
 	for (size_t i = 0; i < parser.AndGateSize(); ++i) {
-		EXPECT_EQ(parser.AndGate(i), kAndGates[i])
-			<< "Error: And gate " << i;
+		std::bitset<kAndBits> gate = parser.AndGate(i)[0];
+		EXPECT_EQ(gate, kAndGates[i]) << "Error: And gate " << i;
 	}
 
 	// check divider
@@ -712,13 +712,26 @@ TEST(ConfigParserTest, GenerateGates) {
 
 	// check divider-or-gate
 	for (size_t i = 0; i < parser.DividerOrGateSize(); ++i) {
-		EXPECT_EQ(parser.DividerOrGate(i), kDividerOrGates[i])
-			<< "Error: Divider or gate " << i;
+		// get flag
+		uint64_t *gate_flag = parser.DividerOrGate(i);
+		// construct gate in bitset form
+		std::bitset<kDividerOrBits> gate =
+			std::bitset<kDividerOrBits>(gate_flag[0])
+			| std::bitset<kDividerOrBits>(gate_flag[1]) << 64;
+		// compare
+		EXPECT_EQ(gate, kDividerOrGates[i]) << "Error: Divider or gate " << i;
 	}
 
 	// check divider-and-gate
 	for (size_t i = 0; i < parser.DividerAndGateSize(); ++i) {
-		EXPECT_EQ(parser.DividerAndGate(i), kDividerAndGates[i])
+		// get flag
+		uint64_t *gate_flag = parser.DividerAndGate(i);
+		// construct gate in bitset form
+		std::bitset<kDividerAndBits> gate =
+			std::bitset<kDividerAndBits>(gate_flag[0])
+			| std::bitset<kDividerAndBits>(gate_flag[1]) << 64;
+		// compare
+		EXPECT_EQ(gate, kDividerAndGates[i])
 			<< "Error: Divider and gate " << i;
 	}
 }
@@ -743,8 +756,8 @@ TEST(ConfigParserTest, GenerateClocks) {
 			kClocks0Frequency[i]
 		) << "Error: Clock frequency " << i;
 	}
-	EXPECT_EQ(parser.ClockSize(), 3)
-		<< "Error: Clock size";
+	EXPECT_EQ(parser.ClockSize(), 3) << "Error: Clock0 size";
+
 
 	// clock group 1
 	parser.Clear();
@@ -763,7 +776,7 @@ TEST(ConfigParserTest, GenerateClocks) {
 			kClocks1Frequency[i]
 		) << "Error: Clock frequency " << i;
 	}
-	EXPECT_EQ(parser.ClockSize(), 2) << "Error: Clock size";
+	EXPECT_EQ(parser.ClockSize(), 2) << "Error: Clock1 size";
 }
 
 
@@ -858,7 +871,8 @@ TEST(ConfigParserTest, Parse) {
 		EXPECT_EQ(parser.OrGateSize(), kOrGatesGroup[group].size())
 			<< "Error: Or gate size of group " << group;
 		for (size_t i = 0; i < parser.OrGateSize(); ++i) {
-			EXPECT_EQ(parser.OrGate(i), kOrGatesGroup[group][i])
+			std::bitset<kOrBits> gate = parser.OrGate(i)[0];
+			EXPECT_EQ(gate, kOrGatesGroup[group][i])
 				<< "Error: Or gate bit of group " << group << ", index " << i;
 		}
 
@@ -866,7 +880,8 @@ TEST(ConfigParserTest, Parse) {
 		EXPECT_EQ(parser.AndGateSize(), kAndGatesGroup[group].size())
 			<< "Error: And gate size of group " << group;
 		for (size_t i = 0; i < parser.AndGateSize(); ++i) {
-			EXPECT_EQ(parser.AndGate(i), kAndGatesGroup[group][i])
+			std::bitset<kAndBits> gate = parser.AndGate(i)[0];
+			EXPECT_EQ(gate, kAndGatesGroup[group][i])
 				<< "Error: And gate bit of group " << group << ", index " << i;
 		}
 
@@ -888,7 +903,14 @@ TEST(ConfigParserTest, Parse) {
 			kDividerOrGatesGroup[group].size()
 		) << "Error: Divider or gate size of group " << group;
 		for (size_t i = 0; i < parser.DividerOrGateSize(); ++i) {
-			EXPECT_EQ(parser.DividerOrGate(i), kDividerOrGatesGroup[group][i])
+			// get flag
+			uint64_t *gate_flag = parser.DividerOrGate(i);
+			// construct gate in bitset form
+			std::bitset<kDividerOrBits> gate =
+				std::bitset<kDividerOrBits>(gate_flag[0])
+				| std::bitset<kDividerOrBits>(gate_flag[1]) << 64;
+			// compare
+			EXPECT_EQ(gate, kDividerOrGatesGroup[group][i])
 				<< "Error: Divider or gate of group " << group
 				<< ", index " << i;
 		}
@@ -899,7 +921,14 @@ TEST(ConfigParserTest, Parse) {
 			kDividerAndGatesGroup[group].size()
 		) << "Error: Divider and gate size of group " << group;
 		for (size_t i = 0; i < parser.DividerAndGateSize(); ++i) {
-			EXPECT_EQ(parser.DividerAndGate(i), kDividerAndGatesGroup[group][i])
+			// get flag
+			uint64_t *gate_flag = parser.DividerAndGate(i);
+			// construct gate in bitset form
+			std::bitset<kDividerAndBits> gate =
+				std::bitset<kDividerAndBits>(gate_flag[0])
+				| std::bitset<kDividerAndBits>(gate_flag[1]) << 64;
+			// compare
+			EXPECT_EQ(gate, kDividerAndGatesGroup[group][i])
 				<< "Error: Divider and gate of group " << group
 				<< ", index " << i;
 		}

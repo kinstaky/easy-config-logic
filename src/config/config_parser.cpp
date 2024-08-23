@@ -23,11 +23,31 @@ void ConfigParser::Clear() noexcept {
 	front_logic_output_ = 0;
 	back_output_ = size_t(-1);
 	extern_clock_ = size_t(-1);
-	or_gates_.clear();
-	and_gates_.clear();
+	or_gate_size_ = 0;
+	for (size_t i = 0; i < kMaxOrGates; ++i) {
+		for (size_t j = 0; j < kOrGateWidth; ++j) {
+			or_gates_[i][j] = 0;
+		}
+	}
+	and_gate_size_ = 0;
+	for (size_t i = 0; i < kMaxAndGates; ++i) {
+		for (size_t j = 0; j < kAndGateWidth; ++j) {
+			and_gates_[i][j] = 0;
+		}
+	}
 	dividers_.clear();
-	divider_or_gates_.clear();
-	divider_and_gates_.clear();
+	divider_or_gate_size_ = 0;
+	for (size_t i = 0; i < kMaxDividerOrGates; ++i) {
+		for (size_t j = 0; j < kDividerOrGateWidth; ++j) {
+			divider_or_gates_[i][j] = 0;
+		}
+	}
+	divider_and_gate_size_ = 0;
+	for (size_t i = 0; i < kMaxDividerAndGates; ++i) {
+		for (size_t j = 0; j < kDividerAndGateWidth; ++j) {
+			divider_and_gates_[i][j] = 0;
+		}
+	}
 	clocks_.clear();
 	clocks_.push_back(1);
 	scalers_.clear();
@@ -124,47 +144,15 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 	int generate_index = -1;
 	bool is_scaler = IsScaler(left_name);
 	if (tree.Root()->OperatorType() == kOperatorNull) {
-		if (parser.Eval() == 1) {
-			GatesInfo<kDividerAndBits> gate_info{
-				divider_and_gates_, kDividerAndGatesOffset, kMaxDividerAndGates
-			};
-			generate_index =
-				GenerateGate(&tree, tree.Root(), 0, gate_info, is_scaler);
-		} else {
-			GatesInfo<kAndBits> gate_info{
-				and_gates_, kAndGatesOffset, kMaxAndGates
-			};
-			generate_index =
-				GenerateGate(&tree, tree.Root(), 0, gate_info, is_scaler);
-		}
+		generate_index = GenerateGate(&tree, tree.Root(), 0, is_scaler);
 	} else if (tree.Root()->OperatorType() == kOperatorOr) {
-		if (parser.Eval() == 1) {
-			GatesInfo<kDividerOrBits> gate_info{
-				divider_or_gates_, kDividerOrGatesOffset, kMaxDividerOrGates
-			};
-			generate_index =
-				GenerateGate(&tree, tree.Root(), 3, gate_info, is_scaler);
-		} else {
-			GatesInfo<kOrBits> gate_info{
-				or_gates_, kOrGatesOffset, kMaxOrGates
-			};
-			generate_index =
-				GenerateGate(&tree, tree.Root(), 1, gate_info, is_scaler);
-		}
+		generate_index = parser.Eval() == 1
+			? GenerateGate(&tree, tree.Root(), 3, is_scaler)
+			: GenerateGate(&tree, tree.Root(), 1, is_scaler);
 	} else if (tree.Root()->OperatorType() == kOperatorAnd) {
-		if (parser.Eval() == 1) {
-			GatesInfo<kDividerAndBits> gate_info{
-				divider_and_gates_, kDividerAndGatesOffset, kMaxDividerAndGates
-			};
-			generate_index =
-				GenerateGate(&tree, tree.Root(), 4, gate_info, is_scaler);
-		} else {
-			GatesInfo<kAndBits> gate_info{
-				and_gates_, kAndGatesOffset, kMaxAndGates
-			};
-			generate_index =
-				GenerateGate(&tree, tree.Root(), 2, gate_info, is_scaler);
-		}
+		generate_index = parser.Eval() == 1
+			? GenerateGate(&tree, tree.Root(), 4, is_scaler)
+			: GenerateGate(&tree, tree.Root(), 2, is_scaler);
 	}
 	if (generate_index < 0) {
 		std::cerr << "Error: Generate gates failed.\n";
@@ -473,14 +461,12 @@ bool ConfigParser::IsDivider(const std::string &name) const noexcept {
 
 size_t ConfigParser::IdentifierIndex(const std::string &id) const noexcept {
 	if (IsBack(id)) return kBackOffset;
-	if (IsExternalClock(id)) return kExternClocksOffset;
+	if (IsExternalClock(id)) return kExternalClockOffset;
 
 	if (IsClock(id)) {
 		size_t frequency = ParseFrequency(id);
 		for (size_t i = 0; i < clocks_.size(); ++i) {
-			if (frequency == clocks_[i]) {
-				return kClocksOffset + i;
-			}
+			if (frequency == clocks_[i]) return kClocksOffset + i;
 		}
 		return size_t(-1);
 	}
@@ -511,6 +497,130 @@ size_t ConfigParser::IdentifierIndex(const std::string &id) const noexcept {
 }
 
 
+int ConfigParser::GenerateGate(
+	const StandardLogicDownscaleTree* tree,
+	const StandardLogicNode *node,
+	const int layer,
+	const bool is_scaler
+) noexcept {
+	// get variables
+	std::vector<Variable*> var_list = tree->VarList();
+
+	// initialize
+	uint64_t gate_bits[4] = {0, 0, 0, 0};
+
+	// check branches
+	for (size_t i = 0; i < node->BranchSize(); ++i) {
+		int gate_index = tree->Depth(node->Branch(i)) >= 4
+			? GenerateGate(tree, node->Branch(i), 3, is_scaler)
+			: GenerateGate(tree, node->Branch(i), 1, is_scaler);
+		// check gate index
+		if (gate_index < 0) return -1;
+		// set bit
+		gate_bits[gate_index/64] |= 1ul << (gate_index % 64);
+	}
+
+	// check leaves
+	// expect gate bits count
+	for (size_t i = 0; i < kMaxIdentifier; ++i) {
+		if (!node->Leaf(i)) continue;
+		if (IsDivider(var_list[i]->Name())) {
+			int divider_index = atoi(var_list[i]->Name().substr(2).c_str());
+			StandardLogicNode *downscle_node = tree->Forest().at(divider_index);
+			int divisor = tree->Divisor(divider_index);
+			// check divisor
+			if (divisor <= 0) return -1;
+			// get gate index
+			int gate_index =
+				GenerateDivider(tree, downscle_node, divisor, is_scaler);
+			// check valid
+			if (gate_index < 0) return -1;
+			// return index or set gate index
+			if (layer == 0) return gate_index;
+			else gate_bits[gate_index/64] |= 1ul << (gate_index % 64);
+		} else if (IsFrontIo(var_list[i]->Name())) {
+			// add this identifier to input used and add to the and-gate
+			size_t id_index = IdentifierIndex(var_list[i]->Name());
+			// record front IO used
+			if (!is_scaler) front_in_use_.set(id_index);
+			// record LEMO used
+			if (IsLemoIo(var_list[i]->Name())) front_use_lemo_.set(id_index);
+			// return index or set gate bit
+			if (layer == 0) return id_index;
+			else gate_bits[id_index/64] |= 1ul << (id_index % 64);
+		} else if (IsClock(var_list[i]->Name())) {
+			if (layer != 0) return -1;
+			return GenerateClock(var_list[i]->Name());
+		}
+	}
+
+	if (layer == 1) {
+		// check existence
+		for (size_t i = 0; i < or_gate_size_; ++i) {
+			if (or_gates_[i][0] == gate_bits[0]) {
+				return kOrGatesOffset + i;
+			}
+		}
+		// not exist, add new one
+		if (or_gate_size_ < kMaxOrGates) {
+			or_gates_[or_gate_size_][0] = gate_bits[0];
+			++or_gate_size_;
+			return kOrGatesOffset + or_gate_size_ - 1;
+		}
+	} else if (layer == 2) {
+		// check existence
+		for (size_t i = 0; i < and_gate_size_; ++i) {
+			if (and_gates_[i][0] == gate_bits[0]) {
+				return kAndGatesOffset + i;
+			}
+		}
+		// not exist add new one
+		if (and_gate_size_ < kMaxAndGates) {
+			and_gates_[and_gate_size_][0] = gate_bits[0];
+			++and_gate_size_;
+			return kAndGatesOffset + and_gate_size_ - 1;
+		}
+	} else if (layer == 3) {
+		// check existence
+		for (size_t i = 0; i < divider_or_gate_size_; ++i) {
+			if (
+				divider_or_gates_[i][0] == gate_bits[0]
+				&& divider_or_gates_[i][1] == gate_bits[1]
+			) {
+				return kDividerOrGatesOffset + i;
+			}
+		}
+		// not exist, add new one
+		if (divider_or_gate_size_ < kMaxDividerOrGates) {
+			divider_or_gates_[divider_or_gate_size_][0] = gate_bits[0];
+			divider_or_gates_[divider_or_gate_size_][1] = gate_bits[1];
+			++divider_or_gate_size_;
+			return kDividerOrGatesOffset + divider_or_gate_size_ - 1;
+		}
+	} else if (layer == 4) {
+		// check existence
+		for (size_t i = 0; i < divider_and_gate_size_; ++i) {
+			if (
+				divider_and_gates_[i][0] == gate_bits[0]
+				&& divider_and_gates_[i][1] == gate_bits[1]
+			) {
+				return kDividerAndGatesOffset + i;
+			}
+		}
+		// not exist, add new one
+		if (divider_and_gate_size_ < kMaxDividerAndGates) {
+			divider_and_gates_[divider_and_gate_size_][0] = gate_bits[0];
+			divider_and_gates_[divider_and_gate_size_][1] = gate_bits[1];
+			++divider_and_gate_size_;
+			return kDividerAndGatesOffset + divider_and_gate_size_ - 1;
+		}
+	}
+
+	return -1;
+}
+
+
+
 int ConfigParser::GenerateDivider(
 	const StandardLogicDownscaleTree *tree,
 	const StandardLogicNode *node,
@@ -521,14 +631,11 @@ int ConfigParser::GenerateDivider(
 
 	int source_index = -1;
 	if (node->OperatorType() == kOperatorNull) {
-		GatesInfo<kAndBits> gate_info{and_gates_, kAndGatesOffset, kMaxAndGates};
-		source_index = GenerateGate(tree, node, 0, gate_info, is_scaler);
+		source_index = GenerateGate(tree, node, 0, is_scaler);
 	} else if (node->OperatorType() == kOperatorOr) {
-		GatesInfo<kOrBits> gate_info{or_gates_, kOrGatesOffset, kMaxOrGates};
-		source_index = GenerateGate(tree, node, 1, gate_info, is_scaler);
+		source_index = GenerateGate(tree, node, 1, is_scaler);
 	} else if (node->OperatorType() == kOperatorAnd) {
-		GatesInfo<kAndBits> gate_info{and_gates_, kAndGatesOffset, kMaxAndGates};
-		source_index = GenerateGate(tree, node, 2, gate_info, is_scaler);
+		source_index = GenerateGate(tree, node, 2, is_scaler);
 	}
 	DividerInfo info{size_t(source_index), divisor};
 	// check existence
@@ -548,7 +655,6 @@ int ConfigParser::GenerateDivider(
 	// error
 	return -1;
 }
-
 
 
 int ConfigParser::GenerateClock(const std::string &id) noexcept {

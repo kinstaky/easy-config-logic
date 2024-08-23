@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
 	if (argv[argc-1][0] == '-' && argv[argc-1][1] == 'h') {
 		PrintUsage(argv[0]);
 		return 0;
-	} 
+	}
 
 
 	ecl::MemoryConfig config;
@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
 	}
 
 
-	std::cout << config << std::endl;
+	config.Print(std::cout, true);
 
 	// open memory file
 	int fd = open("/dev/uio0", O_RDWR);
