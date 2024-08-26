@@ -137,7 +137,19 @@ LogicDownscaleGrammar::LogicDownscaleGrammar() noexcept
 	production_f_id->SetChildren(variable);
 	symbols_.push_back(production_f_id);
 
-	// 8. F -> (E)
+	// 8. F -> literal
+	ProductionFactory<int> *production_f_literal = new ProductionFactory<int>(
+		production_set_f,
+		1,
+		[](const std::vector<Symbol*> &) {
+			return 0;
+		}
+	);
+	production_set_f->AddProductionFactory(production_f_literal);
+	production_f_literal->SetChildren(digits);
+	symbols_.push_back(production_f_literal);
+
+	// 9. F -> (E)
 	ProductionFactory<int> *production_f_bracket_e = new ProductionFactory<int>(
 		production_set_f,
 		3,

@@ -377,11 +377,11 @@ public:
 	/// @param[in] index index of port the check
 	/// @returns true if is logic output, false otherwise
 	///
-	inline bool IsFrontLogicOutput(size_t index) const noexcept {
+	inline bool FrontOutputInverse(size_t index) const noexcept {
 		if (index >= kFrontIoNum) {
 			return false;
 		}
-		return front_logic_output_.test(index);
+		return front_output_inverse_.test(index);
 	}
 
 
@@ -564,7 +564,7 @@ private:
 	std::bitset<kFrontIoNum> front_out_use_;
 	std::bitset<kFrontIoNum> front_in_use_;
 	std::bitset<kFrontIoNum> front_use_lemo_;
-	std::bitset<kFrontIoNum> front_logic_output_;
+	std::bitset<kFrontIoNum> front_output_inverse_;
 
 	size_t back_output_;
 	size_t extern_clock_;

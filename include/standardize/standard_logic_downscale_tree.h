@@ -9,7 +9,21 @@ namespace ecl {
 class StandardLogicDownscaleTree {
 public:
 
+	/// @brief constructor
+	/// @param[in] production production to convert
+	///
 	StandardLogicDownscaleTree(Production<int> *production) noexcept;
+
+	/// @brief evaluate the literal leaves and simplify the tree
+	/// @returns -1 if nothing changed, 0(1) if get constant value 0(1)
+	/// 	2 if the node contains only one leaf
+	///
+	int EvaluateLiteral(StandardLogicNode *node) noexcept;
+
+
+	/// @brief standardize the tree
+	///
+	void Standardize() noexcept;
 
 
 	/// @brief get master tree root node
@@ -82,20 +96,35 @@ private:
 	std::vector<Variable*> var_list_;
 
 
+	/// @brief parse production E
+	/// @param[in] node current processing node
+	/// @param[in] production current processing production
+	///
 	void ParseE(
 		StandardLogicNode *node,
 		Production<int> *production
 	) noexcept;
 
+
+	/// @brief parse production T
+	/// @param[in] node current processing node
+	/// @param[in] production current processing production
+	///
 	void ParseT(
 		StandardLogicNode *node,
 		Production<int> *production
 	) noexcept;
 
+
+	/// @brief parse production F
+	/// @param[in] node current processing node
+	/// @param[in] production current processing production
+	///
 	void ParseF(
 		StandardLogicNode *node,
 		Production<int> *production
 	) noexcept;
+
 };
 
 }	// namespace ecl

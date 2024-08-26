@@ -47,7 +47,7 @@ void ConfigParser::Clear() noexcept {
 	front_out_use_ = 0;
 	front_in_use_ = 0;
 	front_use_lemo_ = 0;
-	front_logic_output_ = 0;
+	front_output_inverse_ = 0;
 	back_output_ = size_t(-1);
 	extern_clock_ = size_t(-1);
 	for (int i = 0; i < 4; ++i) gates_[i].clear();
@@ -148,7 +148,13 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 	int generate_index = -1;
 	bool is_scaler = IsScaler(left_name);
 	if (tree.Root()->OperatorType() == kOperatorNull) {
-		generate_index = GenerateGate(&tree, tree.Root(), 0, is_scaler);
+		if (tree.Root()->Leaf(0)) {
+			generate_index = kZeroValueOffset;
+		} else if (tree.Root()->Leaf(1)) {
+			generate_index = kZeroValueOffset;
+		} else {
+			generate_index = GenerateGate(&tree, tree.Root(), 0, is_scaler);
+		}
 	} else if (tree.Root()->OperatorType() == kOperatorOr) {
 		generate_index = parser.Eval() == 1
 			? GenerateGate(&tree, tree.Root(), 3, is_scaler)
@@ -169,7 +175,13 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 		front_outputs_.push_back(OutputInfo{left_index, size_t(generate_index)});
 		front_out_use_.set(left_index);
 		if (!IsClock(tokens[2]->Name())) {
-			front_logic_output_.set(left_index);
+			front_output_inverse_.set(left_index);
+			if (
+				tree.Root()->Leaf(1)
+				&& tree.Root()->OperatorType() == kOperatorNull
+			) {
+				front_output_inverse_.reset(left_index);
+			}
 		}
 		if (IsLemoIo(left_name)) {
 			front_use_lemo_.set(left_index);
@@ -203,7 +215,10 @@ bool ConfigParser::CheckIdentifiers(const std::vector<TokenPtr> &tokens) const n
 	if (tokens.size() < 3) return false;
 	// check right side identifier
 	if (tokens.size() == 3) {
-		if (tokens[2]->Type() != kSymbolType_Variable) {
+		if (
+			tokens[2]->Type() != kSymbolType_Variable
+			&& tokens[2]->Type() != kSymbolType_Literal
+		) {
 			return false;
 		}
 		if (IsClock(tokens[2]->Name())) {
@@ -212,7 +227,11 @@ bool ConfigParser::CheckIdentifiers(const std::vector<TokenPtr> &tokens) const n
 				// or external clock port
 				return false;
 			}
-		} else if (!IsFrontIo(tokens[2]->Name())) {
+		} else if (
+			!IsFrontIo(tokens[2]->Name())
+			&& tokens[2]->Name() != "0"
+			&& tokens[2]->Name() != "1"
+		) {
 			return false;
 		}
 	} else {
@@ -526,7 +545,7 @@ int ConfigParser::GenerateGate(
 
 	// check leaves
 	// expect gate bits count
-	for (size_t i = 0; i < kMaxIdentifier; ++i) {
+	for (size_t i = 2; i < kMaxIdentifier; ++i) {
 		if (!node->Leaf(i)) continue;
 		if (IsDivider(var_list[i]->Name())) {
 			int divider_index = atoi(var_list[i]->Name().substr(2).c_str());

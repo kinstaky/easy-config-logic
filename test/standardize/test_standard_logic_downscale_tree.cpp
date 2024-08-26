@@ -20,6 +20,16 @@ const std::vector<std::string> kExpression = {
 	"((A&B)|C)/4",
 	"((A&B)|C)/10 | B/5",
 	"(((A&B)|C)/10 & D/10 & E) | ((F&C)|D)/3 | G/5",
+	// with number literal 0 or 1
+	"0|1",
+	"A&0",
+	"(A|0)&B",
+	"(A&B&0)|(C&0)",
+	"(A&B&1)|C",
+	"(A | B | 1) / 5",
+	"(A & 0 & (B | C)) / 4",
+	"((A|B|1)/5) & C",
+	"(((A&B)/10) & ((A|B|1)/5)) | C | D"
 };
 
 const std::vector<int> kLayer = {
@@ -29,6 +39,15 @@ const std::vector<int> kLayer = {
 	1,
 	1,
 	1,
+	0,
+	0,
+	0,
+	0,
+	0,
+	1,
+	1,
+	1,
+	1
 };
 
 const std::vector<std::string> kOutput = {
@@ -40,6 +59,15 @@ const std::vector<std::string> kOutput = {
 	"((((A | C) & (B | C)) / 10) | (((C | D) & (D | F)) / 3) | (G / 5))"\
 	" & ((D / 10) | (((C | D) & (D | F)) / 3) | (G / 5))"\
 	" & (E | (((C | D) & (D | F)) / 3) | (G / 5))",
+	"1",
+	"0",
+	"A & B",
+	"0",
+	"(A | C) & (B | C)",
+	"1",
+	"0",
+	"C",
+	"((A & B) / 10) | C | D"
 };
 
 

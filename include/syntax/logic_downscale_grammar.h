@@ -19,7 +19,8 @@ namespace ecl {
  * 5. T -> F / digits
  * 6. T -> F
  * 7. F -> id
- * 8. F -> (E)
+ * 8. F -> literal
+ * 9. F -> (E)
  */
 class LogicDownscaleGrammar final : public Grammar<int> {
 public:

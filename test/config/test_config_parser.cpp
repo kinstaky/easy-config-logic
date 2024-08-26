@@ -21,25 +21,28 @@ const std::vector<std::string> kExpressions = {
 	"A2 = A0 / 10",
 	"C5 = (A0 / 10) | (C0 / 100)",
 	"A6 = ((A0 & A3) / 10) & B3",
-	"B2 = ((((A3 & B0) | C0) / 4) & ((B4 & B7) / 10) & B11) | (C0 / 100) | B15"
+	"B2 = ((((A3 & B0) | C0) / 4) & ((B4 & B7) / 10) & B11) | (C0 / 100) | B15",
+	// expression with literal
+	"A5 = 0",
+	"A9 = 1"
 };
 const std::vector<size_t> kOutputSize = {
-	1, 2, 3, 4, 5, 6, 7, 8, 9
+	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 };
 const std::vector<size_t> kOrGateSize = {
-	0, 1, 1, 2, 4, 4, 4, 4, 6
+	0, 1, 1, 2, 4, 4, 4, 4, 6, 6, 6
 };
 const std::vector<size_t> kAndGateSize = {
-	0, 0, 1, 2, 3, 3, 3, 4, 6
+	0, 0, 1, 2, 3, 3, 3, 4, 6, 6, 6
 };
 const std::vector<size_t> kDividerSize = {
-	0, 0, 0, 0, 0, 1, 2, 3, 5
+	0, 0, 0, 0, 0, 1, 2, 3, 5, 5, 5
 };
 const std::vector<size_t> kDividerOrGateSize = {
-	0, 0, 0, 0, 0, 0, 1, 1, 4
+	0, 0, 0, 0, 0, 0, 1, 1, 4, 4, 4
 };
 const std::vector<size_t> kDividerAndGateSize = {
-	0, 0, 0, 0, 0, 0, 0, 1, 2
+	0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2
 };
 const std::vector<OutputInfo> kFrontOuputs = {
 	{1, 0},
@@ -50,7 +53,9 @@ const std::vector<OutputInfo> kFrontOuputs = {
 	{2, kDividersOffset + 0},
 	{37, kDividerOrGatesOffset + 0},
 	{6, kDividerAndGatesOffset + 0},
-	{18, kDividerAndGatesOffset + 1}
+	{18, kDividerAndGatesOffset + 1},
+	{5, kZeroValueOffset},
+	{9, kZeroValueOffset}
 };
 const std::vector<Gate> kOrGates = {
 	Gate(0x0088),
@@ -387,7 +392,7 @@ TEST(ConfigParserTest, Clear) {
 			<< "Error: Front output after clear";
 		EXPECT_FALSE(parser.IsFrontLemo(i))
 			<< "Error: Front lemo after clear";
-		EXPECT_FALSE(parser.IsFrontLogicOutput(i))
+		EXPECT_FALSE(parser.FrontOutputInverse(i))
 			<< "Error: Front logic output after clear";
 	}
 	EXPECT_EQ(parser.OrGateSize(), 0)

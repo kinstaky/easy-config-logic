@@ -14,7 +14,7 @@
 int main(int argc, char **argv) {
 	std::string language = "logical";
 	if (argc > 1) {
-		language = std::string(argv[1]);		
+		language = std::string(argv[1]);
 		bool print_usage = false;
 		// check need help?
 		if (language == "-h") {
@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
 		// parse tokens
 		parser.Parse(tokens);
 		// print tree
-		parser.PrintTree(parser.Root());		
+		parser.PrintTree(parser.Root());
 		std::cout << "Layers: " << parser.Root()->Eval() << "\n";
 	} else {
 		// grammar

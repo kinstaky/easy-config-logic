@@ -48,9 +48,12 @@ public:
 	/// @brief free children and their children
 	///
 	inline void FreeChildren() noexcept {
-		for (StandardLogicNode *node : branches_) {
-			node->FreeChildren();
-			delete node;
+		for (size_t i = 0; i < branches_.size(); ++i) {
+			if (branches_[i]) {
+				branches_[i]->FreeChildren();
+				delete branches_[i];
+				branches_[i] = nullptr;
+			}
 		}
 		return;
 	}
