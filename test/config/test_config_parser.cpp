@@ -44,7 +44,7 @@ const std::vector<size_t> kDividerOrGateSize = {
 const std::vector<size_t> kDividerAndGateSize = {
 	0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2
 };
-const std::vector<OutputInfo> kFrontOuputs = {
+const std::vector<PortSource> kFrontOuputs = {
 	{1, 0},
 	{13, kOrGatesOffset + 0},
 	{29, kAndGatesOffset + 0},
@@ -242,7 +242,7 @@ const std::vector<std::vector<std::string>> kExpressionGroup = {
 		"C13 = clock_1Hz"
 	}
 };
-const std::vector<std::vector<OutputInfo>> kFrontOutputsGroup = {
+const std::vector<std::vector<PortSource>> kFrontOutputsGroup = {
 	{
 		{1, kAndGatesOffset + 0},
 		{2, kAndGatesOffset + 1},
@@ -335,7 +335,7 @@ const std::vector<std::vector<Gate>> kDividerAndGatesGroup = {
 	{},
 	{Gate(0xc'0000'0000'0000, 0x1'0000)}
 };
-const std::vector<std::vector<OutputInfo>> kScalersGroup = {
+const std::vector<std::vector<PortSource>> kScalersGroup = {
 	{
 		{0, 3},
 		{1, 7},

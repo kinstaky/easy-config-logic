@@ -55,7 +55,7 @@ const size_t kDividerOrGateWidth = (kDividerOrBits + 63) / 64;
 const size_t kDividerAndGateWidth = (kDividerAndBits + 63) / 64;
 
 
-struct OutputInfo {
+struct PortSource {
 	size_t port;			// port local index
 	size_t source;			// source global index
 };
@@ -329,9 +329,9 @@ public:
 	/// @returns an OutputInfo struct includes information of output port index
 	///		and output source, otherwise the values in struct are all -1
 	///
-	inline OutputInfo FrontOutput(size_t index) const noexcept {
+	inline PortSource FrontOutput(size_t index) const noexcept {
 		if (index >= front_outputs_.size()) {
-			return OutputInfo{size_t(-1), size_t(-1)};
+			return PortSource{size_t(-1), size_t(-1)};
 		}
 		return front_outputs_[index];
 	}
@@ -528,12 +528,12 @@ public:
 
 	/// @brief get the scaler port and source by index
 	/// @param[in] index index of the output
-	/// @returns an OutputInfo struct includes information of output port index
+	/// @returns an PortSource struct includes information of output port index
 	///		and output source, otherwise the values in struct are all -1
 	///
-	inline OutputInfo Scaler(size_t index) const noexcept {
+	inline PortSource Scaler(size_t index) const noexcept {
 		if (index >= scalers_.size()) {
-			return OutputInfo{size_t(-1), size_t(-1)};
+			return PortSource{size_t(-1), size_t(-1)};
 		}
 		return scalers_[index];
 	}
@@ -560,7 +560,7 @@ public:
 	}
 
 private:
-	std::vector<OutputInfo> front_outputs_;
+	std::vector<PortSource> front_outputs_;
 	std::bitset<kFrontIoNum> front_out_use_;
 	std::bitset<kFrontIoNum> front_in_use_;
 	std::bitset<kFrontIoNum> front_use_lemo_;
@@ -576,7 +576,7 @@ private:
 	std::vector<size_t> clocks_;
 
 	// scalers
-	std::vector<OutputInfo> scalers_;
+	std::vector<PortSource> scalers_;
 	std::bitset<kMaxScalers> scaler_use_;
 
 	std::vector<DividerInfo> dividers_;

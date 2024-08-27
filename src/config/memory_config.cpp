@@ -53,7 +53,7 @@ int MemoryConfig::Read(ConfigParser *parser) noexcept {
 	// read front IO selection
 	for (size_t i = 0; i < parser->FrontOutputSize(); ++i) {
 		// get output information
-		OutputInfo info = parser->FrontOutput(i);
+		PortSource info = parser->FrontOutput(i);
 		// convert source
 		uint8_t selection = ConvertSource(info.source);
 		// invalid selection
@@ -209,7 +209,7 @@ int MemoryConfig::Read(ConfigParser *parser) noexcept {
 
 	// read scaler config
 	for (size_t i = 0; i < parser->ScalerSize(); ++i) {
-		OutputInfo info = parser->Scaler(i);
+		PortSource info = parser->Scaler(i);
 		uint8_t selection = ConvertSource(info.source);
 		if (selection == uint8_t(-1)) {
 			std::cerr << "Error: Invalid scaler source "

@@ -172,7 +172,7 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 	// left side token index
 	size_t left_index = IdentifierIndex(left_name);
 	if (IsFrontIo(left_name)) {
-		front_outputs_.push_back(OutputInfo{left_index, size_t(generate_index)});
+		front_outputs_.push_back(PortSource{left_index, size_t(generate_index)});
 		front_out_use_.set(left_index);
 		if (!IsClock(tokens[2]->Name())) {
 			front_output_inverse_.set(left_index);
@@ -189,7 +189,7 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 	} else if (IsBack(left_name)) {
 		back_output_ = generate_index;
 	} else if (IsScaler(left_name)) {
-		scalers_.push_back(OutputInfo{
+		scalers_.push_back(PortSource{
 			left_index-kScalersOffset, size_t(generate_index)
 		});
 		scaler_use_.set(left_index-kScalersOffset);

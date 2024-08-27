@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 	std::vector<AndGateInfo> and_gates;
 
 	for (size_t i = 0; i < parser.FrontOutputSize(); ++i) {
-		ecl::OutputInfo info = parser.FrontOutput(i);
+		ecl::PortSource info = parser.FrontOutput(i);
 		OutPortsInfo new_info;
 		new_info.port = info.port;
 		if (info.source < ecl::kOrGatesOffset) {
