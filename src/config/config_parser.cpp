@@ -56,6 +56,7 @@ void ConfigParser::Clear() noexcept {
 	clocks_.push_back(1);
 	scalers_.clear();
 	scaler_use_ = 0;
+	variables_.clear();
 }
 
 
@@ -112,6 +113,25 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 	if (!CheckIoConflict(tokens)) {
 		std::cerr << "Error: Input output conflict!" << std::endl;
 		return -1;
+	}
+
+	std::vector<TokenPtr> right_tokens;
+	for (size_t i = 2; i < tokens.size(); ++i) {
+		right_tokens.push_back(tokens[i]);
+	}
+
+	// replace the tokens
+	right_tokens = ReplaceVariables(right_tokens);
+
+	// generate new tokens
+	tokens.resize(2);
+	// TokenPtr left_token = tokens[0];
+	// TokenPtr equal_token = tokens[1];
+	// tokens.clear();
+	// tokens.push_back(left_token);
+	// tokens.push_back(equal_token);
+	for (size_t i = 0; i < right_tokens.size(); ++i) {
+		tokens.push_back(right_tokens[i]);
 	}
 
 	// grammar
@@ -195,23 +215,55 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 		scaler_use_.set(left_index-kScalersOffset);
 	} else if (IsExternalClock(left_name)) {
 		extern_clock_ = generate_index;
+	} else {
+		VariableInfo info;
+		info.name = left_name;
+		for (size_t i = 2; i < tokens.size(); ++i) {
+			info.tokens.push_back(tokens[i]);
+		}
+		variables_.push_back(info);
 	}
 
 	return 0;
 }
 
 
-bool ConfigParser::CheckIdentifiers(const std::vector<TokenPtr> &tokens) const noexcept {
+std::vector<TokenPtr> ConfigParser::ReplaceVariables(
+	const std::vector<TokenPtr> &tokens
+) noexcept {
+	std::vector<TokenPtr> result;
+	for (size_t i = 0; i < tokens.size(); ++i) {
+		if (
+			tokens[i]->Type() != kSymbolType_Variable
+			|| !IsVariable(tokens[i]->Name())
+		) {
+			result.push_back(tokens[i]);
+			continue;
+		}
+		for (const auto &var : variables_) {
+			if (var.name != tokens[i]->Name()) continue;
+			std::vector<TokenPtr> replace_tokens =
+				ReplaceVariables(var.tokens);
+			// add left bracket
+			result.push_back(std::make_shared<Operator>('('));
+			for (size_t j = 0; j < replace_tokens.size(); ++j) {
+				result.push_back(replace_tokens[j]);
+			}
+			// add right bracket
+			result.push_back(std::make_shared<Operator>(')'));
+			break;
+		}
+	}
+	return result;
+}
+
+
+bool ConfigParser::CheckIdentifiers(
+	const std::vector<TokenPtr> &tokens
+) const noexcept {
+	// left side token name
 	std::string left = tokens[0]->Name();
 	// check left side identifier
-	if (
-		!IsFrontIo(left)
-		&& !IsBack(left)
-		&& !IsExternalClock(left)
-		&& !IsScaler(left)
-	) {
-		return false;
-	}
 	if (tokens.size() < 3) return false;
 	// check right side identifier
 	if (tokens.size() == 3) {
@@ -229,6 +281,7 @@ bool ConfigParser::CheckIdentifiers(const std::vector<TokenPtr> &tokens) const n
 			}
 		} else if (
 			!IsFrontIo(tokens[2]->Name())
+			&& !IsDefinedVariable(tokens[2]->Name())
 			&& tokens[2]->Name() != "0"
 			&& tokens[2]->Name() != "1"
 		) {
@@ -238,8 +291,9 @@ bool ConfigParser::CheckIdentifiers(const std::vector<TokenPtr> &tokens) const n
 		for (size_t i = 2; i < tokens.size(); ++i) {
 			auto &id = tokens[i];
 			if (id->Type() == kSymbolType_Variable) {
-				if (!IsFrontIo(id->Name())) {
-					std::cerr << "Error: Expected identifier in front io port form "
+				if (!IsFrontIo(id->Name()) && !IsDefinedVariable(id->Name())) {
+					std::cerr << "Error: Expected identifier is in "
+						<< "front io port form or is defined variable "
 						<< id->Name() << "\n";
 					return false;
 				}
@@ -257,8 +311,9 @@ bool ConfigParser::CheckIdentifiers(const std::vector<TokenPtr> &tokens) const n
 }
 
 
-
-bool ConfigParser::CheckIoConflict(const std::vector<TokenPtr> &tokens) const noexcept {
+bool ConfigParser::CheckIoConflict(
+	const std::vector<TokenPtr> &tokens
+) const noexcept {
 	std::string left = tokens[0]->Name();
 	// check output conflict, i.e. an output port with two sources
 	if (IsBack(left)) {
@@ -288,6 +343,13 @@ bool ConfigParser::CheckIoConflict(const std::vector<TokenPtr> &tokens) const no
 			// scaler source conflict
 			std::cerr << "Error: Multiple source of scaler " << left << std::endl;
 			return false;
+		}
+	} else {
+		// check user defined variable
+		// check redefinition
+		for (size_t i = 0; i < variables_.size(); ++i) {
+			// found redefinition
+			if (variables_[i].name == left) return false;
 		}
 	}
 
@@ -343,32 +405,44 @@ bool ConfigParser::CheckIoConflict(const std::vector<TokenPtr> &tokens) const no
 
 	// check lemo input conflict, i.e. an input port defined as both lemo and not
 	for (size_t i = 2; i < tokens.size(); ++i) {
-		if (tokens[i]->Type() != kSymbolType_Variable) {
-			continue;
+		if (tokens[i]->Type() != kSymbolType_Variable) continue;
+		if (!IsFrontIo(tokens[i]->Name())) continue;
+		if (!front_in_use_.test(IdentifierIndex(tokens[i]->Name()))) continue;
+		if (front_use_lemo_.test(IdentifierIndex(tokens[i]->Name()))) {
+			if (!IsLemoIo(tokens[i]->Name())) {
+				std::cerr << "Error: Input port was defined as lemo input before "
+					<< tokens[i]->Name() << ".\n";
+				return false;
+			}
+		} else {
+			if (IsLemoIo(tokens[i]->Name())) {
+				std::cerr << "Error: Input port wasn't defined as lemo input before "
+					<< tokens[i]->Name() << ".\n";
+				return false;
+			}
 		}
-		if (IsFrontIo(tokens[i]->Name())) {
-			if (!front_in_use_.test(IdentifierIndex(tokens[i]->Name()))) {
-				continue;
+	}
+
+	// check variables, variables should be defined before used
+	for (size_t i = 2; i < tokens.size(); ++i) {
+		if (tokens[i]->Type() != kSymbolType_Variable) continue;
+		if (!IsVariable(tokens[i]->Name())) continue;
+		bool found = false;
+		for (const auto &var : variables_) {
+			if (var.name == tokens[i]->Name()) {
+				found = true;
+				break;
 			}
-			if (front_use_lemo_.test(IdentifierIndex(tokens[i]->Name()))) {
-				if (!IsLemoIo(tokens[i]->Name())) {
-					std::cerr << "Error: Input port was defined as lemo input before "
-						<< tokens[i]->Name() << ".\n";
-					return false;
-				}
-			} else {
-				if (IsLemoIo(tokens[i]->Name())) {
-					std::cerr << "Error: Input port wasn't defined as lemo input before "
-						<< tokens[i]->Name() << ".\n";
-					return false;
-				}
-			}
+		}
+		if (!found) {
+			std::cerr << "Error: Variable used but not defined "
+				<< tokens[i]->Name() << "\n";
+			return false;
 		}
 	}
 
 	return true;
 }
-
 
 
 bool ConfigParser::IsFrontIo(const std::string &name) const noexcept {
@@ -480,6 +554,14 @@ bool ConfigParser::IsDivider(const std::string &name) const noexcept {
 	return true;
 }
 
+
+bool ConfigParser::IsDefinedVariable(const std::string &name) const noexcept {
+	if (!IsVariable(name)) return false;
+	for (size_t i = 0; i < variables_.size(); ++i) {
+		if (name == variables_[i].name) return true;
+	}
+	return false;
+}
 
 
 size_t ConfigParser::IdentifierIndex(const std::string &id) const noexcept {

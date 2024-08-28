@@ -67,6 +67,14 @@ struct DividerInfo {
 };
 
 
+struct VariableInfo {
+	// name of variable
+	std::string name;
+	// tokens
+	std::vector<TokenPtr> tokens;
+};
+
+
 class Gate {
 public:
 
@@ -162,6 +170,13 @@ public:
 	void Clear() noexcept;
 
 
+	/// @brief replace the user defined variables
+	/// @param[in] tokens tokens to be replaced
+	///
+	std::vector<TokenPtr> ReplaceVariables(
+		const std::vector<TokenPtr> &tokens
+	) noexcept;
+
 	//-------------------------------------------------------------------------
 	//						helper functions for method Parse
 	//-------------------------------------------------------------------------
@@ -240,6 +255,23 @@ public:
 	}
 
 
+	/// @brief check whether the identifier represents an user defined variable
+	/// @param[in] name identifier name to check
+	/// @returns true if it's variable, false otherwise
+	///
+	inline bool IsVariable(const std::string &name) const noexcept {
+		return !IsFrontIo(name) && !IsBack(name)
+			&& !IsScaler(name) && !IsExternalClock(name)
+			&& !IsClock(name);
+	}
+
+
+	/// @brief check whether the identifier is defined variable
+	/// @param[in] name identifier name
+	/// @returns true if it's defined variable, false otherwise
+	bool IsDefinedVariable(const std::string &name) const noexcept;
+
+
 	/// @brief get the identifier index base on its name
 	/// @note The identifier index affect the bitset of or-gates and and-gates.
 	/// 	To be convenient, the index 0-47 is FrontIO identifiers. Port
@@ -289,17 +321,6 @@ public:
 		const StandardLogicNode *node,
 		const size_t divisor,
 		const bool is_scaler
-	) noexcept;
-
-
-	//// @brief generate or-gate or and-gate with divider output
-	/// @param[in] tokens tokens of the divider and operator
-	/// @param[in] other_source index of the the other source to operate with divider
-	/// @returns genrated index, or -1 on failure
-	///
-	int GenerateDividerGate(
-		const std::vector<TokenPtr> &tokens,
-		size_t other_source
 	) noexcept;
 
 
@@ -566,20 +587,21 @@ private:
 	std::bitset<kFrontIoNum> front_use_lemo_;
 	std::bitset<kFrontIoNum> front_output_inverse_;
 
+	// back output source
 	size_t back_output_;
+	// external clock source
 	size_t extern_clock_;
-
 	// or-gate, and-gate, divider-or-gate, divider-and-gate
 	std::vector<Gate> gates_[4];
-
-	// clocks
+	// dividers
+	std::vector<DividerInfo> dividers_;
+	// clock frequency
 	std::vector<size_t> clocks_;
-
 	// scalers
 	std::vector<PortSource> scalers_;
 	std::bitset<kMaxScalers> scaler_use_;
-
-	std::vector<DividerInfo> dividers_;
+	// user defined variable list
+	std::vector<VariableInfo> variables_;
 };
 
 }				// namespace ecl
