@@ -236,7 +236,7 @@ int StandardLogicNode::Standardize() noexcept {
 	while (change) {
 		change = false;
 		for (size_t i = 0; i < branches_.size(); ++i) {
-			size_t leaf;
+			size_t leaf = 0;
 			if (branches_[i]->IsOneLeaf(leaf)) {
 				leaves_.set(leaf);
 				DeleteBranch(i);
