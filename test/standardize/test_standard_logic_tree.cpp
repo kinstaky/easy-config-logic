@@ -22,6 +22,8 @@ const std::vector<std::string> kExpression = {
 	"(A&B) | (C&D)",
 	"((A&B) | (C&D)) & (E|F)",
 	"((A|B) & (C|D)) | (E&F)",
+	"(A & B & C) | (A & B & D) | A",
+	"(A & B & C) | (A & B & D) | A | B",
 	"(A & B & C) | (A & B & D) | (A & C & E) | (A & F)",
 	"(A & B & C) | (A & B & D) | (A & C & E) | (A & F) | B | G",
 	"((A&B&C)|D|(E&F)|H|I)&(J|K)",
@@ -35,72 +37,74 @@ const std::vector<std::string> kOutput = {
 	"(A | C) & (B | C) & (A | D) & (B | D)",
 	"(E | F) & (A | C) & (B | C) & (A | D) & (B | D)",
 	"(A | B | E) & (A | B | F) & (C | D | E) & (C | D | F)",
+	"A",
+	"A | B",
 	"(C | D | F) & (B | C | F) & (B | E | F) & A",
-	"(A | B | G) & (B | C | D | G) & (B | E | F | G)",
-	"(J | K) & (A | D | E | H | I) & (B | D | E | H | I) & (C | D | E | H | I) & (A | D | F | H | I) & (B | D | F | H | I) & (C | D | F | H | I)"
+	"(B | C | F | G) & (B | E | F | G) & (A | B | G)",
+	"(J | K) & (A | D | E | H | I) & (B | D | E | H | I) & (C | D | E | H | I) & (A | D | F | H | I) & (B | D | F | H | I) & (C | D | F | H | I)",
 };
 
 
 
-// TEST(StandardLogicTreeTest, CompareValue) {
-// 	for (size_t i = 0; i < kExpression.size(); ++i) {
-// 		Lexer lexer;
-// 		LogicalGrammar grammar;
-// 		SLRSyntaxParser parser(&grammar);
-// 		std::vector<TokenPtr> tokens;
+TEST(StandardLogicTreeTest, CompareValue) {
+	for (size_t i = 0; i < kOutput.size(); ++i) {
+		Lexer lexer;
+		LogicalGrammar grammar;
+		SLRSyntaxParser parser(&grammar);
+		std::vector<TokenPtr> tokens;
 
-// 		ASSERT_EQ(lexer.Analyse(kExpression[i], tokens), 0)
-// 			<< "Error: lexer analyse " << i;
-// 		ASSERT_EQ(parser.Parse(tokens), 0)
-// 			<< "Error: parser parse " << i;
-		
-
-// 		StandardLogicTree tree(parser.Root());
-
-// 		EXPECT_LE(tree.Root()->Depth(), 2)
-// 			<< "Error: depth larger than 2 " << i;
-
-// 		std::stringstream ss;
-// 		ss << tree;
-
-// 		LogicComparer comparer;
-// 		EXPECT_TRUE(comparer.Compare(kExpression[i], ss.str()))
-// 			<< "Error: compare not equal " << i;
-
-// 		std::cout << "finish test case " << i << std::endl;
-// 		std::cout << "-----------------------------" << std::endl;
-// 	}
-// }
+		ASSERT_EQ(lexer.Analyse(kExpression[i], tokens), 0)
+			<< "Error: lexer analyse " << i;
+		ASSERT_EQ(parser.Parse(tokens), 0)
+			<< "Error: parser parse " << i;
 
 
+		StandardLogicTree tree(parser.Root());
+
+		EXPECT_LE(tree.Root()->Depth(), 2)
+			<< "Error: depth larger than 2 " << i;
+
+		std::stringstream ss;
+		ss << tree;
+
+		LogicComparer comparer;
+		EXPECT_TRUE(comparer.Compare(kExpression[i], ss.str()))
+			<< "Error: compare not equal " << i;
+
+		std::cout << "finish test case " << i << std::endl;
+		std::cout << "-----------------------------" << std::endl;
+	}
+}
 
 
-// TEST(StandardLogicTreeTest, OutputString) {
-// 	for (size_t i = 0; i < kOutput.size(); ++i) {
-// 		Lexer lexer;
-// 		LogicalGrammar grammar;
-// 		SLRSyntaxParser parser(&grammar);
-// 		std::vector<TokenPtr> tokens;
 
-// 		ASSERT_EQ(lexer.Analyse(kExpression[i], tokens), 0)
-// 			<< "Error: lexer analyse " << i;
-// 		ASSERT_EQ(parser.Parse(tokens), 0)
-// 			<< "Error: parser parse " << i;
-		
 
-// 		StandardLogicTree tree(parser.Root());
+TEST(StandardLogicTreeTest, OutputString) {
+	for (size_t i = 0; i < kOutput.size(); ++i) {
+		Lexer lexer;
+		LogicalGrammar grammar;
+		SLRSyntaxParser parser(&grammar);
+		std::vector<TokenPtr> tokens;
 
-// 		// tree.PrintTree();
-// 		std::stringstream ss;
-// 		ss << tree;
-// 		EXPECT_EQ(ss.str(), kOutput[i])
-// 			<< "Error ouptput string " << i;
-// 		std::cout << ss.str() << std::endl;
+		ASSERT_EQ(lexer.Analyse(kExpression[i], tokens), 0)
+			<< "Error: lexer analyse " << i;
+		ASSERT_EQ(parser.Parse(tokens), 0)
+			<< "Error: parser parse " << i;
 
-// 		std::cout << "finish test case " << i << std::endl;
-// 		std::cout << "-----------------------------" << std::endl;
-// 	}
-// }
+
+		StandardLogicTree tree(parser.Root());
+
+		// tree.PrintTree();
+		std::stringstream ss;
+		ss << tree;
+		EXPECT_EQ(ss.str(), kOutput[i])
+			<< "Error ouptput string " << i;
+		std::cout << ss.str() << std::endl;
+
+		std::cout << "finish test case " << i << std::endl;
+		std::cout << "-----------------------------" << std::endl;
+	}
+}
 
 
 
@@ -114,7 +118,7 @@ TEST(StandardLogicTreeTest, Time) {
 		std::vector<TokenPtr> tokens;
 		lexer.Analyse(kExpression[i], tokens);
 		parser.Parse(tokens);
-		
+
 
 		auto start = std::chrono::high_resolution_clock::now();
 		auto stop = start;
@@ -125,10 +129,16 @@ TEST(StandardLogicTreeTest, Time) {
 
 		std::cout << tree << std::endl;
 
-		time_cost.push_back(std::chrono::duration_cast<std::chrono::microseconds>(stop-start).count());
-		std::cout << "case " << i << " first layer branch size " << tree.Root()->BranchSize() << std::endl;
+		time_cost.push_back(
+			std::chrono::duration_cast<std::chrono::microseconds>(
+				stop-start
+			).count()
+		);
+		std::cout << "case " << i << " first layer branch size "
+			<< tree.Root()->BranchSize() << std::endl;
 	}
 	for (size_t i = 0; i < time_cost.size(); ++i) {
-		std::cout << "test case " << i << " cost time " << time_cost[i] << " us" << std::endl;
+		std::cout << "test case " << i << " cost time "
+			<< time_cost[i] << " us" << std::endl;
 	}
 }

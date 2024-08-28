@@ -255,25 +255,31 @@ public:
 	}
 
 protected:
-
-
+	// production
 	std::vector<ProductionFactorySet<VarType>*> production_sets_;
+	// symbol in production, 终结符号和非终结符号
 	std::vector<Symbol*> symbol_list_;
+	// symbol in production again, 用于维护产生式中的指针
+	std::vector<Symbol*> symbols_;
 
-	bool generate_first_;				// whether has generated first list
+	// whether has generated first list
+	bool generate_first_;
+	// generated first list
 	std::vector<std::set<int>> first_list_;
+	// whether first list includes empty symbol
 	std::vector<bool> first_include_empty_;
 
-
-	bool generate_following_;					// show whether has generated following list
+	// show whether has generated following list
+	bool generate_following_;
+	// generated following list
 	std::vector<std::set<int>> following_list_;
 
-
-
-
-	std::vector<ProductionItem<VarType>*> core_items_;		// generated core items
-	std::vector<ProductionItem<VarType>*> non_core_items_; 	// generated non core items
-	std::vector<ProductionItemCollection<VarType>*> collections_;	// collection of items
+	// generated core items
+	std::vector<ProductionItem<VarType>*> core_items_;
+	// generated non core items	
+	std::vector<ProductionItem<VarType>*> non_core_items_; 	
+	// collection of items
+	std::vector<ProductionItemCollection<VarType>*> collections_;
 
 };
 

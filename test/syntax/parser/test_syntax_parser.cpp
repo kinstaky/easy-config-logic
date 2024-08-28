@@ -78,23 +78,23 @@ const std::vector<std::vector<int>> logical_action_value = {
 // add multi input
 const std::vector<std::vector<TokenPtr>> kAddMultiTokens = {
 	{
-		std::make_shared<Identifier>("A"), std::make_shared<Operator>("+"),
-		std::make_shared<Identifier>("A")
+		std::make_shared<Variable>("A"), std::make_shared<Operator>("+"),
+		std::make_shared<Variable>("A")
 	},
 	{
-		std::make_shared<Identifier>("B"), std::make_shared<Operator>("*"),
-		std::make_shared<Identifier>("B")
+		std::make_shared<Variable>("B"), std::make_shared<Operator>("*"),
+		std::make_shared<Variable>("B")
 	},
 	{
-		std::make_shared<Identifier>("a"), std::make_shared<Operator>("+"), 
-		std::make_shared<Identifier>("b"), std::make_shared<Operator>("*"),
-		std::make_shared<Identifier>("c")	
+		std::make_shared<Variable>("a"), std::make_shared<Operator>("+"), 
+		std::make_shared<Variable>("b"), std::make_shared<Operator>("*"),
+		std::make_shared<Variable>("c")	
 	},
 	{
-		std::make_shared<Operator>("("), std::make_shared<Identifier>("A"),
-		std::make_shared<Operator>("+"), std::make_shared<Identifier>("B"),
+		std::make_shared<Operator>("("), std::make_shared<Variable>("A"),
+		std::make_shared<Operator>("+"), std::make_shared<Variable>("B"),
 		std::make_shared<Operator>(")"), std::make_shared<Operator>("*"),
-		std::make_shared<Identifier>("C")
+		std::make_shared<Variable>("C")
 	}
 };
 // add multi identifier values
@@ -115,44 +115,44 @@ const std::vector<double> kAddMultiResult = {
 // logical input
 const std::vector<std::vector<TokenPtr>> kLogicalTokens = {
 	{
-		std::make_shared<Identifier>("A"), std::make_shared<Operator>("|"),
-		std::make_shared<Identifier>("A")
+		std::make_shared<Variable>("A"), std::make_shared<Operator>("|"),
+		std::make_shared<Variable>("A")
 	},
 	{
-		std::make_shared<Identifier>("A"), std::make_shared<Operator>("|"),
-		std::make_shared<Identifier>("A")
+		std::make_shared<Variable>("A"), std::make_shared<Operator>("|"),
+		std::make_shared<Variable>("A")
 	},
 	{
-		std::make_shared<Identifier>("B"), std::make_shared<Operator>("&"),
-		std::make_shared<Identifier>("B")
+		std::make_shared<Variable>("B"), std::make_shared<Operator>("&"),
+		std::make_shared<Variable>("B")
 	},
 	{
-		std::make_shared<Identifier>("B"), std::make_shared<Operator>("&"),
-		std::make_shared<Identifier>("B")
+		std::make_shared<Variable>("B"), std::make_shared<Operator>("&"),
+		std::make_shared<Variable>("B")
 	},
 	{
-		std::make_shared<Identifier>("A"), std::make_shared<Operator>("|"),
-		std::make_shared<Operator>("("), std::make_shared<Identifier>("B"),
-		std::make_shared<Operator>("&"), std::make_shared<Identifier>("C"),
+		std::make_shared<Variable>("A"), std::make_shared<Operator>("|"),
+		std::make_shared<Operator>("("), std::make_shared<Variable>("B"),
+		std::make_shared<Operator>("&"), std::make_shared<Variable>("C"),
 		std::make_shared<Operator>(")")
 	},
 	{
-		std::make_shared<Identifier>("A"), std::make_shared<Operator>("|"),
-		std::make_shared<Operator>("("), std::make_shared<Identifier>("B"),
-		std::make_shared<Operator>("&"), std::make_shared<Identifier>("C"),
+		std::make_shared<Variable>("A"), std::make_shared<Operator>("|"),
+		std::make_shared<Operator>("("), std::make_shared<Variable>("B"),
+		std::make_shared<Operator>("&"), std::make_shared<Variable>("C"),
 		std::make_shared<Operator>(")")
 	},
 	{
-		std::make_shared<Operator>("("), std::make_shared<Identifier>("A"),
-		std::make_shared<Operator>("|"), std::make_shared<Identifier>("B"),
+		std::make_shared<Operator>("("), std::make_shared<Variable>("A"),
+		std::make_shared<Operator>("|"), std::make_shared<Variable>("B"),
 		std::make_shared<Operator>(")"), std::make_shared<Operator>("&"),
-		std::make_shared<Identifier>("C")
+		std::make_shared<Variable>("C")
 	},
 	{
-		std::make_shared<Operator>("("), std::make_shared<Identifier>("A"),
-		std::make_shared<Operator>("|"), std::make_shared<Identifier>("B"),
+		std::make_shared<Operator>("("), std::make_shared<Variable>("A"),
+		std::make_shared<Operator>("|"), std::make_shared<Variable>("B"),
 		std::make_shared<Operator>(")"), std::make_shared<Operator>("&"),
-		std::make_shared<Identifier>("C")
+		std::make_shared<Variable>("C")
 	}
 };
 // logical identifier values

@@ -68,7 +68,7 @@ TEST(ProductionTest, ProductionFactorySet) {
 
 
 TEST(ProductionTest, ProductionFactory) {
-	Symbol *identifier = new Symbol(kSymbolType_Identifier);
+	Symbol *identifier = new Symbol(kSymbolType_Variable);
 	Operator *op_add = new Operator("+");
 
 	ProductionFactorySet<double> *production_set_e = new ProductionFactorySet<double>;
@@ -98,8 +98,8 @@ TEST(ProductionTest, ProductionFactory) {
 	// create production
 	std::stack<Symbol*> symbols;
 	
-	Identifier *a = new Identifier("A");
-	Identifier *b = new Identifier("B");
+	Variable *a = new Variable("A");
+	Variable *b = new Variable("B");
 
 
 	symbols.push(a);
@@ -142,7 +142,7 @@ TEST(ProductionTest, ProductionFactory) {
 
 
 TEST(ProductionTest, GenearteItems) {
-	Symbol *identifier = new Symbol(kSymbolType_Identifier);
+	Symbol *identifier = new Symbol(kSymbolType_Variable);
 	Operator *op_add = new Operator("+");
 
 	ProductionFactorySet<double> *production_set_e = new ProductionFactorySet<double>;
@@ -198,7 +198,7 @@ TEST(ProductionTest, GenearteItems) {
 
 
 TEST(ProductionTest, ProductionCollection) {
-	Symbol *identifier = new Symbol(kSymbolType_Identifier);
+	Symbol *identifier = new Symbol(kSymbolType_Variable);
 	Operator *op_add = new Operator("+");	
 
 	ProductionFactorySet<double> *production_set_e = new ProductionFactorySet<double>();

@@ -16,7 +16,6 @@ namespace ecl {
 class StandardLogicTree {
 public:
 
-
 	/// @brief constructor
 	///
 	/// @param[in] production root of production tree to standardize
@@ -30,7 +29,6 @@ public:
 
 
 	/// @brief get the tree root
-	///
 	/// @returns pointer to the root
 	///
 	inline StandardLogicNode* Root() const noexcept {
@@ -39,10 +37,9 @@ public:
 
 
 	/// @brief get the id list
-	///
 	/// @returns id list
 	///
-	inline std::vector<Identifier*> IdList() const noexcept {
+	inline std::vector<Variable*> IdList() const noexcept {
 		return id_list_;
 	}
 
@@ -55,19 +52,18 @@ public:
 
 
 	/// @brief overload output stream operator function of StandardLogicTree
-	///
 	/// @param[in] os osteam to output
 	/// @param[in] tree tree to print
 	/// @returns input ostream
 	///
-	friend std::ostream& operator<<(std::ostream &os, const StandardLogicTree &tree) noexcept;
-
-
+	friend std::ostream& operator<<(
+		std::ostream &os,
+		const StandardLogicTree &tree
+	) noexcept;
 
 private:
 
 	/// @brief parse production E and generate standard tree
-	///
 	/// @param[in] node parse the production under this node
 	/// @param[in] production pointer to the production to parse
 	/// @returns 0 on success, -1 on failure
@@ -76,7 +72,6 @@ private:
 
 
 	/// @brief parse production T and generate standard tree
-	///
 	/// @param[in] node parse the production under this node
 	/// @param[in] production pointer to the production to parse
 	/// @returns 0 on success, -1 on failure
@@ -84,26 +79,10 @@ private:
 	int ParseT(StandardLogicNode *node, Production<bool> *production) noexcept;
 
 
-	/// @brief standardize the tree and convert it into two layers
-	///
-	/// @returns 0 on success, -1 on failure
-	///
-	int Standardize() noexcept;
-
-
-	int ReduceLayers(StandardLogicNode *node) noexcept;
-
-
-	/// @brief exchange the order of operation of two layers structure
-	///
-	/// @param[in] node the node the exchange operation order
-	/// @returns pointer to the new node after exchanging
-	///
-	StandardLogicNode* ExchangeOrder(StandardLogicNode *node) noexcept;
-
-
+	// root node of master tree
 	StandardLogicNode *tree_root_;
-	std::vector<Identifier*> id_list_;
+	// identifier list
+	std::vector<Variable*> id_list_;
 };
 
 

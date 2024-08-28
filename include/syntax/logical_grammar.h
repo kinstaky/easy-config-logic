@@ -28,22 +28,9 @@ class LogicalGrammar final : public Grammar<bool> {
 public:
 
 	/// @brief constructor
-	///
 	/// @exceptsafe Shall not throw exceptions.
 	///
 	LogicalGrammar() noexcept;
-
-
-
-	/// @brief destructor
-	///
-	/// @exceptsafe Shall not throw exceptions.
-	///
-	virtual ~LogicalGrammar() noexcept;
-
-
-private:
-	std::vector<Symbol*> symbols_;
 };
 
 }

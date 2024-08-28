@@ -24,8 +24,6 @@ constexpr int kOperatorAnd = 2;
 class StandardLogicNode {
 public:
 
-
-
 	/// @brief Construct a new Standard Logic Node object
 	///
 	/// @param[in] parent pointer to the parent
@@ -34,17 +32,13 @@ public:
 	StandardLogicNode(StandardLogicNode *parent, int type) noexcept;
 
 
-
-
-
 	/// @brief Destroy the Standard Logic Node object
 	///
 	~StandardLogicNode() = default;
 
 
-
 	/// @brief compare two nodes
-	/// 
+	///
 	/// @param[in] node the node to compare
 	/// @returns true if two nodes are the same, false otherwise
 	///
@@ -52,11 +46,14 @@ public:
 
 
 	/// @brief free children and their children
-	/// 
+	///
 	inline void FreeChildren() noexcept {
-		for (StandardLogicNode *node : branches_) {
-			node->FreeChildren();
-			delete node;
+		for (size_t i = 0; i < branches_.size(); ++i) {
+			if (branches_[i]) {
+				branches_[i]->FreeChildren();
+				delete branches_[i];
+				branches_[i] = nullptr;
+			}
 		}
 		return;
 	}
@@ -64,19 +61,25 @@ public:
 
 	//-------------------------------------------------------------------------
 	// 							methods for operator
-	//-------------------------------------------------------------------------	
+	//-------------------------------------------------------------------------
 
-	/// @brief get the operator type 
-	/// 
+	/// @brief get the operator type
+	///
 	/// @returns 0 on null, 1 on or, 2 on and
 	///
 	inline int OperatorType() const noexcept {
 		return op_type_;
 	}
 
+	/// @brief set operator type
+	///
+	inline void SetOperatorType(int type) noexcept {
+		op_type_ = type;
+	}
 
-	/// @brief get the operator string 
-	/// 
+
+	/// @brief get the operator string
+	///
 	/// @returns string value of the operator
 	///
 	inline std::string OperatorString() const noexcept {
@@ -89,10 +92,10 @@ public:
 
 	//-------------------------------------------------------------------------
 	// 							methods for parent
-	//-------------------------------------------------------------------------	
+	//-------------------------------------------------------------------------
 
 	/// @brief change the parent node
-	/// 
+	///
 	/// @param[in] node pointer to the parent node
 	/// @returns 0 on success, -1 on failure
 	///
@@ -102,8 +105,8 @@ public:
 	}
 
 
-	/// @brief get the parent 
-	/// 
+	/// @brief get the parent
+	///
 	/// @returns pointer to the parent
 	///
 	inline StandardLogicNode* Parent() const noexcept {
@@ -113,10 +116,10 @@ public:
 
 	//-------------------------------------------------------------------------
 	// 							methods for leaves
-	//-------------------------------------------------------------------------	
+	//-------------------------------------------------------------------------
 
-	/// @brief add a leaf by global index 
-	/// 
+	/// @brief add a leaf by global index
+	///
 	/// @param[in] index global index of the adding leaf
 	/// @returns 0 on success, -1 on invalid index
 	///
@@ -134,8 +137,8 @@ public:
 	}
 
 
-	/// @brief add several leaves in bitset form 
-	/// 
+	/// @brief add several leaves in bitset form
+	///
 	/// @param[in] leaves addding leaves in bitset form
 	/// @returns 0 on success, -1 on failure
 	///
@@ -146,7 +149,7 @@ public:
 
 
 	/// @brief delete a leaf by global index
-	/// 
+	///
 	/// @param[in] index global index of the deleting leaf
 	/// @returns 0 on success, -1 on invalid index, -2 on leaf not exist
 	///
@@ -158,8 +161,8 @@ public:
 	}
 
 
-	/// @brief get the leaves size 
-	/// 
+	/// @brief get the leaves size
+	///
 	/// @returns size of the leaves
 	///
 	inline size_t LeafSize() const noexcept {
@@ -167,8 +170,8 @@ public:
 	}
 
 
-	/// @brief check whether identifier at index exists in this node 
-	/// 
+	/// @brief check whether identifier at index exists in this node
+	///
 	/// @param[in] index index of the global identifier
 	/// @returns true if exists, false otherwise
 	///
@@ -178,8 +181,8 @@ public:
 	}
 
 
-	/// @brief get the leaves flag 
-	/// 
+	/// @brief get the leaves flag
+	///
 	/// @returns leaves bitset flag
 	///
 	inline std::bitset<kMaxIdentifier> Leaves() const noexcept {
@@ -187,8 +190,8 @@ public:
 	}
 
 
-	/// @brief check whether this node is actually a leaf(contains only one identifier)  
-	/// 
+	/// @brief check whether this node is actually a leaf(contains only one identifier)
+	///
 	/// @param[in] index index of the only identifier if this node is leaf
 	/// @returns true if this node is actually a leaf, false otherwises
 	///
@@ -197,21 +200,21 @@ public:
 
 	//-------------------------------------------------------------------------
 	// 							methods for branches
-	//-------------------------------------------------------------------------	
+	//-------------------------------------------------------------------------
 
-	/// @brief add a branch node 
-	/// 
+	/// @brief add a branch node
+	///
 	/// @param[in] node the node to add
 	/// @returns 0 on success, -1 on failure
 	///
 	int AddBranch(StandardLogicNode *node) noexcept;
 
 	/// @brief change the branch by index
-	/// 
+	///
 	/// @param[in] index the index of branch to change
 	/// @param[in] node the new branch to replace
 	/// @returns 0 on success, -1 on failure
-	/// 
+	///
 	inline int SetBranch(size_t index, StandardLogicNode *node) noexcept {
 		if (index >= branches_.size()) return -1;
 		branches_[index] = node;
@@ -220,7 +223,7 @@ public:
 
 
 	/// @brief  delete a branch by index
-	/// 
+	///
 	/// @param[in] index the index of the branch to delete
 	/// @returns 0 on success, -1 on failure
 	///
@@ -233,8 +236,8 @@ public:
 	}
 
 
-	/// @brief get the branch by index 
-	/// 
+	/// @brief get the branch by index
+	///
 	/// @param[in] index index of the branch to get
 	/// @returns pointer to the branch at index, or nullptr otherwise
 	///
@@ -244,8 +247,8 @@ public:
 	}
 
 
-	/// @brief get the branch size 
-	/// 
+	/// @brief get the branch size
+	///
 	/// @returns size of the branches
 	///
 	inline size_t BranchSize() const noexcept {
@@ -253,8 +256,8 @@ public:
 	}
 
 
-	/// @brief check whether is necessary to add this branch 
-	/// 
+	/// @brief check whether is necessary to add this branch
+	///
 	/// @param[in] node the pointer to the branch to check
 	/// @returns true if necessary, false otherwise
 	///
@@ -265,7 +268,7 @@ public:
 	/// @note If the node is nullptr, this function compare the branch's leaves
 	/// 	at index with the leaves_. Otherwise, this function compare the branches
 	/// 	with the node.
-	/// 
+	///
 	/// @param[in] index the index of the branch to check
 	/// @param[in] node the branch to compare, default is nullptr and just
 	/// 	compare the leaves
@@ -276,35 +279,57 @@ public:
 
 	//-------------------------------------------------------------------------
 	// 							methods for depth
-	//-------------------------------------------------------------------------	
+	//-------------------------------------------------------------------------
 
-	/// @brief get the depth of this node 
-	/// 
+	/// @brief get the depth of this node
+	///
 	/// @returns 0 if it's leaf, or n+1 for n is the largets depth of all branches
 	///
 	int Depth() const noexcept;
 
-	
+
 
 	//-------------------------------------------------------------------------
 	// 							methods for printing
-	//-------------------------------------------------------------------------	
+	//-------------------------------------------------------------------------
 
-	/// @brief print the string of this node 
-	/// 
+	/// @brief print the string of this node
+	///
 	/// @param[in] os ostream
 	/// @param[in] id_list list of all identifiers in tree
 	///
-	void PrintString(std::ostream &os, std::vector<Identifier*> id_list) const noexcept;
+	void PrintString(std::ostream &os, std::vector<Variable*> id_list) const noexcept;
 
 
-	/// @brief print the node in tree structure 
-	/// 
+	/// @brief print the node in tree structure
+	///
 	/// @param[in] id_list list of all identifiers in tree
 	/// @param[in] prefix prefix string of this node
 	///
-	void PrintTree(std::vector<Identifier*> id_list, std::string prefix = "") const noexcept;
+	void PrintTree(std::vector<Variable*> id_list, std::string prefix = "") const noexcept;
 
+
+	//-------------------------------------------------------------------------
+	// 							methods for standardize
+	//-------------------------------------------------------------------------
+
+	/// @brief standardize the tree and convert it into two layers
+	/// 	with the first layer is '&' and the second layer is '|'
+	/// @returns 0 on success, -1 on failure
+	///
+	int Standardize() noexcept;
+
+
+	/// @brief reduce the layers in tree
+	/// @returns 0 on success, -1 on failure
+	///
+	int ReduceLayers() noexcept;
+
+
+	/// @brief exchange the order of operation of two layers structure
+	/// @returns pointer to new node
+	///
+	StandardLogicNode* ExchangeOrder() noexcept;
 
 
 private:

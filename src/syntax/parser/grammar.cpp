@@ -25,9 +25,8 @@ Grammar<VarType>::Grammar() noexcept {
 
 template<typename VarType>
 Grammar<VarType>::~Grammar() noexcept {
-	for (auto c : collections_) {
-		delete c;
-	}
+	for (auto c : collections_) delete c;
+	for (auto s : symbols_) delete s;
 }
 
 
@@ -103,7 +102,7 @@ int Grammar<VarType>::GenerateCollections(int look_ahead) noexcept {
 			}
 
 
-			// and all the other items (except for the first itme) from
+			// and all the other items (except for the first item) from
 			// the production are core items
 			while ((item = production->GenerateItems())) {
 				core_items_.push_back(item);
@@ -366,8 +365,8 @@ int Grammar<VarType>::FindSet(ProductionFactorySet<VarType> *set) noexcept {
 template<typename VarType>
 int Grammar<VarType>::FindSymbol(Symbol *symbol) noexcept {
 	for (size_t s = 0; s < symbol_list_.size(); ++s) {
-		if (symbol->Type() == kSymbolType_Identifier) {
-			if (symbol_list_[s]->Type() == kSymbolType_Identifier) {
+		if (symbol->Type() == kSymbolType_Variable) {
+			if (symbol_list_[s]->Type() == kSymbolType_Variable) {
 				return s;
 			}
 		} else if (symbol_list_[s] == symbol) {

@@ -13,11 +13,14 @@ using namespace ecl;
 // error inputs
 const std::string kErrorInputExpression[] = {
 	"0ac",				// ERROR: variable start with digit
-	"abc & 0",			// ERROR: variable start with digit
 	"#abc",				// ERROR: varaible start with invalid character '#'
-	"abc & @d"			// ERROR: variable start with invalid character '@'
+	"abc & @d",			// ERROR: variable start with invalid character '@'
+	"_abc"				// ERROR: variable start with '_'
 };
-
+// parse result
+const int kErrorInputResult[] = {
+	-2, -1, -1, -3
+};
 
 
 // appropriate inputs
@@ -31,7 +34,11 @@ const std::string kInputExpression[] = {
 	"(Aa0_)",
 	"A | B & ( B | C)",
 	"A|B&(B|C)",
-	"(a&b)|(c&d)"
+	"(a&b)|(c&d)",
+	"a & 0",
+	"B | 10",
+	"(A|B)/5",
+	"A = (B2 & C3) / 6"
 };
 
 
@@ -46,32 +53,52 @@ const std::vector<std::string> kOutputValue[] = {
 	{"(", "Aa0_", ")"},
 	{"A", "|", "B", "&", "(", "B", "|", "C", ")"},
 	{"A", "|", "B", "&", "(", "B", "|", "C", ")"},
-	{"(", "a", "&", "b", ")", "|", "(", "c", "&", "d", ")"}
+	{"(", "a", "&", "b", ")", "|", "(", "c", "&", "d", ")"},
+	{"a", "&", "0"},
+	{"B", "|", "10"},
+	{"(", "A", "|", "B", ")", "/", "5"},
+	{"A", "=", "(", "B2", "&", "C3", ")", "/", "6"}
 };
 
 const std::vector<int> kOutputType[] = {
-	{kSymbolType_Identifier},
-	{kSymbolType_Identifier},
-	{kSymbolType_Identifier},
-	{kSymbolType_Identifier},
-	{kSymbolType_Identifier, kSymbolType_Operator, kSymbolType_Identifier},
-	{kSymbolType_Identifier, kSymbolType_Operator, kSymbolType_Identifier},
-	{kSymbolType_Operator, kSymbolType_Identifier, kSymbolType_Operator},
+	{kSymbolType_Variable},
+	{kSymbolType_Variable},
+	{kSymbolType_Variable},
+	{kSymbolType_Variable},
+	{kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Variable},
+	{kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Variable},
+	{kSymbolType_Operator, kSymbolType_Variable, kSymbolType_Operator},
 	{
-		kSymbolType_Identifier, kSymbolType_Operator, kSymbolType_Identifier,
-		kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Identifier,
-		kSymbolType_Operator, kSymbolType_Identifier, kSymbolType_Operator
+		kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Variable,
+		kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Variable,
+		kSymbolType_Operator, kSymbolType_Variable, kSymbolType_Operator
 	},
 	{
-		kSymbolType_Identifier, kSymbolType_Operator, kSymbolType_Identifier,
-		kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Identifier,
-		kSymbolType_Operator, kSymbolType_Identifier, kSymbolType_Operator
+		kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Variable,
+		kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Variable,
+		kSymbolType_Operator, kSymbolType_Variable, kSymbolType_Operator
 	},
 	{
-		kSymbolType_Operator, kSymbolType_Identifier, kSymbolType_Operator,
-		kSymbolType_Identifier, kSymbolType_Operator, kSymbolType_Operator,
-		kSymbolType_Operator, kSymbolType_Identifier, kSymbolType_Operator,
-		kSymbolType_Identifier, kSymbolType_Operator
+		kSymbolType_Operator, kSymbolType_Variable, kSymbolType_Operator,
+		kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Operator,
+		kSymbolType_Operator, kSymbolType_Variable, kSymbolType_Operator,
+		kSymbolType_Variable, kSymbolType_Operator
+	},
+	{
+		kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Literal
+	},
+	{
+		kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Literal
+	},
+	{
+		kSymbolType_Operator, kSymbolType_Variable, kSymbolType_Operator,
+		kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Operator,
+		kSymbolType_Literal
+	},
+	{
+		kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Operator,
+		kSymbolType_Variable, kSymbolType_Operator, kSymbolType_Variable,
+		kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Literal
 	}
 };
 
@@ -84,7 +111,7 @@ TEST(LexerTest, HandleErrorInput) {
 		std::vector<TokenPtr> tokens;
 		int result = lexer.Analyse(expr, tokens);
 		
-		EXPECT_EQ(result, -1)
+		EXPECT_EQ(result, kErrorInputResult[index])
 			<< "Lexical parse cannot handle the input error: #" << index
 			<< ", result " << result << ".";
 		
@@ -117,10 +144,10 @@ TEST(LexerTest, Analyse) {
 		for (auto &t : tokens) {
 
 			// chekc token value
-			EXPECT_EQ(t->Value(), kOutputValue[expression_index][index])
+			EXPECT_EQ(t->Name(), kOutputValue[expression_index][index])
 				<< "Lexical parser generate token error: expression #"
 				<< expression_index << "token #" << index
-				<< ". Get token " << t->Value() << " but need "
+				<< ". Get token " << t->Name() << " but need "
 				<< kOutputValue[expression_index][index] << ".";
 
 

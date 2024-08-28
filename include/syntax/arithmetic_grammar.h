@@ -18,20 +18,9 @@ class AddMultiGrammar final : public Grammar<double> {
 public:
 
 	/// @brief constructor
-	///
 	/// @exceptsafe Shall not throw exceptions.
 	///
 	AddMultiGrammar() noexcept;
-
-
-	/// @brief destructor
-	///
-	/// @exceptsafe Shall not throw exceptions.
-	///
-	virtual ~AddMultiGrammar() noexcept;
-
-private:
-	std::vector<Symbol*> symbols_;
 };
 
 
@@ -45,19 +34,9 @@ class ArithmeticGrammar final : public Grammar<double> {
 public:
 
 	/// @brief constructor
-	///
 	/// @exceptsafe Shall not throw exceptions.
 	///
 	ArithmeticGrammar() noexcept;
-
-	/// @brief destructor
-	///
-	/// @exceptsafe Shall not throw exceptions.
-	///
-	virtual ~ArithmeticGrammar() noexcept;
-
-private:
-	std::vector<Symbol*> symbols_;
 };
 
 }			// namespace ecl

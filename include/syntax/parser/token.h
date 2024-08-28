@@ -14,8 +14,9 @@ constexpr int kSymbolType_ProductionItem = -4;
 constexpr int kSymbolType_ProductionFactorySet = -3;
 constexpr int kSymbolType_ProductionFactory = -2;
 constexpr int kSymbolType_Production = -1;
-constexpr int kSymbolType_Identifier = 1;
-constexpr int kSymbolType_Operator = 2;
+constexpr int kSymbolType_Operator = 1;
+constexpr int kSymbolType_Literal = 2;
+constexpr int kSymbolType_Variable = 3;
 
 /**
  * Symbol represents the base element in the context-free grammar.
@@ -72,11 +73,11 @@ public:
 	/// 	to the singleton token and update the symbol table.
 	///
 	/// @param[in] type type of this token
-	/// @param[in] value the string value of the token
+	/// @param[in] name name of the token
 	///
 	/// @exceptsafe Shall not throw exceptions.
 	///
-	Token(int type, const std::string &value) noexcept;
+	Token(int type, const std::string &name) noexcept;
 
 
 
@@ -85,18 +86,18 @@ public:
 	virtual ~Token() = default;
 
 
-	/// @brief value of this token
+	/// @brief name of this token
 	///
-	/// @returns the token value
+	/// @returns the token name
 	///
 	/// @exceptsafe Shall not throw exceptions.
 	///
-	inline std::string Value() const noexcept {
-		return value_;
+	inline std::string Name() const noexcept {
+		return name_;
 	}
 
 private:
-	std::string value_;					// string value of this token
+	std::string name_;					// string value of this token
 };
 
 
@@ -104,35 +105,35 @@ typedef std::shared_ptr<Token> TokenPtr;
 
 
 /**
- * Identifier token
+ * Variable token
  *
  */
-class Identifier final : public Token {
+class Variable final : public Token {
 public:
 
 	/// @brief constructor
 	///
-	/// @param[in] value the string value of this Identifier
+	/// @param[in] name the name of this Variable
 	///
 	/// @exceptsafe Shall not throw exceptions.
 	///
-	Identifier(const std::string &value) noexcept;
+	Variable(const std::string &name) noexcept;
 
 
 	/// @brief constructor from char
 	///
-	/// @param[in] value the char value of this Operator
+	/// @param[in] name the name of this Varaible
 	///
 	/// @overload
 	///
 	/// @exceptsafe Shall not throw exceptions.
 	///
-	Identifier(char value) noexcept;
+	Variable(char name) noexcept;
 
 
 	/// @brief default destructor
 	///
-	virtual ~Identifier() = default;
+	virtual ~Variable() = default;
 
 
 	/// @brief attach variable
@@ -163,30 +164,52 @@ public:
 
 	/// @brief constructor from string
 	///
-	/// @param[in] value the string value of this Operator
+	/// @param[in] name the string name of this Operator
 	///
 	/// @exceptsafe shall not throw exceptions
 	///
-	Operator(const std::string &value) noexcept;
+	Operator(const std::string &name) noexcept;
 
 
 	/// @brief constructor from char
 	///
-	/// @param[in] value the char value of this Operator
+	/// @param[in] name the char name of this Operator
 	///
 	/// @overload
 	///
 	/// @exceptsafe Shall not throw exceptions.
-	Operator(char value) noexcept;
+	Operator(char name) noexcept;
 
 
 
 	/// @brief default destructor
 	///
 	virtual ~Operator() = default;
+};
 
+
+class NumberLiteral final : public Token {
+public:
+
+	/// @brief constructor from integer value
+	/// @param[in] value number literal value
+	///
+	NumberLiteral(int value) noexcept;
+
+
+	/// @brief default destructor
+	///
+	virtual ~NumberLiteral() = default;
+
+
+	/// @brief get literal value
+	/// @returns value
+	///
+	inline virtual int Value() const noexcept {
+		return value_;
+	}
 private:
-
+	int value_;
 };
 
 }				// namespace ecl

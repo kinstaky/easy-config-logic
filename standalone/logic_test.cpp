@@ -7,7 +7,7 @@
 #include <iostream>
 #include <vector>
 
-#include "config/logic_parser.h"
+#include "config/config_parser.h"
 #include "config/memory_config.h"
 
 
@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
 	}
 
 	// read logic expressions
-	ecl::LogicParser parser;
+	ecl::ConfigParser parser;
 	if (parser.Read(argv[1]) != 0) {
 		std::cerr << "Error: Parser read file " << argv[1] << " failed." << std::endl;
 		return -1;
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 			input_ports |= 1ul << i;
 			++input_size;
 		}
-		if (parser.IsFrontOutput(i) && parser.IsFrontLogicOutput(i)) {
+		if (parser.IsFrontOutput(i) && parser.FrontOutputInverse(i)) {
 			output_ports |= 1ul << i;
 			++output_size;
 		}
@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 	std::vector<AndGateInfo> and_gates;
 
 	for (size_t i = 0; i < parser.FrontOutputSize(); ++i) {
-		ecl::OutputInfo info = parser.FrontOutput(i);
+		ecl::PortSource info = parser.FrontOutput(i);
 		OutPortsInfo new_info;
 		new_info.port = info.port;
 		if (info.source < ecl::kOrGatesOffset) {
@@ -78,11 +78,11 @@ int main(int argc, char **argv) {
 		} else if (info.source < ecl::kAndGatesOffset) {
 			// or gate
 			new_info.type = kTypeOrGate;
-			uint64_t or_gate = parser.OrGate(info.source - ecl::kOrGatesOffset).to_ulong();
+			size_t gate_index = info.source - ecl::kOrGatesOffset;
 			size_t index = -1ul;
 			// check existence of or gate
 			for (size_t j = 0; j < or_gates.size(); ++j) {
-				if (or_gates[j] == or_gate) {
+				if (or_gates[j] == parser.OrGate(gate_index)->At(0)) {
 					index = j;
 					break;
 				}
@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
 			// not exist
 			if (index == -1ul) {
 				index = or_gates.size();
-				or_gates.push_back(or_gate);
+				or_gates.push_back(parser.OrGate(gate_index)->At(0));
 			}
 			new_info.or_gate = index;
 
@@ -98,11 +98,12 @@ int main(int argc, char **argv) {
 			// and gate
 			new_info.type = kTypeAndGate;
 			AndGateInfo and_gate;
-			and_gate.ports = parser.AndGate(info.source - ecl::kAndGatesOffset).to_ulong() & 0xffff'ffff'ffff;
+			size_t gate_index = info.source - ecl::kAndGatesOffset;
+			and_gate.ports = parser.AndGate(gate_index)->At(0) & 0xffff'ffff'ffff;
 
 			for (size_t j = ecl::kFrontIoNum; j < ecl::kAndBits; ++j) {
-				if (parser.AndGate(info.source-ecl::kAndGatesOffset).test(j)) {
-					uint64_t or_gate = parser.OrGate(j-ecl::kFrontIoNum).to_ulong();
+				if (parser.AndGate(gate_index)->Test(j)) {
+					uint64_t or_gate = parser.OrGate(j-ecl::kFrontIoNum)->At(0);
 					size_t or_gate_index = -1ul;
 					// check existence of or gate
 					for (size_t k = 0; k < and_gates.size(); ++k) {

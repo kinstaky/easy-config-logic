@@ -280,7 +280,11 @@ public:
 	///
 	/// @exceptsafe Shall not throw exceptions.
 	///
-	ProductionFactory(Symbol *parent, size_t size, const ActionType<EvalType> &action = nullptr) noexcept;
+	ProductionFactory(
+		Symbol *parent,
+		size_t size,
+		const ActionType<EvalType> &action = nullptr
+	) noexcept;
 
 
 
@@ -642,8 +646,11 @@ EvalType Evaluate(Symbol *symbol) {
 		case kSymbolType_Production:
 			result = ((Production<EvalType>*)symbol)->Eval();
 			break;
-		case kSymbolType_Identifier:
-			result = *(static_cast<EvalType*>(((Identifier*)symbol)->GetAttached()));
+		case kSymbolType_Literal:
+			result = static_cast<EvalType>(((NumberLiteral*)symbol)->Value());
+			break;
+		case kSymbolType_Variable:
+			result = *(static_cast<EvalType*>(((Variable*)symbol)->GetAttached()));
 			break;
 		case kSymbolType_Operator:
 			throw std::runtime_error("operator symbol");

@@ -20,10 +20,10 @@ const std::vector<std::vector<std::string>> add_multi_grammar_first_list = {
 	{"(", ""}					// f
 };
 const std::vector<std::vector<int>> add_multi_grammar_first_type = {
-	{kSymbolType_Operator, kSymbolType_Identifier},		// s
-	{kSymbolType_Operator, kSymbolType_Identifier},		// e
-	{kSymbolType_Operator, kSymbolType_Identifier},		// t
-	{kSymbolType_Operator, kSymbolType_Identifier}		// f
+	{kSymbolType_Operator, kSymbolType_Variable},		// s
+	{kSymbolType_Operator, kSymbolType_Variable},		// e
+	{kSymbolType_Operator, kSymbolType_Variable},		// t
+	{kSymbolType_Operator, kSymbolType_Variable}		// f
 };
 const std::vector<bool> add_multi_grammar_frist_empty = {
 	false,					// s
@@ -41,10 +41,10 @@ const std::vector<std::vector<std::string>> arithmetic_grammar_first_list = {
 	{"(", ""}					// f
 };
 const std::vector<std::vector<int>> arithmetic_grammar_first_type = {
-	{kSymbolType_Operator, kSymbolType_Identifier},		// s
-	{kSymbolType_Operator, kSymbolType_Identifier},		// e
-	{kSymbolType_Operator, kSymbolType_Identifier},		// t
-	{kSymbolType_Operator, kSymbolType_Identifier}		// f
+	{kSymbolType_Operator, kSymbolType_Variable},		// s
+	{kSymbolType_Operator, kSymbolType_Variable},		// e
+	{kSymbolType_Operator, kSymbolType_Variable},		// t
+	{kSymbolType_Operator, kSymbolType_Variable}		// f
 };
 const std::vector<bool> arithmetic_grammar_frist_empty = {
 	false,					// s
@@ -61,9 +61,9 @@ const std::vector<std::vector<std::string>> logical_grammar_first_list = {
 	{"(", ""}					// t
 };
 const std::vector<std::vector<int>> logical_grammar_first_type = {
-	{kSymbolType_Operator, kSymbolType_Identifier},		// s
-	{kSymbolType_Operator, kSymbolType_Identifier},		// e
-	{kSymbolType_Operator, kSymbolType_Identifier}		// t
+	{kSymbolType_Operator, kSymbolType_Variable},		// s
+	{kSymbolType_Operator, kSymbolType_Variable},		// e
+	{kSymbolType_Operator, kSymbolType_Variable}		// t
 };
 const std::vector<bool> logical_grammar_frist_empty = {
 	false,					// s
@@ -101,6 +101,7 @@ const std::vector<std::vector<int>> arithmetic_following_type = {
 	{kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator},
 	{kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator, kSymbolType_Operator}
 };
+
 // logical grammar
 const std::vector<std::vector<std::string>> logical_following_list = {
 	{"$"},								// s
@@ -133,7 +134,7 @@ const std::vector<std::vector<int>> add_multi_goto_table = {
 	{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1}		// I11
 };
 // arithmetci grammar
-const std::vector<std::vector<int>> airthmetic_goto_table = {};
+const std::vector<std::vector<int>> arithmetic_goto_table = {};
 // logical grammar
 const std::vector<std::vector<int>> logical_goto_table = {
 	{-1, 1, -1, 2, -1, 3, -1, 4, -1},				// I0
@@ -155,16 +156,16 @@ const std::vector<std::vector<int>> logical_goto_table = {
 
 
 bool SymbolInFirst(
-	Symbol *symbol, 
-	const std::vector<std::string> &first, 
+	Symbol *symbol,
+	const std::vector<std::string> &first,
 	const std::vector<int> &type
 ) {
 
-	if (symbol->Type() == kSymbolType_Identifier) {
+	if (symbol->Type() == kSymbolType_Variable) {
 
 		/// check whether this symbol is an identifier
 		for (size_t i = 0; i < type.size(); ++i) {
-			if (type[i] == kSymbolType_Identifier) {
+			if (type[i] == kSymbolType_Variable) {
 				return true;
 			}
 		}
@@ -172,7 +173,7 @@ bool SymbolInFirst(
 
 		// check symbols except identifier
 		for (size_t i = 0; i < type.size(); ++i) {
-			if (type[i] == symbol->Type() && first[i] == ((Token*)symbol)->Value()) {
+			if (type[i] == symbol->Type() && first[i] == ((Token*)symbol)->Name()) {
 				return true;
 			}
 		}
@@ -184,9 +185,9 @@ bool SymbolInFirst(
 
 
 bool SymbolInFollow(
-	size_t index, 
+	size_t index,
 	const std::vector<std::string> &follow,
-	const std::vector<int> &type, 
+	const std::vector<int> &type,
 	const std::vector<Symbol*> &symbols
 ) {
 
@@ -206,16 +207,16 @@ bool SymbolInFollow(
 				continue;
 			}
 			switch (symbol->Type()) {
-				case kSymbolType_Identifier:
+				case kSymbolType_Variable:
 					return true;
 				case kSymbolType_Operator:
-					if (((Operator*)symbol)->Value() == follow[i]) {
+					if (((Operator*)symbol)->Name() == follow[i]) {
 						return true;
 					}
 					break;
 				default:
 					;
-			}	
+			}
 		}
 	}
 	return false;
@@ -228,7 +229,7 @@ TEST(GrammarTest, NotLanguage) {
 	Grammar<bool> grammar;
 
 	// terminal symbols
-	Symbol *identifier = new Symbol(kSymbolType_Identifier);
+	Symbol *identifier = new Symbol(kSymbolType_Variable);
 	Operator *op_not = new Operator("~");
 
 	// non-terminal symbols
@@ -258,7 +259,7 @@ TEST(GrammarTest, NotLanguage) {
 			return Evaluate<bool>(symbols[0]);
 		}
 	);
-	
+
 	// set children
 	production_s_e->SetChildren(production_set_e);
 	production_e_not_e->SetChildren(op_not, production_set_e);
@@ -283,7 +284,7 @@ TEST(GrammarTest, NotLanguage) {
 	EXPECT_EQ((*production_set_e)[1]->Child(0), identifier);
 	EXPECT_EQ((*production_set_e)[0]->Child(0)->Type(), kSymbolType_Operator);
 	EXPECT_EQ((*production_set_e)[0]->Child(1)->Type(), kSymbolType_ProductionFactorySet);
-	EXPECT_EQ((*production_set_e)[1]->Child(0)->Type(), kSymbolType_Identifier);
+	EXPECT_EQ((*production_set_e)[1]->Child(0)->Type(), kSymbolType_Variable);
 
 
 	// symbol list
@@ -331,7 +332,7 @@ TEST(GrammarTest, NotLanguage) {
 		production_e_not_e->Item(2),
 		production_e_id->Item(1)
 	};
-	
+
 	for (size_t i = 0; i < core_items.size(); ++i) {
 		std::vector<ProductionItem<bool>*> closure;
 		EXPECT_EQ(grammar.MakeClosure(core_items[i], closure), 0);
@@ -346,7 +347,7 @@ TEST(GrammarTest, NotLanguage) {
 
 
 	std::vector<std::vector<int>> collection_goto = {
-		{-1, 1, 2, 3, -1},		
+		{-1, 1, 2, 3, -1},
 		{-1, -1, -1, -1, -1},
 		{-1, 4, 2, 3, -1},
 		{-1, -1, -1, -1, -1},
@@ -370,9 +371,6 @@ TEST(GrammarTest, NotLanguage) {
 	delete production_e_not_e;
 	delete production_e_id;
 }
-
-
-
 
 
 
@@ -403,7 +401,7 @@ TEST(GrammarTest, FirstList) {
 	// std::cout << "==check arithmetic grammar==" << std::endl;
 	ArithmeticGrammar arithmetic_grammar;
 	symbol_list = arithmetic_grammar.SymbolList();
-	
+
 	set_size = arithmetic_grammar.ProductionSetSize();
 	ASSERT_EQ(set_size, 4) << "Set size error";
 
@@ -425,7 +423,7 @@ TEST(GrammarTest, FirstList) {
 	// std::cout << "==check logical grammar==" << std::endl;
 	LogicalGrammar logical_grammar;
 	symbol_list = logical_grammar.SymbolList();
-	
+
 	set_size = logical_grammar.ProductionSetSize();
 	ASSERT_EQ(set_size, 3) << "Set size error";
 
@@ -440,8 +438,8 @@ TEST(GrammarTest, FirstList) {
 			Symbol *symbol = symbol_list[first_set[i]];
 			EXPECT_TRUE(
 				SymbolInFirst(
-					symbol, 
-					logical_grammar_first_list[i], 
+					symbol,
+					logical_grammar_first_list[i],
 					logical_grammar_first_type[i]
 				)
 			);
@@ -463,7 +461,7 @@ TEST(GrammarTest, FollowList) {
 
 	for (int set = 0; set < set_size; set++) {
 		std::vector<int> follow_list = add_multi_grammar.Following(set);
-		
+
 		EXPECT_EQ(
 			follow_list.size(),
 			add_multi_following_list[set].size()
@@ -472,9 +470,9 @@ TEST(GrammarTest, FollowList) {
 		for (size_t i = 0; i < follow_list.size(); ++i) {
 			EXPECT_TRUE(
 				SymbolInFollow(
-					follow_list[i], 
-					add_multi_following_list[set], 
-					add_multi_following_type[set], 
+					follow_list[i],
+					add_multi_following_list[set],
+					add_multi_following_type[set],
 					symbol_list
 				)
 			);
@@ -490,7 +488,7 @@ TEST(GrammarTest, FollowList) {
 
 	for (int set = 0; set < set_size; set++) {
 		std::vector<int> follow_list = arithmetic_grammar.Following(set);
-		
+
 		EXPECT_EQ(
 			follow_list.size(),
 			arithmetic_following_list[set].size()
@@ -499,9 +497,9 @@ TEST(GrammarTest, FollowList) {
 		for (size_t i = 0; i < follow_list.size(); ++i) {
 			EXPECT_TRUE(
 				SymbolInFollow(
-					follow_list[i], 
-					arithmetic_following_list[set], 
-					arithmetic_following_type[set], 
+					follow_list[i],
+					arithmetic_following_list[set],
+					arithmetic_following_type[set],
 					symbol_list
 				)
 			);
@@ -517,7 +515,7 @@ TEST(GrammarTest, FollowList) {
 
 	for (int set = 0; set < set_size; set++) {
 		std::vector<int> follow_list = logical_grammar.Following(set);
-		
+
 		EXPECT_EQ(
 			follow_list.size(),
 			logical_following_list[set].size()
@@ -526,9 +524,9 @@ TEST(GrammarTest, FollowList) {
 		for (size_t i = 0; i < follow_list.size(); ++i) {
 			EXPECT_TRUE(
 				SymbolInFollow(
-					follow_list[i], 
-					logical_following_list[set], 
-					logical_following_type[set], 
+					follow_list[i],
+					logical_following_list[set],
+					logical_following_type[set],
 					symbol_list
 				)
 			);
@@ -539,7 +537,7 @@ TEST(GrammarTest, FollowList) {
 
 
 
-TEST(TestGrammar, CollectionGoto) {
+TEST(SpecificGrammarTest, CollectionGoto) {
 	int collection_size;
 	int symbol_size;
 	std::vector<Symbol*> symbol_list;
@@ -553,7 +551,7 @@ TEST(TestGrammar, CollectionGoto) {
 
 	EXPECT_EQ(collection_size, add_multi_goto_table.size());
 	EXPECT_EQ(symbol_size+1, add_multi_goto_table[0].size());
-	
+
 	for (int c = 0; c < collection_size; ++c) {
 		for (int s = 0; s < symbol_size+1; ++s) {
 			EXPECT_EQ(add_multi_grammar.CollectionGoto(c, s), add_multi_goto_table[c][s])
@@ -571,7 +569,7 @@ TEST(TestGrammar, CollectionGoto) {
 
 	// EXPECT_EQ(collection_size, arithmetic_goto_table.size());
 	// EXPECT_EQ(symbol_size+1, arithmetic_goto_table[0].size());
-	
+
 	// for (int c = 0; c < collection_size; ++c) {
 	// 	for (int s = 0; s < symbol_size+1; ++s) {
 	// 		EXPECT_EQ(arithmetic_grammar.CollectionGoto(c, s), arithmetic_goto_table[c][s])
@@ -589,7 +587,7 @@ TEST(TestGrammar, CollectionGoto) {
 
 	EXPECT_EQ(collection_size, logical_goto_table.size());
 	EXPECT_EQ(symbol_size+1, logical_goto_table[0].size());
-	
+
 	for (int c = 0; c < collection_size; ++c) {
 		for (int s = 0; s < symbol_size+1; ++s) {
 			EXPECT_EQ(logical_grammar.CollectionGoto(c, s), logical_goto_table[c][s])

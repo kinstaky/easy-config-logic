@@ -2,7 +2,7 @@
 #include <string>
 #include <fstream>
 
-#include "config/logic_parser.h"
+#include "config/config_parser.h"
 #include "config/memory_config.h"
 
 int main(int argc, char **argv) {
@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
 		std::cout << "  output_file       -- output raw config file" << std::endl;
 	}
 
-	ecl::LogicParser parser;
+	ecl::ConfigParser parser;
 	if (parser.Read(argv[1]) != 0) {
 		std::cerr << "Error: Logic parser read from file " << argv[1] << " failed." << std::endl;
 		return -1;
