@@ -25,10 +25,6 @@ add_executable(convert convert.cpp)
 target_link_libraries(convert PRIVATE memory_config config_parser)
 
 
-# i2c library
-add_library(i2c STATIC i2c.cpp i2c.h)
-
-
 # config
 add_executable(config config.cpp)
 target_link_libraries(config PRIVATE memory_config config_parser i2c)

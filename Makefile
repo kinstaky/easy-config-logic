@@ -20,7 +20,7 @@ install:
 	@for prog in $(SCALER_PROGRAMS); do \
 		cp standalone/scaler/$$prog bin/$$prog; \
 	done
-	
+
 
 .PHONY: uninstall
 uninstall:

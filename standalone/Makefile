@@ -11,9 +11,9 @@ CONFIG_OBJS := $(patsubst %.cpp,%.o,$(call rwildcard,../src/config,*.cpp))
 PROGRAMS := syntax_tree compare standardize convert config logic_test
 syntax_tree_OBJS := syntax_tree.o $(SYNTAX_OBJS)
 compare_OBJS := compare_logical_expression.o $(SYNTAX_OBJS)
-standardize_OBJS := standard_logic_adapter.o $(SYNTAX_OBJS) $(STANDARDIZE_OBJS)
+standardize_OBJS := standardize.o $(SYNTAX_OBJS) $(STANDARDIZE_OBJS)
 convert_OBJS := convert.o $(SYNTAX_OBJS) $(STANDARDIZE_OBJS) $(CONFIG_OBJS)
-config_OBJS := config.o i2c.o $(SYNTAX_OBJS) $(STANDARDIZE_OBJS) $(CONFIG_OBJS)
+config_OBJS := config.o ../src/i2c.o $(SYNTAX_OBJS) $(STANDARDIZE_OBJS) $(CONFIG_OBJS)
 logic_test_OBJS := logic_test.o $(SYNTAX_OBJS) $(STANDARDIZE_OBJS) $(CONFIG_OBJS)
 
 
