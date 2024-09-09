@@ -41,7 +41,7 @@ int ParseArguments(
 	int argc,
 	char **argv,
 	bool &help,
-	bool &test,
+	int &test,
 	bool &print,
 	int &port,
 	LogLevel &level,
@@ -62,12 +62,16 @@ int ParseArguments(
 		if (argv[result][1] == 'h') {
 			help = true;
 			return result;
-		} else if (argv[result][1] == 't') {
-			// option of running in test mode
-			test = true;
 		} else if (argv[result][1] == 's') {
 			// option of print scaler values
 			print = true;
+		} else if (argv[result][1] == 't') {
+			// option of running in test mode
+			// get mode in next argument
+			++result;
+			// miss argument behind option
+			if (result == argc) return -argc;
+			test = atoi(argv[result]);
 		} else if (argv[result][1] == 'p') {
 			// option of setting port
 			// get port in next argument
@@ -107,7 +111,7 @@ int main(int argc, char **argv) {
 	// help flag
 	bool help = false;
 	// test flag
-	bool test = false;
+	int test = 0;
 	// print flag
 	bool print = false;
 	// service port

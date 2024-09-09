@@ -39,7 +39,7 @@ struct ScalerFileHeader {
 struct ServiceOption {
 	int port;
 	LogLevel log_level;
-	bool test;
+	int test;
 	std::string data_path;
 
 	ServiceOption() {
@@ -129,7 +129,7 @@ private:
 	// service options
 	int port_;
 	LogLevel log_level_;
-	bool test_;
+	int test_;
 	std::string data_path_;
 
 	// mapped file

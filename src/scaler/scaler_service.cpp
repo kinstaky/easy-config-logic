@@ -42,7 +42,7 @@ ScalerService::ScalerService(const ServiceOption &option) noexcept
 	if (test_) {
 		memory_ = new Memory;
 		for (size_t i = 0; i < kMaxScalers; ++i) {
-			memory_->scaler[i].value = i*100;
+			memory_->scaler[i].value = i*100*test_;
 		}
 	} else {
 		xillybus_lite_fd_ = open("/dev/uio0", O_RDWR);
@@ -91,10 +91,10 @@ ScalerService::ScalerService(const ServiceOption &option) noexcept
 					std::mt19937 engine(r());
 					for (size_t i = 0; i < kMaxScalers; ++i) {
 						std::normal_distribution<double> distribution(
-							0.0, i*10
+							0.0, i*10*test_
 						);
 						memory_->scaler[i].value =
-							i * 100 + std::round(distribution(engine));
+							i*100*test_ + std::round(distribution(engine));
 					}
 					next += std::chrono::seconds(1);
 					std::this_thread::sleep_until(next);
