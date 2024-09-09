@@ -72,6 +72,7 @@ int ParseArguments(
 			// miss argument behind option
 			if (result == argc) return -argc;
 			test = atoi(argv[result]);
+			if (test == 0) test = 1;
 		} else if (argv[result][1] == 'p') {
 			// option of setting port
 			// get port in next argument
