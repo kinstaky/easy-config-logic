@@ -1,0 +1,16 @@
+syntax = "proto3";
+package ecl;
+
+service EasyConfigLogic {
+	rpc GetState(Request) returns (Response) {}
+	rpc GetScaler(Request) returns (stream Response) {}
+};
+
+message Request {
+	int32 type = 1;
+	int32 index = 2;
+}
+
+message Response {
+	int32 value = 1;
+}

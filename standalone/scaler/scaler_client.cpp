@@ -167,7 +167,7 @@ void ParseArguments(int argc, char **argv, int &pos_argc, char **&pos_argv) {
 	}
 	pos_argv = argv + (argc - pos_argc);
 	return;
-} 
+}
 
 
 //-----------------------------------------------------------------------------

@@ -2,8 +2,52 @@
 #define __MEMORY_H__
 
 #include <cstdint>
+#include <cstddef>
 
 namespace ecl {
+
+const size_t kFrontIoGroupNum = 3;
+const size_t kFrontIoGroupSize = 16;
+const size_t kFrontIoNum = 48;
+
+const size_t kMaxMultiGates = 16;
+
+const size_t kOrGatesOffset = kFrontIoNum;
+const size_t kOrBits = kFrontIoNum;
+const size_t kMaxOrGates = 16;
+
+const size_t kAndGatesOffset = kOrGatesOffset + kMaxOrGates;
+const size_t kAndBits = kOrBits + kMaxOrGates;
+const size_t kMaxAndGates = 16;
+
+const size_t kDividersOffset = kAndGatesOffset + kMaxAndGates;
+const size_t kMaxDividers = 8;
+
+const size_t kDividerOrGatesOffset = kDividersOffset + kMaxDividers;
+const size_t kDividerOrBits = kAndBits + kMaxAndGates + kMaxDividers;
+const size_t kMaxDividerOrGates = 8;
+
+const size_t kDividerAndGatesOffset = kDividerOrGatesOffset + kMaxDividerOrGates;
+const size_t kDividerAndBits = kDividerOrBits + kMaxDividerOrGates;
+const size_t kMaxDividerAndGates = 8;
+
+const size_t kClocksOffset = kDividerAndGatesOffset + kMaxDividerAndGates;
+const size_t kMaxClocks = 4;
+
+const size_t kInternalClocksOffset = kClocksOffset + kMaxClocks;
+const size_t kMaxInternalClocks = 4;
+const size_t kExternalClockOffset = kInternalClocksOffset + kMaxInternalClocks;
+const size_t kBackOffset = kExternalClockOffset + 1;
+const size_t kZeroValueOffset = kBackOffset + 1;
+
+const size_t kMaxScalers = 32;
+const size_t kScalersOffset = 255 - kMaxScalers;
+
+const size_t kOrGateWidth = (kOrBits + 63) / 64;
+const size_t kAndGateWidth = (kAndBits + 63) / 64;
+const size_t kDividerOrGateWidth = (kDividerOrBits + 63) / 64;
+const size_t kDividerAndGateWidth = (kDividerAndBits + 63) / 64;
+
 
 struct I2C {
 	uint32_t sda : 1;
