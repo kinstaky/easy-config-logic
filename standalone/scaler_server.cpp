@@ -13,6 +13,7 @@ void PrintUsage(const char *name) {
 		<< "  -s         Print scaler value on screen.\n"
 		<< "  -p port    Set the listening port, default is 2233.\n"
 		<< "  -d path    Set data path, default is ./\n"
+		<< "  -n name    Set device name, default is empty.\n"
 		<< "  -l level   Set log level: error, warn, info, debug,\n"
 		<< "               default is warn.\n"
 		<< "Examples:\n"
@@ -31,8 +32,9 @@ void PrintUsage(const char *name) {
 /// @param[out] test run in test mode
 /// @param[out] print whether to print scaler values on screen
 /// @param[out] port run serveice on this port
-/// @param[out] level set log level
 /// @param[out] path data path
+/// @param[out] device device name
+/// @param[out] level set log level
 /// @returns start index of positional arguments if succes, if failed returns
 ///		-argc (negative argc) for miss argument behind option,
 /// 	or -index (negative index) for invalid argument
@@ -44,14 +46,16 @@ int ParseArguments(
 	int &test,
 	bool &print,
 	int &port,
-	LogLevel &level,
-	std::string &path
+	std::string &path,
+	std::string &device,
+	LogLevel &level
 ) {
 	// initialize
 	help = false;
 	test = false;
 	print = false;
 	path = "./";
+	device = "";
 	// start index of positional arugments
 	int result = 0;
 	for (result = 1; result < argc; ++result) {
@@ -99,6 +103,13 @@ int ParseArguments(
 			// miss argument behind option
 			if (result == argc) return -argc;
 			path = std::string(argv[result]);
+		} else if (argv[result][1] == 'n') {
+			// option of setting device name
+			// get device name in next argument
+			++result;
+			// miss argument behind option
+			if (result == argc) return -argc;
+			device = std::string(argv[result]);
 		} else {
 			return -result;
 		}
@@ -117,15 +128,17 @@ int main(int argc, char **argv) {
 	bool print = false;
 	// service port
 	int port = 2233;
-	// log level
-	LogLevel log_level = kWarn;
 	// data path
 	std::string path;
+	// device name
+	std::string device_name;
+	// log level
+	LogLevel log_level = kWarn;
 
 	// parse arguments and get start index of positional arguments
 	int pos_start = ParseArguments(
 		argc, argv,
-		help, test, print, port, log_level, path
+		help, test, print, port, path, device_name, log_level
 	);
 
 	// need help
@@ -148,6 +161,7 @@ int main(int argc, char **argv) {
 	option.test = test;
 	option.log_level = log_level;
 	option.data_path = path;
+	option.device_name = device_name;
 
 	if (print) {
 		option.port = -1;

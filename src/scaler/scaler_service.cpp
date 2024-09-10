@@ -26,6 +26,7 @@ ScalerService::ScalerService(const ServiceOption &option) noexcept
 , log_level_(option.log_level)
 , test_(option.test)
 , data_path_(option.data_path)
+, device_name_(option.device_name)
 , xillybus_lite_fd_(-1)
 , memory_(nullptr) {
 
@@ -33,10 +34,11 @@ ScalerService::ScalerService(const ServiceOption &option) noexcept
 
 	if (log_level_ >= kDebug) {
 		std::cout << "[Debug] Initialize scaler service:\n"
-			<< "  port " << port_ << "\n"
-			<< "  data path " << data_path_ << "\n"
-			<< "  log level " << kLogLevelName[log_level_] << "\n"
-			<< "  test " << test_ << "\n";
+			<< "  port: " << port_ << "\n"
+			<< "  data path: " << data_path_ << "\n"
+			<< "  device name: " << device_name_ << "\n"
+			<< "  log level: " << kLogLevelName[log_level_] << "\n"
+			<< "  test: " << test_ << "\n";
 	}
 
 	if (test_) {
@@ -166,11 +168,12 @@ void ScalerService::PrintScaler() const noexcept {
 }
 
 
-std::string GetFileName(std::string data_path, tm *t) {
+std::string GetFileName(std::string data_path, std::string device_name, tm *t) {
 	std::stringstream file_name;
 	file_name << data_path << t->tm_year+1900
 		<< std::setw(2) << std::setfill('0') << t->tm_mon+1
 		<< std::setw(2) << std::setfill('0') << t->tm_mday
+		<< (device_name.empty() ? "" : "-"+device_name)
 		<< ".bin";
 	return file_name.str();
 }
@@ -200,7 +203,7 @@ int ScalerService::ReadRecentScaler(
 		tm *yesterday_tm = localtime(&yesterday);
 		yesterday_tm->tm_mday--;
 		mktime(yesterday_tm);
-		std::string file_name = GetFileName(data_path_, yesterday_tm);
+		std::string file_name = GetFileName(data_path_, device_name_, yesterday_tm);
 		// open file
 		std::ifstream fin(file_name, std::ios::binary);
 		if (!fin.good()) {
@@ -234,7 +237,7 @@ int ScalerService::ReadRecentScaler(
 
 	// read today's data
 	// get file name
-	std::string file_name = GetFileName(data_path_, now_tm);
+	std::string file_name = GetFileName(data_path_, device_name_, now_tm);
 	// open file
 	std::ifstream fin(file_name, std::ios::binary);
 	if (!fin.good()) {
@@ -325,7 +328,7 @@ int ScalerService::WriteScaler() const noexcept {
 	size_t seconds = ((current_hour * 60 + current_min) * 60) + current_sec;
 
 	// file name
-	std::string file_name = GetFileName(data_path_, current_tm);
+	std::string file_name = GetFileName(data_path_, device_name_, current_tm);
 	// open file
 	std::fstream fout;
 	if (GetFileStream(file_name.c_str(), fout)) {

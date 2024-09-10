@@ -37,16 +37,23 @@ struct ScalerFileHeader {
 
 
 struct ServiceOption {
+	// gRPC port, server listen at localhost:port
 	int port;
+	// log level, error, warn, info, debug
 	LogLevel log_level;
+	// run in test mode, 0 normal mode, >0 different test mode
 	int test;
+	// scaler data stored path
 	std::string data_path;
+	// device name to distinguish different device
+	std::string device_name;
 
 	ServiceOption() {
 		port = 2233;
 		log_level = kWarn;
-		test = false;
+		test = 0;
 		data_path = "./";
+		device_name = "";
 	}
 };
 
@@ -131,6 +138,7 @@ private:
 	LogLevel log_level_;
 	int test_;
 	std::string data_path_;
+	std::string device_name_;
 
 	// mapped file
 	int xillybus_lite_fd_;
