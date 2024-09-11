@@ -77,6 +77,25 @@ public:
 	int WriteScaler() const noexcept;
 
 
+	/// @brief read scaler value for one date
+	/// @param[in] date pointer to c style date
+	/// @param[in] flag flag that scaler needs to be read
+	/// @param[in] seconds seconds for start to read in this day
+	/// @param[in] size number of scaler values to read
+	/// @param[in] average seconds to average
+	/// @param[out] scalers output scaler values
+	/// @returns 0 for success, -1 for failure
+	///
+	int ReadDateScaler(
+		tm* date,
+		int32_t flag,
+		size_t seconds,
+		size_t size,
+		int average,
+		std::vector<std::vector<uint32_t>> &scalers
+	) const noexcept;
+
+
 	/// @brief read recent scaler values
 	/// @param[in] index index of scaler to read
 	/// @param[in] seconds time in seconds to read before now
@@ -119,12 +138,25 @@ public:
 
 	/// @brief get scaler value
 	/// @param[in] context server context, handled by gRPC
-	/// @param[in] request request content, keep empty now
+	/// @param[in] request request content,
+	///		type 0 refers to get current scaler,
+	///		type 1+ refers to get range of scaler values
 	/// @returns reactor to write scaler values
 	///
 	grpc::ServerWriteReactor<Response>* GetScaler(
 		grpc::CallbackServerContext *context,
 		const Request *request
+	) override;
+
+
+	/// @brief get scaler date value
+	/// @param[in] context server context, handled by gRPC
+	/// @param[in] request request content, fill date
+	/// @returns reactor to write scaler values
+	///
+	grpc::ServerWriteReactor<Response>* GetScalerDate(
+		grpc::CallbackServerContext *context,
+		const DateRequest *request
 	) override;
 
 

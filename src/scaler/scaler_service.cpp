@@ -168,7 +168,16 @@ void ScalerService::PrintScaler() const noexcept {
 }
 
 
-std::string GetFileName(std::string data_path, std::string device_name, tm *t) {
+/// @brief construct file name
+/// @param[in] data_path data stored path
+/// @param[in] device_name device name
+/// @param[in] t c style time
+/// @returns file name
+std::string GetFileName(
+	std::string data_path,
+	std::string device_name,
+	tm *t
+) {
 	std::stringstream file_name;
 	file_name << data_path << t->tm_year+1900
 		<< std::setw(2) << std::setfill('0') << t->tm_mon+1
@@ -176,6 +185,65 @@ std::string GetFileName(std::string data_path, std::string device_name, tm *t) {
 		<< (device_name.empty() ? "" : "-"+device_name)
 		<< ".bin";
 	return file_name.str();
+}
+
+
+int ScalerService::ReadDateScaler(
+	tm* date,
+	int32_t flag,
+	size_t seconds,
+	size_t size,
+	int average,
+	std::vector<std::vector<uint32_t>> &scalers
+) const noexcept {
+	// check parameters
+	if (flag == 0) return -1;
+	if (seconds + size*average > 86400) return -1;
+	// initialize
+	scalers.clear();
+	std::vector<int> indexes;
+	for (int32_t i = 0; i < 32; ++i) {
+		if (flag & (1 << i)) {
+			scalers.push_back(std::vector<uint32_t>());
+			indexes.push_back(i);
+		}
+	}
+	double sum[32];
+	int sum_number = 0;
+
+	// get file name
+	std::string file_name = GetFileName(data_path_, device_name_, date);
+	// open file
+	std::ifstream fin(file_name, std::ios::binary);
+	if (!fin.good()) {
+		std::cout << "[Error] Could not open file " << file_name << "\n";
+		return -2;
+	}
+	// get offset
+	size_t offset = sizeof(ScalerFileHeader)
+		+ seconds * kMaxScalers * sizeof(uint32_t);
+	// set start position for reading
+	fin.seekg(offset);
+	// read
+	uint32_t read_value[kMaxScalers];
+	for (size_t i = 0; i < size*average; ++i) {
+		fin.read((char*)read_value, sizeof(uint32_t)*kMaxScalers);
+		++sum_number;
+		for (size_t j = 0; j < indexes.size(); ++j) {
+			sum[j] += read_value[indexes[j]];
+			if (sum_number == average) {
+				scalers[j].push_back(std::round(sum[j] / average));
+				sum[j] = 0.0;
+			}
+		}
+		if (sum_number == average) {
+			sum_number = 0;
+		}
+	}
+	// close file
+	fin.close();
+
+	return 0;
 }
 
 
@@ -498,6 +566,86 @@ grpc::ServerWriteReactor<Response>* ScalerService::GetScaler(
 	}
 
 	return new ScalerWriter(this, scaler, request->type(), request->index());
+}
+
+
+grpc::ServerWriteReactor<Response>* ScalerService::GetScalerDate(
+	grpc::CallbackServerContext*,
+	const DateRequest *request
+) {
+	class ScalerWriter : public grpc::ServerWriteReactor<Response> {
+	public:
+		ScalerWriter(
+			ScalerService *service,
+			tm *date,
+			int32_t flag
+		)
+		: service_(service)
+		, date_(date)
+		, flag_(flag) {
+			index_ = 0;
+			range_index_ = 0;
+			NextWrite();
+		}
+
+		virtual void OnWriteDone(bool ok) override {
+			if (!ok) {
+				Finish(grpc::Status(
+					grpc::StatusCode::UNKNOWN, "Unexpected failure"
+				));
+			} else {
+				NextWrite();
+			}
+		}
+
+		void OnDone() override {
+			delete this;
+		}
+
+	private:
+
+		void NextWrite() {
+			// get scaler values from file
+			if (range_scalers_.empty()) {
+				if (service_->ReadDateScaler(
+					date_, flag_, 0, 120, 720, range_scalers_
+				)) {
+					Finish(grpc::Status(
+						grpc::StatusCode::DATA_LOSS,
+						"Read recent scaler failed"
+					));
+				}
+			}
+			while (index_ < range_scalers_.size()) {
+				if (range_index_ < range_scalers_[index_].size()) {
+					Response *response = new Response();
+					response->set_value(range_scalers_[index_][range_index_]);
+					range_index_++;
+					StartWrite(response);
+					return;
+				}
+				index_++;
+				range_index_ = 0;
+			}
+			Finish(grpc::Status::OK);
+		}
+
+		const ScalerService *service_;
+		tm *date_;
+		int32_t flag_;
+		size_t index_;
+		size_t range_index_;
+		std::vector<std::vector<uint32_t>> range_scalers_;
+	};
+
+	time_t t = time(NULL);
+	tm *date = localtime(&t);
+	date->tm_year = request->year() - 1900;
+	date->tm_mon = request->month() - 1;
+	date->tm_mday = request->day();
+	mktime(date);
+
+	return new ScalerWriter(this, date, request->flag());
 }
 
 }
