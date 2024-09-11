@@ -596,7 +596,7 @@ void MemoryConfig::Print(std::ostream &os, bool print_tips) const noexcept {
 		<< " " << std::setw(3) << uint32_t(memory_.extern_ts_selection)
 		<< std::hex << std::setfill('0');
 	if (print_tips) {
-		os << std::string(16, ' ')
+		os << std::string(17, ' ')
 			<< "back and external clock signal enable and selection";
 	}
 	os << "\n\n";
@@ -659,7 +659,7 @@ void MemoryConfig::Print(std::ostream &os, bool print_tips) const noexcept {
 		if (print_tips) {
 			std::stringstream ss;
 			ss << memory_.divisor[i];
-			os << std::string(35-ss.str().length(), ' ') << "divider "
+			os << std::string(34-ss.str().length(), ' ') << "divider "
 				<< i << " source selection and divisor";
 		}
 		os << "\n";
@@ -702,7 +702,7 @@ void MemoryConfig::Print(std::ostream &os, bool print_tips) const noexcept {
 			<< " 0x" << std::setw(2) << int(memory_.divider_and[i].divider)
 			<< " 0x" << std::setw(2) << int(memory_.divider_and[i].divider_or);
 		if (print_tips) {
-			os << std::string(16, ' ') << "divider and gate " << i
+			os << std::string(15, ' ') << "divider and gate " << i
 				<< " or gates, and gates, divider, divider-or gate mask";
 		}
 		os << "\n";
@@ -719,7 +719,7 @@ void MemoryConfig::Print(std::ostream &os, bool print_tips) const noexcept {
 		if (print_tips) {
 			std::stringstream ss;
 			ss << memory_.clock_divisor[i] << memory_.clock_divisor[i+1];
-			os << std::string(31-ss.str().length(), ' ') << "clock "
+			os << std::string(29-ss.str().length(), ' ') << "clock "
 				<< i << ", " << i+1 << " source and divisor";
 		}
 		os << "\n";
@@ -733,7 +733,7 @@ void MemoryConfig::Print(std::ostream &os, bool print_tips) const noexcept {
 			<< " " << std::setw(3) << int(memory_.scaler[i+1].source)
 			<< " " << std::setw(1) << int(memory_.scaler[i+1].clock_source);
 		if (print_tips) {
-			os << std::string(25, ' ') << "scaler " << i << ", " << i+1
+			os << std::string(27, ' ') << "scaler " << i << ", " << i+1
 				<< " sources and clock sources";
 		}
 		os << "\n";

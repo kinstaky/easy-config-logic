@@ -538,6 +538,18 @@ public:
 		return dividers_[index];
 	}
 
+
+	//-------------------------------------------------------------------------
+	//							write log
+	//-------------------------------------------------------------------------
+
+
+	/// @brief save config information and get file name
+	/// @param[in] logic logic or register input
+	/// @returns the file name
+	///
+	std::string SaveConfigInformation(bool logic) const noexcept;
+
 private:
 	std::vector<PortSource> front_outputs_;
 	std::bitset<kFrontIoNum> front_out_use_;
@@ -560,6 +572,9 @@ private:
 	std::bitset<kMaxScalers> scaler_use_;
 	// user defined variable list
 	std::vector<VariableInfo> variables_;
+
+	// record information
+	std::vector<std::string> expressions_;
 };
 
 }				// namespace ecl
