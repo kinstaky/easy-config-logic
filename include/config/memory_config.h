@@ -5,6 +5,7 @@
 
 #include "config/config_parser.h"
 #include "config/memory.h"
+#include "i2c.h"
 
 namespace ecl {
 
@@ -75,6 +76,13 @@ public:
 	}
 
 
+	/// @brief call I2C chips to enable RJ45 input or output
+	/// @param[in] map mapped address for FPGA
+	/// @param[in] index index of RJ45 port to enable
+	///
+	void EnableRj45(volatile uint32_t *map, uint32_t index) const noexcept;
+
+
 	/// @brief convert source index from ConfigParser to memroy selection
 	/// @param[in] source index of source from parser
 	/// @returns selection index in memroy config
@@ -89,6 +97,14 @@ public:
 	/// @returns enable flag if index is valid, 0 otherwise
 	///
 	uint8_t Rj45Enable(size_t index) const noexcept;
+
+
+	/// @brief reset FPGA with reset signal
+	/// @param[in] map FPGA memory address
+	/// @note This function set the reset bit for 1ms and set it back to 0.
+	///		So the divider can work properly.
+	///
+	void Reset(volatile uint32_t *map) const noexcept;
 
 private:
 	Memory memory_;

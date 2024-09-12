@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <filesystem>
 
 #include "syntax/parser/lexer.h"
 #include "syntax/parser/syntax_parser.h"
@@ -83,6 +84,8 @@ int ConfigParser::Read(const std::string &path) noexcept {
 
 
 int ConfigParser::Parse(const std::string &expr) noexcept {
+	// save it
+	expressions_.push_back(expr);
 	// lexer analysis
 	Lexer lexer;
 	// tokens
@@ -746,6 +749,53 @@ size_t ConfigParser::ParseFrequency(const std::string &clock) const noexcept {
 	// calculate frequency
 	frequency *= gain;
 	return frequency;
+}
+
+
+std::string ConfigParser::SaveConfigInformation(bool logic) const noexcept {
+	// create directories if not existed
+	std::string path = std::string(getenv("HOME")) + "/.easy-config-logic";
+	std::filesystem::create_directories(path);
+	std::filesystem::create_directories(path+"/backup");
+
+	// get current time
+	time_t current_time = time(NULL);
+	tm* current = localtime(&current_time);
+	// format time
+	char time_str[32];
+	strftime(time_str, 32, "%Y-%m-%d %H:%M:%S", current);
+	char file_name_time[32];
+	strftime(file_name_time, 32, "%Y-%m-%d-%H-%M-%S", current);
+	// backup configuration file name
+	std::string file_name = path + "/backup/" + file_name_time + "-backup";
+
+	// save configuration information to the last config file
+	if (logic) {
+		std::ofstream last_info_file(path+"/last-config.txt");
+		last_info_file << "0\n"
+			<< time_str << "\n"
+			<< file_name << "\n";
+		last_info_file.close();
+	}
+
+	// save configuration information to full log file
+	std::ofstream info_file(path+"/config-log.txt", std::ios::app);
+	info_file << "0, "
+		<< time_str << ", "
+		<< (logic ? "logic" : "register") << ", "
+		<< file_name << "\n";
+	info_file.close();
+
+	// save configuration backup
+	if (logic) {
+		std::ofstream backup_file(file_name+".txt");
+		for (const auto &expr : expressions_) {
+			backup_file << expr << "\n";
+		}
+		backup_file.close();
+	}
+
+	return file_name;
 }
 
 

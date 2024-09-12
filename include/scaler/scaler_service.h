@@ -160,6 +160,28 @@ public:
 	) override;
 
 
+	/// @brief get last FPGA memory config expressions
+	/// @param[in] context server context, handled by gPRC
+	/// @param[in] request request content, empty now
+	/// @returns reactor to write expressions
+	///
+	grpc::ServerWriteReactor<Expression>* GetConfig(
+		grpc::CallbackServerContext *context,
+		const Request *request
+	) override;
+
+
+	/// @brief set FPGA memory config
+	/// @param[in] context server context, handled by gRPC
+	/// @param[in] response response, config result
+	/// @returns reactor to read expressions
+	///
+	grpc::ServerReadReactor<Expression>* SetConfig(
+		grpc::CallbackServerContext *context,
+		Response *response
+	) override;
+
+
 	// keep running until get SIGINT
 	static bool keep_running;
 

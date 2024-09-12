@@ -4,5 +4,5 @@ target_include_directories(
 	"${PROJECT_SOURCE_DIR}/include"
 )
 target_link_libraries(
-	scaler_service PUBLIC ecl_grpc_proto
+	scaler_service PUBLIC ecl_grpc_proto config_parser memory_config
 )

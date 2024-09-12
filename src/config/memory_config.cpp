@@ -596,7 +596,7 @@ void MemoryConfig::Print(std::ostream &os, bool print_tips) const noexcept {
 		<< " " << std::setw(3) << uint32_t(memory_.extern_ts_selection)
 		<< std::hex << std::setfill('0');
 	if (print_tips) {
-		os << std::string(16, ' ')
+		os << std::string(17, ' ')
 			<< "back and external clock signal enable and selection";
 	}
 	os << "\n\n";
@@ -659,7 +659,7 @@ void MemoryConfig::Print(std::ostream &os, bool print_tips) const noexcept {
 		if (print_tips) {
 			std::stringstream ss;
 			ss << memory_.divisor[i];
-			os << std::string(35-ss.str().length(), ' ') << "divider "
+			os << std::string(34-ss.str().length(), ' ') << "divider "
 				<< i << " source selection and divisor";
 		}
 		os << "\n";
@@ -702,7 +702,7 @@ void MemoryConfig::Print(std::ostream &os, bool print_tips) const noexcept {
 			<< " 0x" << std::setw(2) << int(memory_.divider_and[i].divider)
 			<< " 0x" << std::setw(2) << int(memory_.divider_and[i].divider_or);
 		if (print_tips) {
-			os << std::string(16, ' ') << "divider and gate " << i
+			os << std::string(15, ' ') << "divider and gate " << i
 				<< " or gates, and gates, divider, divider-or gate mask";
 		}
 		os << "\n";
@@ -719,7 +719,7 @@ void MemoryConfig::Print(std::ostream &os, bool print_tips) const noexcept {
 		if (print_tips) {
 			std::stringstream ss;
 			ss << memory_.clock_divisor[i] << memory_.clock_divisor[i+1];
-			os << std::string(31-ss.str().length(), ' ') << "clock "
+			os << std::string(29-ss.str().length(), ' ') << "clock "
 				<< i << ", " << i+1 << " source and divisor";
 		}
 		os << "\n";
@@ -733,7 +733,7 @@ void MemoryConfig::Print(std::ostream &os, bool print_tips) const noexcept {
 			<< " " << std::setw(3) << int(memory_.scaler[i+1].source)
 			<< " " << std::setw(1) << int(memory_.scaler[i+1].clock_source);
 		if (print_tips) {
-			os << std::string(25, ' ') << "scaler " << i << ", " << i+1
+			os << std::string(27, ' ') << "scaler " << i << ", " << i+1
 				<< " sources and clock sources";
 		}
 		os << "\n";
@@ -744,13 +744,64 @@ void MemoryConfig::Print(std::ostream &os, bool print_tips) const noexcept {
 
 int MemoryConfig::MapMemory(volatile uint32_t *map) const noexcept {
 	memcpy((void*)map, &memory_, sizeof(memory_));
+	for (size_t i = 0; i < 6; ++i) EnableRj45(map, i);
+	Reset(map);
 	return 0;
+}
+
+
+void MemoryConfig::EnableRj45(
+	volatile uint32_t *map,
+	uint32_t index
+) const noexcept {
+	I2C_Start(map);
+
+	uint8_t address;
+	switch (index) {
+		case 0:
+			address = 0b01001000;
+			break;
+		case 1:
+			address = 0b01000000;
+			break;
+		case 2:
+			address = 0b01001010;
+			break;
+		case 3:
+			address = 0b01000010;
+			break;
+		case 4:
+			address = 0b01001100;
+			break;
+		case 5:
+			address = 0b01000100;
+			break;
+		default:
+			fprintf(stderr, "Error: Invalid index %u\n", index);
+			return;
+	}
+	I2C_Byte_Send(map, address);
+	I2C_Slave_Ack(map);
+
+	I2C_Byte_Send(map, Rj45Enable(index));
+	I2C_Slave_Ack(map);
+
+	I2C_Stop(map);
 }
 
 
 uint8_t MemoryConfig::Rj45Enable(size_t index) const noexcept {
 	if (index > 5) return 0;
 	return uint8_t(memory_.rj45_enable[index/2] >> (index % 2 * 8));
+}
+
+
+void MemoryConfig::Reset(volatile uint32_t *map) const noexcept {
+	Memory *mem = (ecl::Memory*)map;
+	mem->i2c.reset = 1;
+	usleep(1000);
+	mem->i2c.reset = 0;
+	return;
 }
 
 
