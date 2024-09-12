@@ -783,18 +783,24 @@ grpc::ServerReadReactor<Expression>* ScalerService::SetConfig(
 				}
 				// read config from parser
 				memory_config_.Read(&config_parser_);
-				if (test_) {
+				if (!test_) {
 					grpc::Status bad = grpc::Status(
 						grpc::StatusCode::UNAVAILABLE, "mmap failed"
 					);
 					// open memory file
 					int fd = open("/dev/uio0", O_RDWR);
 					if (fd < 0) {
+						if (log_level_ >= kDebug) {
+							std::cout << "[Debug] Failed to open /dev/uio0.\n";
+						}
 						response_->set_value(-2);
 						Finish(bad);
 					}
 					// lock the address space
 					if (flock(fd, LOCK_EX | LOCK_NB)) {
+						if (log_level_ >= kDebug) {
+							std::cout << "[Debug] Failed to acquire file lock.\n";
+						}
 						response_->set_value(-2);
 						Finish(bad);
 					}
@@ -808,6 +814,9 @@ grpc::ServerReadReactor<Expression>* ScalerService::SetConfig(
 						0
 					);
 					if (map_addr == MAP_FAILED) {
+						if (log_level_ >= kDebug) {
+							std::cout << "[Debug] Failed to map.\n";
+						}
 						response_->set_value(-2);
 						Finish(bad);
 					}
