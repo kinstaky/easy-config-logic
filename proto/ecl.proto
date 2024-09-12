@@ -5,6 +5,8 @@ service EasyConfigLogic {
 	rpc GetState(Request) returns (Response) {}
 	rpc GetScaler(Request) returns (stream Response) {}
 	rpc GetScalerDate(DateRequest) returns (stream Response) {}
+	rpc GetConfig(Request) returns (stream Expression) {}
+	rpc SetConfig(stream Expression) returns (Response) {}
 };
 
 message Request {
@@ -21,4 +23,8 @@ message DateRequest {
 	int32 month = 2;
 	int32 day = 3;
 	int32 flag = 4;
+}
+
+message Expression {
+	string value = 1;
 }

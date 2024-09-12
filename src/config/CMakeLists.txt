@@ -7,4 +7,4 @@ target_link_libraries(
 
 # memory_config library
 add_library(memory_config STATIC memory_config.cpp)
-target_link_libraries(memory_config PUBLIC config_parser)
+target_link_libraries(memory_config PUBLIC config_parser i2c)

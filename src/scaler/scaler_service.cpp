@@ -17,6 +17,10 @@
 
 #include <grpcpp/grpcpp.h>
 
+#include "config/config_parser.h"
+#include "config/memory_config.h"
+#include "i2c.h"
+
 namespace ecl {
 
 bool ScalerService::keep_running = true;
@@ -513,6 +517,7 @@ grpc::ServerWriteReactor<Response>* ScalerService::GetScaler(
 		}
 
 		void OnDone() override {
+			for (auto &response : responses_) delete response;
 			delete this;
 		}
 
@@ -520,6 +525,7 @@ grpc::ServerWriteReactor<Response>* ScalerService::GetScaler(
 		void NextSingleWrite() {
 			if (index_ < kMaxScalers) {
 				Response *response = new Response();
+				responses_.push_back(response);
 				response->set_value(scaler_[index_]);
 				index_++;
 				StartWrite(response);
@@ -558,6 +564,7 @@ grpc::ServerWriteReactor<Response>* ScalerService::GetScaler(
 		int average_;
 		size_t range_index_;
 		std::vector<uint32_t> range_scalers_;
+		std::vector<Response*> responses_;
 	};
 
 	std::vector<uint32_t> scaler;
@@ -599,11 +606,10 @@ grpc::ServerWriteReactor<Response>* ScalerService::GetScalerDate(
 		}
 
 		void OnDone() override {
+			for (auto &response : responses_) delete response;
 			delete this;
 		}
-
 	private:
-
 		void NextWrite() {
 			// get scaler values from file
 			if (range_scalers_.empty()) {
@@ -619,6 +625,7 @@ grpc::ServerWriteReactor<Response>* ScalerService::GetScalerDate(
 			while (index_ < range_scalers_.size()) {
 				if (range_index_ < range_scalers_[index_].size()) {
 					Response *response = new Response();
+					responses_.push_back(response);
 					response->set_value(range_scalers_[index_][range_index_]);
 					range_index_++;
 					StartWrite(response);
@@ -636,6 +643,7 @@ grpc::ServerWriteReactor<Response>* ScalerService::GetScalerDate(
 		size_t index_;
 		size_t range_index_;
 		std::vector<std::vector<uint32_t>> range_scalers_;
+		std::vector<Response*> responses_;
 	};
 
 	time_t t = time(NULL);
@@ -646,6 +654,200 @@ grpc::ServerWriteReactor<Response>* ScalerService::GetScalerDate(
 	mktime(date);
 
 	return new ScalerWriter(this, date, request->flag());
+}
+
+
+grpc::ServerWriteReactor<Expression>* ScalerService::GetConfig(
+	grpc::CallbackServerContext*,
+	const Request*
+) {
+	class ExpressionWriter : public grpc::ServerWriteReactor<Expression> {
+	public:
+		ExpressionWriter(const std::vector<Expression> &expressions)
+		: expressions_(expressions), index_(0) {
+			NextWrite();
+		}
+
+		void OnWriteDone(bool ok) override {
+			if (!ok) Finish(
+				grpc::Status(grpc::StatusCode::UNKNOWN, "Unexpected Failure")
+			);
+			NextWrite();
+		}
+
+		void OnDone() override {
+			delete this;
+		}
+
+	private:
+		void NextWrite() {
+			if (index_ < expressions_.size()) {
+				StartWrite(expressions_.data()+index_);
+				index_++;
+				return;
+			}
+			Finish(grpc::Status::OK);
+		}
+
+		std::vector<Expression> expressions_;
+		size_t index_;
+	};
+
+	// expressions
+	std::vector<Expression> expressions;
+
+	// config or log path
+	std::string path = std::string(getenv("HOME")) + "/.easy-config-logic";
+
+	// get last config information
+	std::ifstream last_info_file(path+"/last-config.txt");
+	std::string line;
+	for (int i = 0; i < 3; ++i) {
+		std::getline(last_info_file, line);
+	}
+	last_info_file.close();
+
+	// last config file name
+	std::string file_name = line + ".txt";
+	std::ifstream fin(file_name);
+	if (log_level_ >= kDebug) {
+		std::cout << "[Debug] Try to read " << file_name << "\n";
+	}
+
+	line = line.substr(line.find_last_of("/")+1);
+	line = line.substr(0, line.find_last_of("-"));
+	line[line.find_last_of("-")] = ':';
+	line[line.find_last_of("-")] = ':';
+	line[line.find_last_of("-")] = ' ';
+	Expression config_time;
+	config_time.set_value(line);
+	expressions.push_back(config_time);
+	if (log_level_ >= kDebug) {
+		std::cout << "[Debug] Read config time "
+			<< line << "\n";
+	}
+
+	while (fin.good()) {
+		std::getline(fin, line);
+		if (line.empty()) continue;
+		Expression expr;
+		expr.set_value(line);
+		expressions.push_back(expr);
+		if (log_level_ >= kInfo) {
+			std::cout << "[Info] Read expression from file "
+				<< expr.value() << "\n";
+		}
+	}
+	fin.close();
+
+	return new ExpressionWriter(expressions);
+}
+
+
+grpc::ServerReadReactor<Expression>* ScalerService::SetConfig(
+	grpc::CallbackServerContext*,
+	Response *response
+) {
+	class Recorder : public grpc::ServerReadReactor<Expression> {
+	public:
+		Recorder(
+			Response *response,
+			bool test,
+			LogLevel log_level
+		): response_(response), test_(test), log_level_(log_level) {
+			// initialize
+			response_->set_value(0);
+			if (log_level_ >= kDebug) {
+				std::cout << "[Debug] Start to read config.\n";
+			}
+			StartRead(&expression_);
+		}
+
+		void OnReadDone(bool ok) override {
+			if (ok) {
+				if (log_level_ >= kInfo) {
+					std::cout << "[Info] Read expression from client "
+						<< expression_.value() << "\n";
+				}
+				if (config_parser_.Parse(expression_.value())) {
+					response_->set_value(-1);
+					Finish(grpc::Status(
+						grpc::StatusCode::INVALID_ARGUMENT,
+						"Parse expression failed"
+					));
+				}
+				StartRead(&expression_);
+			} else {
+				if (log_level_ >= kDebug) {
+					std::cout << "[Debug] Read expressions done.\n";
+				}
+				// read config from parser
+				memory_config_.Read(&config_parser_);
+				if (test_) {
+					grpc::Status bad = grpc::Status(
+						grpc::StatusCode::UNAVAILABLE, "mmap failed"
+					);
+					// open memory file
+					int fd = open("/dev/uio0", O_RDWR);
+					if (fd < 0) {
+						response_->set_value(-2);
+						Finish(bad);
+					}
+					// lock the address space
+					if (flock(fd, LOCK_EX | LOCK_NB)) {
+						response_->set_value(-2);
+						Finish(bad);
+					}
+					// map memory
+					void *map_addr = mmap(
+						NULL,
+						4096,
+						PROT_READ | PROT_WRITE,
+						MAP_SHARED,
+						fd,
+						0
+					);
+					if (map_addr == MAP_FAILED) {
+						response_->set_value(-2);
+						Finish(bad);
+					}
+					volatile uint32_t *map = (uint32_t*)map_addr;
+
+					// write config to memory
+					memory_config_.MapMemory(map);
+
+					// clean up
+					flock(fd, LOCK_UN);
+					munmap(map_addr, 4096);
+					close(fd);
+				}
+
+				// save backup
+				std::string backup_file_name =
+					config_parser_.SaveConfigInformation(true);
+				// save register backup
+				std::ofstream backup_file(backup_file_name+"-register.txt");
+				memory_config_.Print(backup_file);
+				backup_file.close();
+
+				Finish(grpc::Status::OK);
+			}
+		}
+
+		void OnDone() override {
+			delete this;
+		}
+
+	private:
+		Response *response_;
+		bool test_;
+		LogLevel log_level_;
+		Expression expression_;
+		MemoryConfig memory_config_;
+		ConfigParser config_parser_;
+	};
+
+	return new Recorder(response, test_, log_level_);
 }
 
 }

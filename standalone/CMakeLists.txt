@@ -23,7 +23,7 @@ target_link_libraries(convert PRIVATE memory_config config_parser)
 
 # config
 add_executable(config config.cpp)
-target_link_libraries(config PRIVATE memory_config config_parser i2c)
+target_link_libraries(config PRIVATE memory_config config_parser)
 
 # logic test
 add_executable(logic_test logic_test.cpp)

@@ -26,18 +26,6 @@ void PrintUsage(const char *name) {
 }
 
 
-/// @brief reset FPGA with reset signal
-/// @param[in] mapped FPGA memory address
-/// @note This function set the reset bit for 1ms and set it back to 0.
-///		So the divider can work properly.
-void Reset(volatile uint32_t *mapped) {
-	ecl::Memory *memory = (ecl::Memory*)mapped;
-	memory->i2c.reset = 1;
-	usleep(1000);
-	memory->i2c.reset = 0;
-	return;
-}
-
 int main(int argc, char **argv) {
 	if (argc < 2 || argc > 4) {
 		std::cerr << "Error: Invalid parameters.\n";
@@ -135,12 +123,6 @@ int main(int argc, char **argv) {
 
 		// write config to memory
 		config.MapMemory(map);
-		// reset divider
-		Reset(map);
-		// call i2c chips
-		for (size_t i = 0; i < 6; ++i) {
-			Enable_Rj45(map, i, config.Rj45Enable(i));
-		}
 
 		// clean up
 		flock(fd, LOCK_UN);

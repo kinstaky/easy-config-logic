@@ -744,13 +744,64 @@ void MemoryConfig::Print(std::ostream &os, bool print_tips) const noexcept {
 
 int MemoryConfig::MapMemory(volatile uint32_t *map) const noexcept {
 	memcpy((void*)map, &memory_, sizeof(memory_));
+	for (size_t i = 0; i < 6; ++i) EnableRj45(map, i);
+	Reset(map);
 	return 0;
+}
+
+
+void MemoryConfig::EnableRj45(
+	volatile uint32_t *map,
+	uint32_t index
+) const noexcept {
+	I2C_Start(map);
+
+	uint8_t address;
+	switch (index) {
+		case 0:
+			address = 0b01001000;
+			break;
+		case 1:
+			address = 0b01000000;
+			break;
+		case 2:
+			address = 0b01001010;
+			break;
+		case 3:
+			address = 0b01000010;
+			break;
+		case 4:
+			address = 0b01001100;
+			break;
+		case 5:
+			address = 0b01000100;
+			break;
+		default:
+			fprintf(stderr, "Error: Invalid index %u\n", index);
+			return;
+	}
+	I2C_Byte_Send(map, address);
+	I2C_Slave_Ack(map);
+
+	I2C_Byte_Send(map, Rj45Enable(index));
+	I2C_Slave_Ack(map);
+
+	I2C_Stop(map);
 }
 
 
 uint8_t MemoryConfig::Rj45Enable(size_t index) const noexcept {
 	if (index > 5) return 0;
 	return uint8_t(memory_.rj45_enable[index/2] >> (index % 2 * 8));
+}
+
+
+void MemoryConfig::Reset(volatile uint32_t *map) const noexcept {
+	Memory *mem = (ecl::Memory*)map;
+	mem->i2c.reset = 1;
+	usleep(1000);
+	mem->i2c.reset = 0;
+	return;
 }
 
 
