@@ -1,7 +1,7 @@
 #include <cstring>
 #include <iostream>
 
-#include "scaler/scaler_service.h"
+#include "service.h"
 
 using namespace ecl;
 

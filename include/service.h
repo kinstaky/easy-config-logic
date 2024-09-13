@@ -1,5 +1,5 @@
-#ifndef __SCALER_SERVICE_H__
-#define __SCALER_SERVICE_H__
+#ifndef __SERVICE_H__
+#define __SERVICE_H__
 
 #include <unistd.h>
 
@@ -207,4 +207,4 @@ private:
 
 }	// namespace ecl
 
-#endif // __SCALER_SERVICE_H__
+#endif // __SERVICE_H__
