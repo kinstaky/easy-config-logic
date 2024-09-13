@@ -30,8 +30,8 @@ add_executable(logic_test logic_test.cpp)
 target_link_libraries(logic_test PRIVATE memory_config config_parser)
 
 # scaler server
-add_executable(scaler_server scaler_server.cpp)
-target_link_libraries(scaler_server PRIVATE scaler_service)
+add_executable(server server.cpp)
+target_link_libraries(server PRIVATE service)
 
 
 install(
