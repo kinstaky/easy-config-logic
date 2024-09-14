@@ -103,10 +103,10 @@ public:
 	/// @param[out] value read value from file
 	/// @returns 0 if successful, -1 on invalid parameters, -2 on file error
 	int ReadRecentScaler(
-		size_t index,
+		int32_t flag,
 		int seconds,
 		int average,
-		std::vector<uint32_t> &value
+		std::vector<std::vector<uint32_t>> &value
 	) const noexcept;
 
 
@@ -146,6 +146,19 @@ public:
 	grpc::ServerWriteReactor<Response>* GetScaler(
 		grpc::CallbackServerContext *context,
 		const Request *request
+	) override;
+
+
+	/// @brief get recent scaler value
+	/// @param[in] context server context, handled by gRPC
+	/// @param[in] request request content,
+	///		type refers to get different range of scaler values
+	/// 	flag refers to needed scaler
+	/// @returns reactor to write scaler values
+	///
+	grpc::ServerWriteReactor<Response>* GetScalerRecent(
+		grpc::CallbackServerContext *context,
+		const RecentRequest *request
 	) override;
 
 

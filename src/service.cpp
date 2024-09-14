@@ -213,6 +213,7 @@ int ScalerService::ReadDateScaler(
 		}
 	}
 	double sum[32];
+	for (size_t i = 0; i < 32; ++i) sum[i] = 0.0;
 	int sum_number = 0;
 
 	// get file name
@@ -252,17 +253,26 @@ int ScalerService::ReadDateScaler(
 
 
 int ScalerService::ReadRecentScaler(
-	size_t index,
+	int32_t flag,
 	int seconds,
 	int average,
-	std::vector<uint32_t> &value
+	std::vector<std::vector<uint32_t>> &scalers
 ) const noexcept {
 	// initialize
-	value.clear();
+	scalers.clear();
 	if (seconds <= 0) return 0;
 	if (seconds % average) return -1;
-	double sum = 0;
+	double sum[32];
+	for (size_t i = 0; i < 32; ++i) sum[i] = 0.0;
 	int sum_number = 0;
+	std::vector<int> indexes;
+	for (int32_t i = 0; i < 32; ++i) {
+		if (flag & (1 << i)) {
+			scalers.push_back(std::vector<uint32_t>());
+			indexes.push_back(i);
+		}
+	}
+
 	// get current time
 	time_t now = time(NULL);
 	tm *now_tm = localtime(&now);
@@ -293,12 +303,16 @@ int ScalerService::ReadRecentScaler(
 		uint32_t read_value[kMaxScalers];
 		for (int i = 0; i < seconds-now_second-1; ++i) {
 			fin.read((char*)read_value, sizeof(uint32_t)*kMaxScalers);
-			sum += read_value[index];
 			++sum_number;
+			for (size_t j = 0; j < indexes.size(); ++j) {
+				sum[j] += read_value[indexes[j]];
+				if (sum_number == average) {
+					scalers[j].push_back(std::round(sum[j] / average));
+					sum[j] = 0.0;
+				}
+			}
 			if (sum_number == average) {
-				value.push_back(std::round(sum / average));
 				sum_number = 0;
-				sum = 0.0;
 			}
 		}
 		// change seconds
@@ -327,24 +341,25 @@ int ScalerService::ReadRecentScaler(
 	// read loop
 	for (int i = 0; i < seconds-1; ++i) {
 		fin.read((char*)read_value, sizeof(uint32_t)*kMaxScalers);
-		sum += read_value[index];
 		++sum_number;
+		for (size_t j = 0; j < indexes.size(); ++j) {
+			sum[j] += read_value[indexes[j]];
+			if (sum_number == average) {
+				scalers[j].push_back(std::round(sum[j] / average));
+				sum[j] = 0.0;
+			}
+		}
 		if (sum_number == average) {
-			value.push_back(std::round(sum / average));
 			sum_number = 0;
-			sum = 0.0;
 		}
 	}
 	// close file
 	fin.close();
 
 	// add the current scaler value
-	sum += memory_->scaler[index].value;
-	sum_number++;
-	if (sum_number == average) {
-		value.push_back(std::round(sum / average));
-		sum = 0.0;
-		sum_number = 0;
+	for (size_t i = 0; i < indexes.size(); ++i) {
+		sum[i] += memory_->scaler[indexes[i]].value;
+		scalers[i].push_back(std::round(sum[i] / average));
 	}
 
 	// std::cout << "\nRead recent scaler index " << index
@@ -460,138 +475,13 @@ grpc::ServerUnaryReactor* ScalerService::GetState(
 
 grpc::ServerWriteReactor<Response>* ScalerService::GetScaler(
 	grpc::CallbackServerContext*,
-	const Request* request
+	const Request*
 ) {
 
 	class ScalerWriter : public grpc::ServerWriteReactor<Response> {
 	public:
-		ScalerWriter(
-			ScalerService *service,
-			std::vector<uint32_t> scaler,
-			int32_t type,
-			int32_t index
-		)
-		: service_(service)
-		, scaler_(scaler)
-		, type_(type)
-		, index_(index) {
-
-			range_index_ = 0;
-			range_scalers_.clear();
-
-			if (type_ == 0) {
-				index_ = 0;
-				NextSingleWrite();
-			} else if (type_ == 1) {
-				range_ = 120;
-				average_ = 1;
-				NextRangeWrite();
-			} else if (type_ == 2) {
-				range_ = 1200;
-				average_ = 10;
-				NextRangeWrite();
-			} else if (type_ == 3) {
-				range_ = 7200;
-				average_ = 60;
-				NextRangeWrite();
-			} else if (type_ == 4) {
-				range_ = 86400;
-				average_ = 720;
-				NextRangeWrite();
-			}
-		}
-
-		virtual void OnWriteDone(bool ok) override {
-			if (!ok) {
-				Finish(grpc::Status(
-					grpc::StatusCode::UNKNOWN, "Unexpected failure"
-				));
-
-			} else {
-				if (type_ == 0) {
-					NextSingleWrite();
-				} else {
-					NextRangeWrite();
-				}
-			}
-		}
-
-		void OnDone() override {
-			for (auto &response : responses_) delete response;
-			delete this;
-		}
-
-	private:
-		void NextSingleWrite() {
-			if (index_ < kMaxScalers) {
-				Response *response = new Response();
-				responses_.push_back(response);
-				response->set_value(scaler_[index_]);
-				index_++;
-				StartWrite(response);
-				return;
-			}
-			Finish(grpc::Status::OK);
-		}
-
-		void NextRangeWrite() {
-			// get scaler values from file
-			if (range_scalers_.empty()) {
-				if (service_->ReadRecentScaler(
-					index_, range_, average_, range_scalers_
-				)) {
-					Finish(grpc::Status(
-						grpc::StatusCode::DATA_LOSS,
-						"Read recent scaler failed"
-					));
-				}
-			}
-			if (range_index_ < range_scalers_.size()) {
-				Response *response = new Response();
-				response->set_value(range_scalers_[range_index_]);
-				range_index_++;
-				StartWrite(response);
-				return;
-			}
-			Finish(grpc::Status::OK);
-		}
-
-		const ScalerService *service_;
-		std::vector<uint32_t> scaler_;
-		int32_t type_;
-		size_t index_;
-		int range_;
-		int average_;
-		size_t range_index_;
-		std::vector<uint32_t> range_scalers_;
-		std::vector<Response*> responses_;
-	};
-
-	std::vector<uint32_t> scaler;
-	for (size_t i = 0; i < kMaxScalers; ++i) {
-		scaler.push_back(memory_->scaler[i].value);
-	}
-
-	return new ScalerWriter(this, scaler, request->type(), request->index());
-}
-
-
-grpc::ServerWriteReactor<Response>* ScalerService::GetScalerDate(
-	grpc::CallbackServerContext*,
-	const DateRequest *request
-) {
-	class ScalerWriter : public grpc::ServerWriteReactor<Response> {
-	public:
-		ScalerWriter(
-			ScalerService *service,
-			tm *date,
-			int32_t flag
-		)
-		: service_(service)
-		, date_(date)
-		, flag_(flag) {
-			index_ = 0;
-			range_index_ = 0;
+		ScalerWriter(const std::vector<Response> &responses)
+		: index_(0), responses_(responses) {
 			NextWrite();
 		}
 
@@ -606,46 +496,124 @@ grpc::ServerWriteReactor<Response>* ScalerService::GetScalerDate(
 		}
 
 		void OnDone() override {
-			for (auto &response : responses_) delete response;
 			delete this;
 		}
+
 	private:
 		void NextWrite() {
-			// get scaler values from file
-			if (range_scalers_.empty()) {
-				if (service_->ReadDateScaler(
-					date_, flag_, 0, 120, 720, range_scalers_
-				)) {
-					Finish(grpc::Status(
-						grpc::StatusCode::DATA_LOSS,
-						"Read recent scaler failed"
-					));
-				}
-			}
-			while (index_ < range_scalers_.size()) {
-				if (range_index_ < range_scalers_[index_].size()) {
-					Response *response = new Response();
-					responses_.push_back(response);
-					response->set_value(range_scalers_[index_][range_index_]);
-					range_index_++;
-					StartWrite(response);
-					return;
-				}
+			if (index_ < kMaxScalers) {
+				const size_t index = index_;
+				StartWrite(responses_.data() + index);
 				index_++;
-				range_index_ = 0;
+				return;
 			}
 			Finish(grpc::Status::OK);
 		}
 
-		const ScalerService *service_;
-		tm *date_;
-		int32_t flag_;
 		size_t index_;
-		size_t range_index_;
-		std::vector<std::vector<uint32_t>> range_scalers_;
-		std::vector<Response*> responses_;
+		std::vector<Response> responses_;
 	};
 
+	std::vector<Response> responses;
+	for (size_t i = 0; i < kMaxScalers; ++i) {
+		Response response;
+		response.set_value(memory_->scaler[i].value);
+		responses.push_back(response);
+	}
+
+	return new ScalerWriter(responses);
+}
+
+
+class ScalerWriter : public grpc::ServerWriteReactor<Response> {
+public:
+	ScalerWriter(const std::vector<Response> &responses)
+	: index_(0), responses_(responses) {
+		if (responses.empty()) {
+			Finish(grpc::Status(
+				grpc::StatusCode::DATA_LOSS, "Read data failure"
+			));
+		} else {
+			NextWrite();
+		}
+	}
+
+	virtual void OnWriteDone(bool ok) override {
+		if (!ok) {
+			Finish(grpc::Status(
+				grpc::StatusCode::UNKNOWN, "Unexpected failure"
+			));
+		} else {
+			NextWrite();
+		}
+	}
+
+	void OnDone() override {
+		delete this;
+	}
+
+private:
+	void NextWrite() {
+		if (index_ < responses_.size()) {
+			const size_t index = index_;
+			index_++;
+			StartWrite(responses_.data() + index);
+			return;
+		}
+		Finish(grpc::Status::OK);
+	}
+
+	size_t index_;
+	std::vector<Response> responses_;
+};
+
+
+grpc::ServerWriteReactor<Response>* ScalerService::GetScalerRecent(
+	grpc::CallbackServerContext*,
+	const RecentRequest* request
+) {
+	int range, average;
+	if (request->type() == 0) {
+		range = 120;
+		average = 1;
+	} else if (request->type() == 1) {
+		range = 1200;
+		average = 10;
+	} else if (request->type() == 2) {
+		range = 7200;
+		average = 60;
+	} else if (request->type() == 3) {
+		range = 86400;
+		average = 720;
+	}
+	std::vector<std::vector<uint32_t>> scalers;
+	std::vector<Response> responses;
+	// get recent scalers from file
+	int result = ReadRecentScaler(request->flag(), range, average, scalers);
+	if (result) {
+		if (log_level_ >= kWarn) {
+			std::cout << "[Warn] Read recent scalers from file faied, "
+				<< "code: " << result << ".\n";
+		}
+		return new ScalerWriter(responses);
+	}
+
+	for (const auto &scaler : scalers) {
+		for (const auto &value : scaler) {
+			Response response;
+			response.set_value(value);
+			responses.push_back(response);
+		}
+	}
+
+	return new ScalerWriter(responses);
+}
+
+
+grpc::ServerWriteReactor<Response>* ScalerService::GetScalerDate(
+	grpc::CallbackServerContext*,
+	const DateRequest *request
+) {
 	time_t t = time(NULL);
 	tm *date = localtime(&t);
 	date->tm_year = request->year() - 1900;
@@ -653,7 +621,26 @@ grpc::ServerWriteReactor<Response>* ScalerService::GetScalerDate(
 	date->tm_mday = request->day();
 	mktime(date);
 
-	return new ScalerWriter(this, date, request->flag());
+	std::vector<Response> responses;
+	std::vector<std::vector<uint32_t>> scalers;
+	int result = ReadDateScaler(date, request->flag(), 0, 120, 720, scalers);
+	if (result) {
+		if (log_level_ >= kWarn) {
+			std::cout << "[Warn] Read date scaler from file failed, "
+				<< "code: " << result << "\n";
+		}
+		return new ScalerWriter(responses);
+	}
+
+	for (const auto &scaler : scalers) {
+		for (const auto &value : scaler) {
+			Response response;
+			response.set_value(value);
+			responses.push_back(response);
+		}
+	}
+
+	return new ScalerWriter(responses);
 }
 
 
@@ -682,8 +669,9 @@ grpc::ServerWriteReactor<Expression>* ScalerService::GetConfig(
 	private:
 		void NextWrite() {
 			if (index_ < expressions_.size()) {
-				StartWrite(expressions_.data()+index_);
+				const size_t index = index_;
 				index_++;
+				StartWrite(expressions_.data()+index);
 				return;
 			}
 			Finish(grpc::Status::OK);
