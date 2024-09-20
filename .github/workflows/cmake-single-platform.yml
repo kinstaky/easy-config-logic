@@ -52,7 +52,7 @@ jobs:
         cmake -S . -B build -G Ninja \
           -DgRPC_INSTALL=ON \
           -DgRPC_BUILD_TESTS=OFF \
-          -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/dep/grpc/bin \
+          -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/dep/grpc \
           -G Ninja
         cmake --build build -- -j4
         cmake --build build --target install
