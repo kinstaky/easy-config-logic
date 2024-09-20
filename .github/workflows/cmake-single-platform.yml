@@ -37,57 +37,23 @@ jobs:
         ref: dev
 
     - name: Install Dependency Packages
-      run: |
-        sudo apt update
-        sudo apt install -y \
-        build-essential \
-        autoconf libtool pkg-config \
-        git cmake libc-ares-dev libre2-dev libssl-dev \
-        zlib1g-dev curl
-
-    - name: Install abseil
-      run: |
-        mkdir -p ${{ github.workspace }}/dep_build/abseil-cpp && cd ${{ github.workspace }}/dep_build/abseil-cpp
-        curl -sSL https://github.com/abseil/abseil-cpp/archive/refs/${{ matrix.dep_version.abseil }}.tar.gz | tar -xzf - --strip=1
-        mkdir build && cd build
-        cmake .. \
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-        -DBUILD_SHARED_LIBS=ON \
-        -DBUILD_TESTING=OFF
-        sudo make install
-        sudo ldconfig
-
-    - name: Install protobuf
-      run: |
-        mkdir -p ${{ github.workspace }}/dep_build/protobuf && cd ${{ github.workspace }}/dep_build/protobuf
-        curl -sSL https://github.com/google/protobuf/archive/refs/${{ matrix.dep_version.protobuf }}.tar.gz | tar -xzf - --strip=1
-        mkdir build && cd build
-        cmake ../cmake \
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-        -DBUILD_SHARED_LIBS=ON \
-        -Dprotobuf_BUILD_TESTS=OFF
-        sudo make install
-        sudo ldconfig
+      run: sudo apt install -y build-essential autoconf libtool pkg-config
 
     - name: Install gRPC
+      working-directory: ${{github.workspace}}/dep
       run: |
-        mkdir -p ${{ github.workspace }}/dep_build/grpc && cd ${{ github.workspace }}/dep_build/grpc
-        curl -sSL https://github.com/grpc/grpc/archive/refs/${{ matrix.dep_version.grpc }}.tar.gz| tar -xzf - --strip=1
-        mkdir build && cd build
-        cmake .. \
-        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-        -DBUILD_SHARED_LIBS=OFF \
-        -DgRPC_INSTALL=ON \
-        -DgRPC_BUILD_TESTS=OFF \
-        -DgRPC_ABSL_PROVIDER=package \
-        -DgRPC_CARES_PROVIDER=package \
-        -DgRPC_PROTOBUF_PROVIDER=package \
-        -DgRPC_PROTOBUF_PACKAGE_TYPE=CONFIG \
-        -DgRPC_RE2_PROVIDER=package \
-        -DgRPC_SSL_PROVIDER=package \
-        -DgRPC_ZLIB_PROVIDER=package
-        sudo make install
-        sudo ldconfig
+        export PATH="${{github.workspace}}/dep/bin:$PATH"
+        git clone --recurse-submodules -b v1.66.0 --depth 1 --shallow-submodules https://github.com/grpc/grpc
+        cd grpc
+        mkdir -p build
+        pushd build
+        cmake -DgRPC_INSTALL=ON \
+            -DgRPC_BUILD_TESTS=OFF \
+            -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/dep/bin \
+            ../
+        make -j 2
+        make install
+        popd
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
