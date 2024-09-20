@@ -37,22 +37,28 @@ jobs:
         ref: dev
 
     - name: Install Dependency Packages
-      run: sudo apt install -y build-essential autoconf libtool pkg-config
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential autoconf libtool pkg-config
 
     - name: Install gRPC
       run: |
-        mkdir -p dep/bin
-        export PATH="${{github.workspace}}/dep/bin:$PATH"
-        cd dep
+        mkdir -p dep/grpc
+        export PATH="${{github.workspace}}/dep/grpc/bin:$PATH"
+        mkdir dep_src
+        cd dep_src
         git clone --recurse-submodules -b v1.66.0 --depth 1 --shallow-submodules https://github.com/grpc/grpc
         mkdir -p grpc/build
         cd grpc/build
         cmake -DgRPC_INSTALL=ON \
             -DgRPC_BUILD_TESTS=OFF \
-            -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/dep/bin \
+            -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/dep/grpc/bin \
             ../
-        make -j 2
+        make -j 4
         make install
+
+    - name: Show protobuf
+      run: ls ${{workspace}}/dep/grpc/lib/cmake/protobuf
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
