@@ -39,7 +39,7 @@ jobs:
     - name: Install Dependency Packages
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential autoconf libtool pkg-config
+        sudo apt-get install -y build-essential autoconf libtool pkg-config ninja-build
 
     - name: Install gRPC
       run: |
@@ -48,17 +48,21 @@ jobs:
         mkdir dep_src
         cd dep_src
         git clone --recurse-submodules -b v1.66.0 --depth 1 --shallow-submodules https://github.com/grpc/grpc
-        mkdir -p grpc/build
-        cd grpc/build
-        cmake -DgRPC_INSTALL=ON \
-            -DgRPC_BUILD_TESTS=OFF \
-            -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/dep/grpc/bin \
-            ../
-        make -j 4
-        make install
+        cd grpc
+        cmake -S . -B build -G Ninja \
+          -DgRPC_INSTALL=ON \
+          -DgRPC_BUILD_TESTS=OFF \
+          -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/dep/grpc/bin \
+          -G Ninja
+        cmake --build build -- -j4
+        cmake --build build --target install
 
     - name: Show protobuf
-      run: ls ${{github.workspace}}/dep/grpc/lib/cmake/protobuf
+      run: |
+        ls ${{github.workspace}}/dep/grpc
+        ls ${{github.workspace}}/dep/grpc/lib
+        ls ${{github.workspace}}/dep/grpc/lib/cmake
+        ls ${{github.workspace}}/dep/grpc/lib/cmake/protobuf
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.

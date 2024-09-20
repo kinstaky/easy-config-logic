@@ -572,7 +572,8 @@ grpc::ServerWriteReactor<Response>* ScalerService::GetScalerRecent(
 	grpc::CallbackServerContext*,
 	const RecentRequest* request
 ) {
-	int range, average;
+	int range = 120;
+	int average = 1;
 	if (request->type() == 0) {
 		range = 120;
 		average = 1;
