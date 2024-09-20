@@ -8,87 +8,84 @@
 #include "config/config_parser.h"
 #include "config/memory_config.h"
 #include "i2c.h"
+#include "external/cxxopts.hpp"
 
 const size_t kMemorySize = 4096;
 
-/// @brief print usage
-/// @param[in] name program name
-///
-void PrintUsage(const char *name) {
-	std::cout << "Usage: " << name << " [options] file\n"
-		<< "Options:\n"
-		<< "  -h      Print this help information.\n"
-		<< "  -t      Config FPGA as a tester, only available when read logic expressions.\n"
-		<< "  -l      Read logic expressions as config, default.\n"
-		<< "  -r      Read register memory as config.\n"
-		<< "  -n      Do not map to /dev/uio0, used for test.\n"
-		<< "  file    Path of config file.\n";
-}
-
 
 int main(int argc, char **argv) {
-	if (argc < 2 || argc > 4) {
-		std::cerr << "Error: Invalid parameters.\n";
-		PrintUsage(argv[0]);
-		return -1;
-	}
-
-	bool test_flag = false;
-	bool logic_flag = true;
+	bool register_flag = false;
 	bool no_map = false;
-	for (int i = 1; i < argc-1; ++i) {
-		if (argv[i][0] != '-') {
-			PrintUsage(argv[0]);
+	std::string file_name;
+
+	cxxopts::Options args("config", "config FPGA");
+	args.add_options()
+		("h,help", "Print usage")
+		(
+			"r,register", "Read register format config file",
+			cxxopts::value<bool>()
+		)
+		(
+			"n,nomap", "Do not mmap to /dev/uio0, for test",
+			cxxopts::value<bool>()
+		)
+		(
+			"file", "File to read",
+			cxxopts::value<std::string>(), "file"
+		);
+
+	args.parse_positional({"file"});
+
+	try {
+		auto result = args.parse(argc, argv);
+		if (result.count("help")) {
+			std::cout << args.help() << std::endl;
+			return 0;
+		}
+		register_flag = result["register"].as<bool>();
+		no_map = result["nomap"].as<bool>();
+		if (!result.count("file")) {
+			std::cerr << "[Error] Require [file] parameter.\n";
 			return -1;
 		}
-		for (size_t j = 1; argv[i][j] != '\0'; ++j) {
-			if (argv[i][j] == 'h') {
-				PrintUsage(argv[0]);
-				return 0;
-			}
-			if (argv[i][j] == 't') {
-				test_flag = true;
-			} else if (argv[i][j] == 'l') {
-				logic_flag = true;
-			} else if (argv[i][j] == 'r') {
-				logic_flag = false;
-			} else if (argv[i][j] == 'n') {
-				no_map = true;
-			} else {
-				PrintUsage(argv[0]);
-				return -1;
-			}
-		}
+		file_name = result["file"].as<std::string>();
+	} catch (const cxxopts::exceptions::exception& e) {
+		std::cerr << "[Error] Parse filaed: " << e.what() << "\n";
+		return -1;
 	}
 
 	// memory config
 	ecl::MemoryConfig config;
 	// config parser
 	ecl::ConfigParser parser;
-	if (!logic_flag) {
-		if (config.Read(argv[argc-1]) != 0) {
+	if (register_flag) {
+		if (config.Read(file_name.c_str())) {
 			std::cerr << "Error: Memory config read file "
-				<< argv[argc-1] << " failed.\n";
+				<< file_name << " failed.\n";
 			return -1;
 		}
 	} else {
-		if (parser.Read(argv[argc-1]) != 0) {
+		if (parser.Read(file_name.c_str())) {
 			std::cerr << "Error: Parser read from file "
-				<< argv[argc-1] << " failed.\n";
+				<< file_name << " failed.\n";
+			return -1;
+		}
+		if (config.Read(&parser)) {
+			std::cerr << "[Error] Failed to read from parser.\n";
 			return -1;
 		}
 
-		if (test_flag) {
-			if (config.TesterRead(&parser) != 0) {
-				std::cerr << "Error: TesterRead from parser failed.\n";
-				return -1;
-			}
-		} else {
-			if (config.Read(&parser) != 0) {
-				std::cerr << "Error: Read from parser failed.\n";
-				return -1;
-			}
-		}
+		// if (test_flag) {
+		// 	if (config.TesterRead(&parser) != 0) {
+		// 		std::cerr << "Error: TesterRead from parser failed.\n";
+		// 		return -1;
+		// 	}
+		// } else {
+		// 	if (config.Read(&parser) != 0) {
+		// 		std::cerr << "Error: Read from parser failed.\n";
+		// 		return -1;
+		// 	}
+		// }
 	}
 
 	// show configuration
@@ -131,7 +128,7 @@ int main(int argc, char **argv) {
 	}
 
 	// save backup
-	std::string backup_file_name = parser.SaveConfigInformation(logic_flag);
+	std::string backup_file_name = parser.SaveConfigInformation(!register_flag);
 	// save register backup
 	std::ofstream backup_file(backup_file_name+"-register.txt");
 	config.Print(backup_file);

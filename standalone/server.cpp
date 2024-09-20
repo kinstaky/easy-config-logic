@@ -1,133 +1,33 @@
 #include <cstring>
 #include <iostream>
+#include <string_view>
 
 #include "service.h"
+#include "external/cxxopts.hpp"
+#define TOML_ENABLE_FORMATTERS 0
+#include "external/toml.hpp"
+
 
 using namespace ecl;
 
-void PrintUsage(const char *name) {
-	std::cout << "Usage: " << name
-		<< " [options]\n"
-		<< "Options:\n"
-		<< "  -h         Print this help and exit.\n"
-		<< "  -s         Print scaler value on screen.\n"
-		<< "  -p port    Set the listening port, default is 2233.\n"
-		<< "  -d path    Set data path, default is ./\n"
-		<< "  -n name    Set device name, default is empty.\n"
-		<< "  -l level   Set log level: error, warn, info, debug,\n"
-		<< "               default is warn.\n"
-		<< "Examples:\n"
-		<< "  scaler_server -s          # Print scaler values only.\n"
-		<< "  scaler_server             # Run scaler service on default port.\n"
-		<< "  scaler_server -p 2233 -l debug  # "
-		<< "Run service on port 2233 and print log on debug level.\n";
-	return;
-}
-
-
-/// @brief parse arguments
-/// @param[in] argc number of arguments
-/// @param[in] argv arguments
-/// @param[out] help need help
-/// @param[out] test run in test mode
-/// @param[out] print whether to print scaler values on screen
-/// @param[out] port run serveice on this port
-/// @param[out] path data path
-/// @param[out] device device name
-/// @param[out] level set log level
-/// @returns start index of positional arguments if succes, if failed returns
-///		-argc (negative argc) for miss argument behind option,
-/// 	or -index (negative index) for invalid argument
-///
-int ParseArguments(
-	int argc,
-	char **argv,
-	bool &help,
-	int &test,
-	bool &print,
-	int &port,
-	std::string &path,
-	std::string &device,
-	LogLevel &level
-) {
-	// initialize
-	help = false;
-	test = false;
-	print = false;
-	path = "./";
-	device = "";
-	// start index of positional arugments
-	int result = 0;
-	for (result = 1; result < argc; ++result) {
-		// assumed that all options have read
-		if (argv[result][0] != '-') break;
-		// short option contains only one letter
-		if (argv[result][2] != 0) return -result;
-		if (argv[result][1] == 'h') {
-			help = true;
-			return result;
-		} else if (argv[result][1] == 's') {
-			// option of print scaler values
-			print = true;
-		} else if (argv[result][1] == 't') {
-			// option of running in test mode
-			// get mode in next argument
-			++result;
-			// miss argument behind option
-			if (result == argc) return -argc;
-			test = atoi(argv[result]);
-			if (test == 0) test = 1;
-		} else if (argv[result][1] == 'p') {
-			// option of setting port
-			// get port in next argument
-			++result;
-			// miss argument behind option
-			if (result == argc) return -argc;
-			port = atoi(argv[result]);
-		} else if (argv[result][1] == 'l') {
-			// option of setting log level
-			// get log level in next argument
-			++result;
-			// miss argument behind option
-			if (result == argc) return -argc;
-			level = kWarn;
-			for (int i = 0; i < 4; ++i) {
-				if (strcmp(argv[result], kLogLevelName[i])) continue;
-				level = LogLevel(i);
-				break;
-			}
-		} else if (argv[result][1] == 'd') {
-			// option of setting data path
-			// get path in next argument
-			++result;
-			// miss argument behind option
-			if (result == argc) return -argc;
-			path = std::string(argv[result]);
-		} else if (argv[result][1] == 'n') {
-			// option of setting device name
-			// get device name in next argument
-			++result;
-			// miss argument behind option
-			if (result == argc) return -argc;
-			device = std::string(argv[result]);
-		} else {
-			return -result;
-		}
+LogLevel ParseLogLevel(const char* str, LogLevel old_level = LogLevel::kWarn) {
+	for (int i = 0; i < 4; ++i) {
+		if (strcmp(str, kLogLevelName[i])) continue;
+		return LogLevel(i);
 	}
-	return result;
+	return old_level;
 }
-
 
 int main(int argc, char **argv) {
 	// initialize flags
-	// help flag
-	bool help = false;
 	// test flag
 	int test = 0;
-	// print flag
-	bool print = false;
+	// show flag
+	bool show = false;
 	// service port
 	int port = 2233;
+	// config file
+	std::string config_file;
 	// data path
 	std::string path;
 	// device name
@@ -135,26 +35,72 @@ int main(int argc, char **argv) {
 	// log level
 	LogLevel log_level = kWarn;
 
-	// parse arguments and get start index of positional arguments
-	int pos_start = ParseArguments(
-		argc, argv,
-		help, test, print, port, path, device_name, log_level
-	);
+	cxxopts::Options args("server", "server for easy-config-logic");
+	args.add_options()
+		("h,help", "Print usage")
+		("s,show", "Show scaler on screen")
+		(
+			"c,config", "Config from file",
+			cxxopts::value<std::string>(), "file"
+		)
+		(
+			"p,port", "Set listening port",
+			cxxopts::value<int>()->default_value("2233"), "port"
+		)
+		(
+			"d,path", "Set data path",
+			cxxopts::value<std::string>()->default_value("./"), "path"
+		)
+		(
+			"n,name", "Set device name",
+			cxxopts::value<std::string>()->default_value(""), "name"
+		)
+		(
+			"l,level", "Set log level, error, warn, info, debug",
+			cxxopts::value<std::string>()->default_value("warn"), "level"
+		)
+		(
+			"t,test", "Set test mode",
+			cxxopts::value<int>()->default_value("0"), "mode"
+		);
 
-	// need help
-	if (help) {
-		PrintUsage(argv[0]);
-		return 0;
-	}
-	// no option arguments
-	if (pos_start < 0) {
-		if (-pos_start < argc) {
-			std::cerr << "Error: Invaild option " << argv[-pos_start] << ".\n";
-		} else {
-			std::cerr << "Error: Option need parameter.\n";
+	try {
+		auto result = args.parse(argc, argv);
+		if (result.count("help")) {
+			std::cout << args.help() << std::endl;
+			return 0;
 		}
-		PrintUsage(argv[0]);
+		if (result.count("config")) {
+			config_file = result["config"].as<std::string>();
+		}
+		test = result["test"].as<int>();
+		show = result["show"].as<bool>();
+		port = result["port"].as<int>();
+		path = result["path"].as<std::string>();
+		device_name = result["name"].as<std::string>();
+		std::string level_name = result["level"].as<std::string>();
+		log_level = ParseLogLevel(level_name.c_str());
+	} catch (const cxxopts::exceptions::exception &e) {
+		std::cout << "[Error] Parse failed: " << e.what() << "\n";
 		return -1;
+	}
+
+	// read config file
+	if (!config_file.empty()) {
+		toml::table tbl;
+		try {
+			tbl = toml::parse_file(config_file);
+			test = tbl["test"].value_or(0);
+			port = tbl["port"].value_or(2233);
+			path = tbl["data_path"].value_or("./");
+			device_name = tbl["name"].value_or("");
+			std::string level_name = tbl["log_level"].value_or("warn");
+			log_level = ParseLogLevel(level_name.c_str());
+		} catch (const toml::parse_error &e) {
+			std::cerr << "[Error] Parse config failed:\n"
+				<< e << "\n";
+			return -2;
+		}
 	}
 
 	ServiceOption option;
@@ -163,7 +109,7 @@ int main(int argc, char **argv) {
 	option.data_path = path;
 	option.device_name = device_name;
 
-	if (print) {
+	if (show) {
 		option.port = -1;
 		ScalerService service(option);
 		service.PrintScaler();
