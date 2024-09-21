@@ -17,6 +17,25 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v4
+    - name: Install Dependency Packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential autoconf libtool pkg-config ninja-build
+    - name: Install gRPC
+      run: |
+        mkdir -p dep/grpc
+        export PATH="${{github.workspace}}/dep/grpc/bin:$PATH"
+        mkdir dep_src
+        cd dep_src
+        git clone --recurse-submodules -b v1.66.0 --depth 1 --shallow-submodules https://github.com/grpc/grpc
+        cd grpc
+        cmake -S . -B ${{github.workspace}}/dep_src/grpc/build -G Ninja \
+          -DgRPC_INSTALL=ON \
+          -DgRPC_BUILD_TESTS=OFF \
+          -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/dep/grpc \
+          -G Ninja
+        cmake --build ${{github.workspace}}/dep_src/grpc/build -- -j4
+        cmake --build ${{github.workspace}}/dep_src/grpc/build --target install
     - name: Configure CMake
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
     - name: Build
@@ -37,12 +56,10 @@ jobs:
     - uses: actions/checkout@v4
       with:
         ref: dev
-
     - name: Install Dependency Packages
       run: |
         sudo apt-get update
         sudo apt-get install -y build-essential autoconf libtool pkg-config ninja-build
-
     - name: Install gRPC
       run: |
         mkdir -p dep/grpc
@@ -58,8 +75,6 @@ jobs:
           -G Ninja
         cmake --build ${{github.workspace}}/dep_src/grpc/build -- -j4
         cmake --build ${{github.workspace}}/dep_src/grpc/build --target install
-
-
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
@@ -68,11 +83,9 @@ jobs:
         -G Ninja
         -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
         -DCMAKE_PREFIX_PATH=${{github.workspace}}/dep/grpc
-
     - name: Build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -- -j4
-
     - name: Test
       working-directory: ${{github.workspace}}/build
       # Execute tests defined by the CMake configuration.
