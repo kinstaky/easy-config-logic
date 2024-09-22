@@ -53,11 +53,7 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 		message(STATUS "Doxygen not found, not building docs")
 	endif()
 
-
-
 	include(FetchContent)
-
-
 endif()
 
 # search for grpc
