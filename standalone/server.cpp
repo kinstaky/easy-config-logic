@@ -111,11 +111,11 @@ int main(int argc, char **argv) {
 
 	if (show) {
 		option.port = -1;
-		ScalerService service(option);
+		Service service(option);
 		service.PrintScaler();
 	} else {
 		option.port = port;
-		ScalerService service(option);
+		Service service(option);
 		service.Serve();
 	}
 

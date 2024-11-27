@@ -752,7 +752,7 @@ size_t ConfigParser::ParseFrequency(const std::string &clock) const noexcept {
 }
 
 
-std::string ConfigParser::SaveConfigInformation(bool logic) const noexcept {
+std::string ConfigParser::SaveConfigInformation(bool expression) const noexcept {
 	// create directories if not existed
 	std::string path = std::string(getenv("HOME")) + "/.easy-config-logic";
 	std::filesystem::create_directories(path);
@@ -770,7 +770,7 @@ std::string ConfigParser::SaveConfigInformation(bool logic) const noexcept {
 	std::string file_name = path + "/backup/" + file_name_time + "-backup";
 
 	// save configuration information to the last config file
-	if (logic) {
+	if (expression) {
 		std::ofstream last_info_file(path+"/last-config.txt");
 		last_info_file << "0\n"
 			<< time_str << "\n"
@@ -782,12 +782,12 @@ std::string ConfigParser::SaveConfigInformation(bool logic) const noexcept {
 	std::ofstream info_file(path+"/config-log.txt", std::ios::app);
 	info_file << "0, "
 		<< time_str << ", "
-		<< (logic ? "logic" : "register") << ", "
+		<< (expression ? "expression" : "register") << ", "
 		<< file_name << "\n";
 	info_file.close();
 
 	// save configuration backup
-	if (logic) {
+	if (expression) {
 		std::ofstream backup_file(file_name+".txt");
 		for (const auto &expr : expressions_) {
 			backup_file << expr << "\n";

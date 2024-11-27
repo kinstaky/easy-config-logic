@@ -57,18 +57,18 @@ struct ServiceOption {
 	}
 };
 
-class ScalerService final : public EasyConfigLogic::CallbackService {
+class Service final : public EasyConfigLogic::CallbackService {
 public:
 
 	/// @brief constructor
 	/// @param[in] option construct options
 	///
-	ScalerService(const ServiceOption &option) noexcept;
+	Service(const ServiceOption &option) noexcept;
 
 
 	/// @brief destructor
 	///
-	virtual ~ScalerService() noexcept;
+	virtual ~Service() noexcept;
 
 
 	/// @brief write scaler value to file
@@ -210,7 +210,7 @@ private:
 	// mapped file
 	int xillybus_lite_fd_;
 	// maped memory
-	Memory *memory_;
+	volatile Memory *memory_;
 
 	// write scaler thread
 	std::unique_ptr<std::thread> write_thread_;

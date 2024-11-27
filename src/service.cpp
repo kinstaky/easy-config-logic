@@ -23,9 +23,9 @@
 
 namespace ecl {
 
-bool ScalerService::keep_running = true;
+bool Service::keep_running = true;
 
-ScalerService::ScalerService(const ServiceOption &option) noexcept
+Service::Service(const ServiceOption &option) noexcept
 : port_(option.port)
 , log_level_(option.log_level)
 , test_(option.test)
@@ -122,7 +122,7 @@ ScalerService::ScalerService(const ServiceOption &option) noexcept
 }
 
 
-ScalerService::~ScalerService() {
+Service::~Service() {
 	if (test_) {
 		if (memory_) delete memory_;
 	} else {
@@ -142,11 +142,11 @@ ScalerService::~ScalerService() {
 
 
 void SigIntHandler(int) {
-	ScalerService::keep_running = false;
+	Service::keep_running = false;
 }
 
 
-void ScalerService::PrintScaler() const noexcept {
+void Service::PrintScaler() const noexcept {
 	signal(SIGINT, SigIntHandler);
 	if (system("tput smcup")) {
 		std::cout << "[Error] Use bash command tput smcup failed.\n";
@@ -192,7 +192,7 @@ std::string GetFileName(
 }
 
 
-int ScalerService::ReadDateScaler(
+int Service::ReadDateScaler(
 	tm* date,
 	int32_t flag,
 	size_t seconds,
@@ -252,7 +252,7 @@ int ScalerService::ReadDateScaler(
 }
 
 
-int ScalerService::ReadRecentScaler(
+int Service::ReadRecentScaler(
 	int32_t flag,
 	int seconds,
 	int average,
@@ -405,7 +405,7 @@ int GetFileStream(const char *file_name, std::fstream &fout) {
 }
 
 
-int ScalerService::WriteScaler() const noexcept {
+int Service::WriteScaler() const noexcept {
 	// generate file name according to the date
 	time_t current_time = time(NULL);
 	tm *current_tm = localtime(&current_time);
@@ -439,7 +439,7 @@ int ScalerService::WriteScaler() const noexcept {
 }
 
 
-void ScalerService::Serve() noexcept {
+void Service::Serve() noexcept {
 	// server address
 	std::string server_address = "0.0.0.0:" + std::to_string(port_);
 	// server builder
@@ -461,7 +461,7 @@ void ScalerService::Serve() noexcept {
 }
 
 
-grpc::ServerUnaryReactor* ScalerService::GetState(
+grpc::ServerUnaryReactor* Service::GetState(
 	grpc::CallbackServerContext* context,
 	const Request*,
 	Response *response
@@ -473,7 +473,7 @@ grpc::ServerUnaryReactor* ScalerService::GetState(
 }
 
 
-grpc::ServerWriteReactor<Response>* ScalerService::GetScaler(
+grpc::ServerWriteReactor<Response>* Service::GetScaler(
 	grpc::CallbackServerContext*,
 	const Request*
 ) {
@@ -568,7 +568,7 @@ private:
 };
 
 
-grpc::ServerWriteReactor<Response>* ScalerService::GetScalerRecent(
+grpc::ServerWriteReactor<Response>* Service::GetScalerRecent(
 	grpc::CallbackServerContext*,
 	const RecentRequest* request
 ) {
@@ -611,7 +611,7 @@ grpc::ServerWriteReactor<Response>* ScalerService::GetScalerRecent(
 }
 
 
-grpc::ServerWriteReactor<Response>* ScalerService::GetScalerDate(
+grpc::ServerWriteReactor<Response>* Service::GetScalerDate(
 	grpc::CallbackServerContext*,
 	const DateRequest *request
 ) {
@@ -645,7 +645,7 @@ grpc::ServerWriteReactor<Response>* ScalerService::GetScalerDate(
 }
 
 
-grpc::ServerWriteReactor<Expression>* ScalerService::GetConfig(
+grpc::ServerWriteReactor<Expression>* Service::GetConfig(
 	grpc::CallbackServerContext*,
 	const Request*
 ) {
@@ -733,7 +733,7 @@ grpc::ServerWriteReactor<Expression>* ScalerService::GetConfig(
 }
 
 
-grpc::ServerReadReactor<Expression>* ScalerService::SetConfig(
+grpc::ServerReadReactor<Expression>* Service::SetConfig(
 	grpc::CallbackServerContext*,
 	Response *response
 ) {
@@ -741,6 +741,7 @@ grpc::ServerReadReactor<Expression>* ScalerService::SetConfig(
 	public:
 		Recorder(
 			Response *response,
+			volatile Memory* memory_,
 			bool test,
 			LogLevel log_level
 		): response_(response), test_(test), log_level_(log_level) {
@@ -773,51 +774,8 @@ grpc::ServerReadReactor<Expression>* ScalerService::SetConfig(
 				// read config from parser
 				memory_config_.Read(&config_parser_);
 				if (!test_) {
-					grpc::Status bad = grpc::Status(
-						grpc::StatusCode::UNAVAILABLE, "mmap failed"
-					);
-					// open memory file
-					int fd = open("/dev/uio0", O_RDWR);
-					if (fd < 0) {
-						if (log_level_ >= kDebug) {
-							std::cout << "[Debug] Failed to open /dev/uio0.\n";
-						}
-						response_->set_value(-2);
-						Finish(bad);
-					}
-					// lock the address space
-					if (flock(fd, LOCK_EX | LOCK_NB)) {
-						if (log_level_ >= kDebug) {
-							std::cout << "[Debug] Failed to acquire file lock.\n";
-						}
-						response_->set_value(-2);
-						Finish(bad);
-					}
-					// map memory
-					void *map_addr = mmap(
-						NULL,
-						4096,
-						PROT_READ | PROT_WRITE,
-						MAP_SHARED,
-						fd,
-						0
-					);
-					if (map_addr == MAP_FAILED) {
-						if (log_level_ >= kDebug) {
-							std::cout << "[Debug] Failed to map.\n";
-						}
-						response_->set_value(-2);
-						Finish(bad);
-					}
-					volatile uint32_t *map = (uint32_t*)map_addr;
-
 					// write config to memory
-					memory_config_.MapMemory(map);
-
-					// clean up
-					flock(fd, LOCK_UN);
-					munmap(map_addr, 4096);
-					close(fd);
+					memory_config_.MapMemory((uint32_t*)memory_);
 				}
 
 				// save backup
@@ -838,6 +796,7 @@ grpc::ServerReadReactor<Expression>* ScalerService::SetConfig(
 
 	private:
 		Response *response_;
+		volatile Memory *memory_;
 		bool test_;
 		LogLevel log_level_;
 		Expression expression_;
@@ -845,7 +804,7 @@ grpc::ServerReadReactor<Expression>* ScalerService::SetConfig(
 		ConfigParser config_parser_;
 	};
 
-	return new Recorder(response, test_, log_level_);
+	return new Recorder(response, memory_, test_, log_level_);
 }
 
 }

@@ -545,10 +545,10 @@ public:
 
 
 	/// @brief save config information and get file name
-	/// @param[in] logic logic or register input
+	/// @param[in] expression expression or register input
 	/// @returns the file name
 	///
-	std::string SaveConfigInformation(bool logic) const noexcept;
+	std::string SaveConfigInformation(bool expression) const noexcept;
 
 private:
 	std::vector<PortSource> front_outputs_;
