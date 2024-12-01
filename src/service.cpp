@@ -741,10 +741,10 @@ grpc::ServerReadReactor<Expression>* Service::SetConfig(
 	public:
 		Recorder(
 			Response *response,
-			volatile Memory* memory_,
+			volatile Memory* memory,
 			bool test,
 			LogLevel log_level
-		): response_(response), test_(test), log_level_(log_level) {
+		): response_(response), memory_(memory), test_(test), log_level_(log_level) {
 			// initialize
 			response_->set_value(0);
 			if (log_level_ >= kDebug) {
