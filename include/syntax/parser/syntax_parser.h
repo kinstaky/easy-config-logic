@@ -11,6 +11,7 @@
 #include "syntax/parser/grammar.h"
 #include "syntax/parser/production.h"
 #include "syntax/parser/token.h"
+#include "parse_result.h"
 
 namespace ecl {
 
@@ -18,15 +19,15 @@ namespace ecl {
  * This struct Action represents the action of the LR syntax parse.
  * @param type the action type:
  *  kTypeError: syntax error
- *  kTypeAccept: accept the expression  
- *  kTypeShift: shift the token to the stack 
+ *  kTypeAccept: accept the expression
+ *  kTypeShift: shift the token to the stack
  *  kTypeGoto: goto the next collection status
  * 	kTypeReduce: reduce the tokens into a production
  * @param collection just used in type kTypeShift and kTypeGoto, and it
  *  represents the next collection status
  * @param production just used in type kTypeReduce, and it represents the
  *  production to reduce
- * 
+ *
  */
 struct Action {
 	static const int kTypeError = -1;
@@ -44,8 +45,8 @@ struct Action {
 /**
  * ActionTable, restores the action in this class. It actually use array to
  * store inside. It get or set the action through two parameters, symbol and
- * collection, i.e. an action is mapped to pair of symbol and collection.  
- * 
+ * collection, i.e. an action is mapped to pair of symbol and collection.
+ *
  */
 class ActionTable {
 public:
@@ -70,7 +71,7 @@ public:
 
 	/// @brief set the content of the action table
 	///
-	/// @param[in] collection present collection before action 
+	/// @param[in] collection present collection before action
 	/// @param[in] symbol next symbol meets
 	/// @param[in] type the action type
 	/// @param[in] next the next collection after this action
@@ -84,7 +85,7 @@ public:
 
 	/// @brief set the content of the action table
 	///
-	/// @param[in] collection present collection before action 
+	/// @param[in] collection present collection before action
 	/// @param[in] symbol next symbol meets
 	/// @param[in] type the action type
 	/// @param[in] production the production to reduce
@@ -106,7 +107,7 @@ public:
 	Action* GetAction(int collection, int symbol) noexcept;
 
 private:
-	
+
 	struct Action* table_;
 	int collection_size_;
 	int symbol_size_;
@@ -120,7 +121,7 @@ private:
  * The syntax parser is attached with a kind of grammar, and then parse the
  * token list and generate the syntax tree. All the derived classes should
  * override the abstract function Parse().
- * 
+ *
  * @tparam VarType the return type of the Evaluate function
  */
 template<typename VarType>
@@ -152,12 +153,12 @@ public:
 	/// @param[in] tokens the token list to parse
 	/// @returns 0 on success, -1 on failure
 	///
-	virtual int Parse(const std::vector<TokenPtr>& tokens) = 0;
+	virtual ParseResult Parse(const std::vector<TokenPtr>& tokens) = 0;
 
 
 	/// @brief search the token and return index
 	///
-	/// @param[in] token shared pointer to the token 
+	/// @param[in] token shared pointer to the token
 	/// @returns index of the token, -1 on failure
 	///
 	/// @exceptsafe Shall not throw exceptions.
@@ -183,9 +184,9 @@ public:
 	///
 	/// @param[in] name name of the identifier
 	/// @param[in] var_ptr pointer to the attached variable
-	/// 
+	///
 	/// @returns 0 on success, -1 on variable pointer invalid, -2 on identifier
-	/// 	name invalid 
+	/// 	name invalid
 	///
 	/// @exceptsafe Shall not throw exceptions.
 	///
@@ -230,7 +231,7 @@ public:
 	// template<typename... ArgTypes>
 	// static VarType Evaluate(const std::string &expr, ArgTypes... var_ptrs);
 
-	
+
 	/// @brief print the tree structure of the concrete syntax tree
 	///
 	/// @param[in] symbol the symbol to print
@@ -242,7 +243,7 @@ public:
 	int PrintTree(Symbol *symbol, std::string prefix = "") const noexcept;
 
 
-	
+
 	/// @brief get the syntax tree root
 	///
 	/// @returns pointer to the root production
@@ -261,7 +262,7 @@ protected:
 
 	Grammar<VarType> *grammar_;
 	Production<VarType> *syntax_tree_root_;
-	std::vector<Symbol*> symbol_list_; 
+	std::vector<Symbol*> symbol_list_;
 	std::vector<Variable*> variable_list_;
 	std::vector<NumberLiteral*> literal_list_;
 };
@@ -285,7 +286,7 @@ public:
 	/// @brief destructor
 	///
 	/// @exceptsafe Shall not throw exceptions.
-	/// 
+	///
 	virtual ~SLRSyntaxParser() noexcept;
 
 
@@ -303,15 +304,15 @@ public:
 
 	/// @brief parse the token list and generate symbol table and syntax tree
 	/// @note This functions parse the token list and generate the symbol table
-	/// 	and the syntax tree. The symbols in the table are in the order 
+	/// 	and the syntax tree. The symbols in the table are in the order
 	/// 	of the token list, and one symbol occupies one slot in the table.
 	///     The concrete syntax tree locate in the syntax_tree_root_ and was
 	/// 	generated based on the grammar.
 	///
 	/// @param[in] tokens input token list from lexer
 	/// @returns 0 on success, -1 on failure
-	///	
-	virtual int Parse(const std::vector<TokenPtr> &tokens);
+	///
+	virtual ParseResult Parse(const std::vector<TokenPtr> &tokens);
 
 private:
 

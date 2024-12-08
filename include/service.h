@@ -191,7 +191,7 @@ public:
 	///
 	grpc::ServerReadReactor<Expression>* SetConfig(
 		grpc::CallbackServerContext *context,
-		Response *response
+		ParseResponse *response
 	) override;
 
 

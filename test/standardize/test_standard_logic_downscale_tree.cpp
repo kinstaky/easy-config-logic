@@ -78,9 +78,9 @@ TEST(StandardLogicDownscaleTreeTest, Output) {
 		SLRSyntaxParser parser(&grammar);
 		std::vector<TokenPtr> tokens;
 
-		ASSERT_EQ(lexer.Analyse("LEFT="+kExpression[i], tokens), 0)
+		ASSERT_TRUE(lexer.Analyse("LEFT="+kExpression[i], tokens).Ok())
 			<< "Error: Lexer analyse " << i;
-		ASSERT_EQ(parser.Parse(tokens), 0)
+		ASSERT_TRUE(parser.Parse(tokens).Ok())
 			<< "Error: Parser parse " << i;
 
 		ASSERT_EQ(parser.Root()->Eval(), kLayer[i])

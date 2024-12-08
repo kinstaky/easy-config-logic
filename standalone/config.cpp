@@ -60,13 +60,13 @@ int main(int argc, char **argv) {
 	ecl::ConfigParser parser;
 	if (register_flag) {
 		if (config.Read(file_name.c_str())) {
-			std::cerr << "Error: Memory config read file "
+			std::cerr << "[Error] Memory config read file "
 				<< file_name << " failed.\n";
 			return -1;
 		}
 	} else {
 		if (parser.Read(file_name.c_str())) {
-			std::cerr << "Error: Parser read from file "
+			std::cerr << "[Error] Parser read from file "
 				<< file_name << " failed.\n";
 			return -1;
 		}

@@ -1,3 +1,9 @@
+# add parse_result
+add_library(parse_result parse_result.cpp)
+target_include_directories(
+	parse_result PUBLIC "${PROJECT_SOURCE_DIR}/include"
+)
+
 # add syntax libraries
 add_subdirectory(syntax)
 

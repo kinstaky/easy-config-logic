@@ -682,6 +682,10 @@ grpc::ServerWriteReactor<Expression>* Service::GetConfig(
 		size_t index_;
 	};
 
+	if (log_level_ >= kDebug) {
+		std::cout << "[Debug] GetConfig().\n";
+	}
+
 	// expressions
 	std::vector<Expression> expressions;
 
@@ -735,12 +739,12 @@ grpc::ServerWriteReactor<Expression>* Service::GetConfig(
 
 grpc::ServerReadReactor<Expression>* Service::SetConfig(
 	grpc::CallbackServerContext*,
-	Response *response
+	ParseResponse *response
 ) {
 	class Recorder : public grpc::ServerReadReactor<Expression> {
 	public:
 		Recorder(
-			Response *response,
+			ParseResponse *response,
 			volatile Memory* memory,
 			bool test,
 			LogLevel log_level
@@ -750,6 +754,8 @@ grpc::ServerReadReactor<Expression>* Service::SetConfig(
 			if (log_level_ >= kDebug) {
 				std::cout << "[Debug] Start to read config.\n";
 			}
+			success_ = true;
+			index_ = 0;
 			StartRead(&expression_);
 		}
 
@@ -759,15 +765,21 @@ grpc::ServerReadReactor<Expression>* Service::SetConfig(
 					std::cout << "[Info] Read expression from client "
 						<< expression_.value() << "\n";
 				}
-				if (config_parser_.Parse(expression_.value())) {
-					response_->set_value(-1);
-					Finish(grpc::Status(
-						grpc::StatusCode::INVALID_ARGUMENT,
-						"Parse expression failed"
-					));
+				ParseResult parse_result =
+					config_parser_.Parse(expression_.value());
+				if (!parse_result.Ok()) {
+					success_ = false;
+					response_->set_value(parse_result.Status());
+					response_->set_index(index_);
+					response_->set_position(int(parse_result.Position()));
+					response_->set_length(int(parse_result.Length()));
+					Finish(grpc::Status::OK);
 				}
+				++index_;
 				StartRead(&expression_);
 			} else {
+				if (!success_) return;
+
 				if (log_level_ >= kDebug) {
 					std::cout << "[Debug] Read expressions done.\n";
 				}
@@ -795,14 +807,20 @@ grpc::ServerReadReactor<Expression>* Service::SetConfig(
 		}
 
 	private:
-		Response *response_;
+		ParseResponse *response_;
 		volatile Memory *memory_;
 		bool test_;
 		LogLevel log_level_;
 		Expression expression_;
 		MemoryConfig memory_config_;
 		ConfigParser config_parser_;
+		bool success_;
+		int index_;
 	};
+
+	if (log_level_ >= kDebug) {
+		std::cout << "[Debug] SetConfig().\n";
+	}
 
 	return new Recorder(response, memory_, test_, log_level_);
 }

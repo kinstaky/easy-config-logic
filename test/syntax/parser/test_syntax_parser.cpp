@@ -86,9 +86,9 @@ const std::vector<std::vector<TokenPtr>> kAddMultiTokens = {
 		std::make_shared<Variable>("B")
 	},
 	{
-		std::make_shared<Variable>("a"), std::make_shared<Operator>("+"), 
+		std::make_shared<Variable>("a"), std::make_shared<Operator>("+"),
 		std::make_shared<Variable>("b"), std::make_shared<Operator>("*"),
-		std::make_shared<Variable>("c")	
+		std::make_shared<Variable>("c")
 	},
 	{
 		std::make_shared<Operator>("("), std::make_shared<Variable>("A"),
@@ -289,7 +289,7 @@ TEST(SLRSyntaxParserTest, Parse) {
 		for (auto tokens : tokens_list) {
 			AddMultiGrammar grammar;
 			SLRSyntaxParser<double> parser(&grammar);
-			ASSERT_EQ(parser.Parse(tokens), 0);
+			ASSERT_TRUE(parser.Parse(tokens).Ok());
 
 			// parser.PrintTree(parser.Root());
 			for (size_t i = 0; i < value[index].size(); ++i) {
@@ -297,7 +297,7 @@ TEST(SLRSyntaxParserTest, Parse) {
 			}
 			EXPECT_EQ(result[index], parser.Eval())
 				<< "error evaluated value, index " << index;
-			
+
 			std::cout << "====Finish test case " << index << std::endl;
 			++index;
 		}
@@ -311,7 +311,7 @@ TEST(SLRSyntaxParserTest, Parse) {
 		for (auto tokens : tokens_list) {
 			LogicalGrammar grammar;
 			SLRSyntaxParser<bool> parser(&grammar);
-			ASSERT_EQ(parser.Parse(tokens), 0);
+			ASSERT_TRUE(parser.Parse(tokens).Ok());
 
 			// parser.PrintTree(parser.Root());
 			for (size_t i = 0; i < value[index].size(); ++i) {
@@ -319,7 +319,7 @@ TEST(SLRSyntaxParserTest, Parse) {
 			}
 			EXPECT_EQ(result[index], parser.Eval())
 				<< "error evaluated value, index " << index;
-			
+
 			std::cout << "====Finish test case " << index << std::endl;
 			++index;
 		}

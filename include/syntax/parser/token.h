@@ -74,10 +74,16 @@ public:
 	///
 	/// @param[in] type type of this token
 	/// @param[in] name name of the token
-	///
+	/// @param[in] position position of the token
+	/// @param[in] size size of the token
 	/// @exceptsafe Shall not throw exceptions.
 	///
-	Token(int type, const std::string &name) noexcept;
+	Token(
+		int type,
+		const std::string &name,
+		size_t position,
+		size_t size
+	) noexcept;
 
 
 
@@ -87,17 +93,36 @@ public:
 
 
 	/// @brief name of this token
-	///
 	/// @returns the token name
-	///
 	/// @exceptsafe Shall not throw exceptions.
 	///
 	inline std::string Name() const noexcept {
 		return name_;
 	}
 
+
+	/// @brief position in line
+	/// @returns position
+	///
+	inline size_t Position() const noexcept {
+		return position_;
+	}
+
+
+	/// @brief size of token
+	/// @returns size
+	///
+	inline size_t Size() const noexcept {
+		return size_;
+	}
+
 private:
-	std::string name_;					// string value of this token
+	// string value of this token
+	std::string name_;
+	// position of this token
+	size_t position_;
+	// size of this token
+	size_t size_;
 };
 
 
@@ -112,23 +137,30 @@ class Variable final : public Token {
 public:
 
 	/// @brief constructor
-	///
 	/// @param[in] name the name of this Variable
-	///
+	/// @param[in] position position of this variable
+	/// @param[in] size size of this variable
 	/// @exceptsafe Shall not throw exceptions.
 	///
-	Variable(const std::string &name) noexcept;
+	Variable(
+		const std::string &name,
+		size_t position = 0,
+		size_t size = 0
+	) noexcept;
 
 
 	/// @brief constructor from char
-	///
 	/// @param[in] name the name of this Varaible
-	///
+	/// @param[in] position the position of the Varaible
+	/// @param[in] size the size of the Varaible
 	/// @overload
-	///
 	/// @exceptsafe Shall not throw exceptions.
 	///
-	Variable(char name) noexcept;
+	Variable(
+		char name,
+		size_t positon = 0,
+		size_t size = 0
+	) noexcept;
 
 
 	/// @brief default destructor
@@ -163,12 +195,11 @@ class Operator final : public Token {
 public:
 
 	/// @brief constructor from string
-	///
 	/// @param[in] name the string name of this Operator
-	///
+	/// @param[in] position position of this Operator
 	/// @exceptsafe shall not throw exceptions
 	///
-	Operator(const std::string &name) noexcept;
+	Operator(const std::string &name, size_t position = 0) noexcept;
 
 
 	/// @brief constructor from char
@@ -178,7 +209,7 @@ public:
 	/// @overload
 	///
 	/// @exceptsafe Shall not throw exceptions.
-	Operator(char name) noexcept;
+	Operator(char name, size_t position = 0) noexcept;
 
 
 
@@ -193,8 +224,14 @@ public:
 
 	/// @brief constructor from integer value
 	/// @param[in] value number literal value
+	/// @param[in] position position of the literal
+	/// @param[in] size size of the literal
 	///
-	NumberLiteral(int value) noexcept;
+	NumberLiteral(
+		int value,
+		size_t position = 0,
+		size_t size = 0
+	) noexcept;
 
 
 	/// @brief default destructor

@@ -28,12 +28,12 @@ int main() {
 		full_tokens.push_back(std::make_shared<ecl::Variable>("_Left"));
 		full_tokens.push_back(std::make_shared<ecl::Operator>("="));
 		for (size_t i = 0; i < tokens.size(); ++i) full_tokens.push_back(tokens[i]);
-		if (parser.Parse(full_tokens)) {
+		if (!parser.Parse(full_tokens).Ok()) {
 			std::cerr << "Error: Parse failed.\n";
 			return -1;
 		}
 	} else {
-		if (parser.Parse(tokens)) {
+		if (!parser.Parse(tokens).Ok()) {
 			std::cerr << "Error: Parse failed.\n";
 			return -1;
 		}

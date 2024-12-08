@@ -24,21 +24,23 @@ bool LogicComparer::Compare(const std::string &line1, const std::string &line2) 
 	std::string line[2] = {line1, line2};
 	std::vector<TokenPtr> tokens[2];
 	for (size_t i = 0; i < 2; ++i) {
-		if (lexer_[i].Analyse(line[i], tokens[i]) < 0) {
-			std::cerr << "Error: lexer analyse expression " << i << std::endl;
+		if (!lexer_[i].Analyse(line[i], tokens[i]).Ok()) {
+			std::cerr << "[Error] Lexer analyse expression "
+				<< i << "\n";
 			return false;
 		}
 
 
 		// parse the token list
-		if (parser_[i].Parse(tokens[i]) < 0) {
-			std::cerr << "Error: parser parse token list " << i << std::endl;
+		if (!parser_[i].Parse(tokens[i]).Ok()) {
+			std::cerr << "[Error] Parser parse token list "
+				<< i << "\n";
 			return false;
 		}
 	}
 
 	if (GenerateNodes() != 0) {
-		std::cerr << "Error: genrate nodes" << std::endl;
+		std::cerr << "[Error] genrate nodes.\n";
 		return false;
 	}
 	return CompareValues();
