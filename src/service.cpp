@@ -158,8 +158,8 @@ void Service::PrintScaler() const noexcept {
 			exit(-1);
 		}
 		std::cout << "scaler      counts\n";
-		for (size_t i = 0; i < kMaxScalers; ++i) {
-			printf("%2ld%15d\n", i, memory_->scaler[i].value);
+		for (uint32_t i = 0; i < kMaxScalers; ++i) {
+			printf("%2d%15d\n", i, memory_->scaler[i].value);
 		}
 		usleep(1000000);
 	}
