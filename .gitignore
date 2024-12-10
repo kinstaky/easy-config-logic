@@ -17,7 +17,7 @@ objs
 *.bin
 
 # cmake build files
-build/
+build*/
 
 # Visual Studio Code artifacts
 .vscode/*

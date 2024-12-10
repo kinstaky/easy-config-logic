@@ -75,7 +75,7 @@ TEST(StandardLogicDownscaleTreeTest, Output) {
 	for (size_t i = 0; i < kOutput.size(); ++i) {
 		Lexer lexer;
 		LogicDownscaleGrammar grammar;
-		SLRSyntaxParser parser(&grammar);
+		SLRSyntaxParser<int> parser(&grammar);
 		std::vector<TokenPtr> tokens;
 
 		ASSERT_TRUE(lexer.Analyse("LEFT="+kExpression[i], tokens).Ok())

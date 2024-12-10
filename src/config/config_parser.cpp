@@ -3,7 +3,11 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#if __cplusplus >= 201703L
 #include <filesystem>
+#else
+#include <experimental/filesystem>
+#endif
 
 #include "syntax/parser/lexer.h"
 #include "syntax/parser/syntax_parser.h"
@@ -759,9 +763,13 @@ size_t ConfigParser::ParseFrequency(const std::string &clock) const noexcept {
 std::string ConfigParser::SaveConfigInformation(bool expression) const noexcept {
 	// create directories if not existed
 	std::string path = std::string(getenv("HOME")) + "/.easy-config-logic";
+#if __cplusplus >= 201703L
 	std::filesystem::create_directories(path);
 	std::filesystem::create_directories(path+"/backup");
-
+#else
+	std::experimental::filesystem::create_directories(path);
+	std::experimental::filesystem::create_directories(path+"/backup");
+#endif
 	// get current time
 	time_t current_time = time(NULL);
 	tm* current = localtime(&current_time);

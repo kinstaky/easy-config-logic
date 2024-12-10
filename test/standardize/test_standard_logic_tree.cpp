@@ -50,7 +50,7 @@ TEST(StandardLogicTreeTest, CompareValue) {
 	for (size_t i = 0; i < kOutput.size(); ++i) {
 		Lexer lexer;
 		LogicalGrammar grammar;
-		SLRSyntaxParser parser(&grammar);
+		SLRSyntaxParser<bool> parser(&grammar);
 		std::vector<TokenPtr> tokens;
 
 		ASSERT_TRUE(lexer.Analyse(kExpression[i], tokens).Ok())
@@ -83,7 +83,7 @@ TEST(StandardLogicTreeTest, OutputString) {
 	for (size_t i = 0; i < kOutput.size(); ++i) {
 		Lexer lexer;
 		LogicalGrammar grammar;
-		SLRSyntaxParser parser(&grammar);
+		SLRSyntaxParser<bool> parser(&grammar);
 		std::vector<TokenPtr> tokens;
 
 		ASSERT_TRUE(lexer.Analyse(kExpression[i], tokens).Ok())
