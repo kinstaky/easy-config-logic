@@ -32,7 +32,7 @@ target_link_libraries(logic_test PRIVATE memory_config config_parser)
 if (BUILD_GRPC_SERVER)
 	# scaler server
 	add_executable(server server.cpp)
-	target_link_libraries(server PRIVATE service)
+	target_link_libraries(server PRIVATE service stdc++compact)
 endif()
 
 install(

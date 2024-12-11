@@ -4,7 +4,6 @@
 
 #include "service.h"
 #include "external/cxxopts.hpp"
-#define TOML_ENABLE_FORMATTERS 0
 #include "external/toml.hpp"
 
 

@@ -11,7 +11,6 @@
 
 #include <iostream>
 #include <iomanip>
-#include <sstream>
 #include <fstream>
 #include <random>
 
@@ -182,7 +181,7 @@ std::string GetFileName(
 	std::string device_name,
 	tm *t
 ) {
-	std::stringstream file_name;
+	std::stringstream file_name("");
 	file_name << data_path << t->tm_year+1900
 		<< std::setw(2) << std::setfill('0') << t->tm_mon+1
 		<< std::setw(2) << std::setfill('0') << t->tm_mday

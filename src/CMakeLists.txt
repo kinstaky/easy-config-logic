@@ -18,6 +18,9 @@ add_library(i2c STATIC i2c.cpp)
 target_include_directories(i2c PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 if (BUILD_GRPC_SERVER)
+	add_library(stdc++compact stdc++compact.cpp)
+	target_link_libraries(stdc++compact PUBLIC pthread)
+
 	# service library
 	add_library(service service.cpp)
 	target_include_directories(
