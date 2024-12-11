@@ -84,6 +84,12 @@ if (BUILD_GRPC_SERVER)
 
 endif()
 
+# set install path
+if (${CMAKE_INSTALL_PREFIX} STREQUAL "/usr/local")
+	set(ECL_INSTALL_PATH "${CMAKE_BINARY_DIR}")
+else()
+	set(ECL_INSTALL_PATH "${CMAKE_INSTALL_PREFIX}")
+endif()
 
 # show properties
 MESSAGE("Build Properties")
@@ -101,7 +107,7 @@ if (BUILD_GRPC_SERVER)
 	MESSAGE("  protobuf.............: " ${Protobuf_VERSION})
 	MESSAGE("  grpc.................: " ${gRPC_VERSION})
 endif()
-
+MESSAGE("  install at...........: " ${ECL_INSTALL_PATH})
 
 if (BUILD_GRPC_SERVER)
 	# The protobuf files
