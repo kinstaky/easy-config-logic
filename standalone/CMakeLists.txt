@@ -37,5 +37,9 @@ endif()
 
 install(
 	TARGETS syntax_tree compare standardize convert config logic_test
-	DESTINATION "${CMAKE_BINARY_DIR}/bin"
+	DESTINATION "${ECL_INSTALL_PATH}/bin"
 )
+
+if (BUILD_GRPC_SERVER)
+	install(TARGETS server DESTINATION "${ECL_INSTALL_PATH}/bin")
+endif()
