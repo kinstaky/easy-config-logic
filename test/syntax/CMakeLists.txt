@@ -4,7 +4,6 @@ target_link_libraries(test_logic_comparer PRIVATE gtest_main logic_comparer)
 
 
 # google test discover
-include(GoogleTest)
 gtest_discover_tests(test_logic_comparer)
 
 # add parser tests

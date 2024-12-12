@@ -36,7 +36,7 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 	set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 	# Set default compile options
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_CFLAGS} -Werror -Wall -Wextra")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror -Wall -Wextra")
 
 	# Let's nicely support folders in IDE's
 	set_property(GLOBAL PROPERTY USE_FOLDERS ON)

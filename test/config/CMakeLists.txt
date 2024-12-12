@@ -28,6 +28,5 @@ file(
 )
 
 # google test discover
-include(GoogleTest)
 gtest_discover_tests(test_config_parser)
 gtest_discover_tests(test_memory_config)

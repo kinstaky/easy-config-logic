@@ -5,6 +5,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
+include(GoogleTest)
 
 # syntax test
 add_subdirectory(syntax)

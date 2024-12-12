@@ -26,7 +26,6 @@ target_link_libraries(
 )
 
 # google test discover
-include(GoogleTest)
 gtest_discover_tests(test_lexer)
 gtest_discover_tests(test_production)
 gtest_discover_tests(test_grammar)

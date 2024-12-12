@@ -11,6 +11,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <memory>
 #include <sstream>
 /* Expose the definitions for the old ABI, allowing us to call its functions */
 #define _GLIBCXX_THREAD_ABI_COMPAT 1

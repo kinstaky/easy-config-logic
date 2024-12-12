@@ -19,6 +19,5 @@ target_link_libraries(
 
 
 # google test discover
-include(GoogleTest)
 gtest_discover_tests(test_standard_logic_tree)
 gtest_discover_tests(test_standard_logic_downscale_tree)

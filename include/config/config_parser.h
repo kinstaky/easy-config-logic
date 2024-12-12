@@ -84,7 +84,7 @@ public:
 	/// @param[in] index index of bit, less than 256
 	///
 	inline void Set(size_t index) noexcept {
-		if (index < 256) data_[index/64] |= 1ul << (index % 64);
+		if (index < 256) data_[index/64] |= uint64_t(1) << (index % 64);
 	}
 
 
@@ -92,7 +92,7 @@ public:
 	/// @param[in] index index of bit, less than 256
 	///
 	inline bool Test(size_t index) const noexcept {
-		return (data_[index/64] & (1ul << (index % 64))) != 0;
+		return (data_[index/64] & (uint64_t(1) << (index % 64))) != 0;
 	}
 
 private:

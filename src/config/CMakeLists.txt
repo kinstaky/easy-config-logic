@@ -4,7 +4,7 @@ target_link_libraries(
 	config_parser
 	PUBLIC standard_logic_downscale_tree lexer syntax_parser logic_downscale_grammar
 )
-if (${CMAKE_CXX_STANDARD} STREQUAL "14")
+if ("${CMAKE_CXX_STANDARD}" STREQUAL "14")
 	target_link_libraries(config_parser PUBLIC stdc++fs)
 endif()
 
