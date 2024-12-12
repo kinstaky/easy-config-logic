@@ -89,7 +89,18 @@ int ConfigParser::Read(const std::string &path) noexcept {
 }
 
 
+bool IsEmpty(const std::string s) {
+	if (s.empty()) return true;
+	for (size_t i = 0; i < s.length(); ++i) {
+		if (s[i] == ' ' || s[i] == '\t') continue;
+		return false;
+	}
+	return true;
+}
+
+
 ParseResult ConfigParser::Parse(const std::string &expr) noexcept {
+	if (IsEmpty(expr)) return ParseResult(0);
 	// save it
 	expressions_.push_back(expr);
 	// lexer analysis
