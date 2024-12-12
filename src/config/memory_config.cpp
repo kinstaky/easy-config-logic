@@ -711,14 +711,14 @@ void MemoryConfig::Print(std::ostream &os, bool print_tips) const noexcept {
 	// clock
 	os << std::dec << std::setfill(' ');
 	for (size_t i = 0; i < kMaxClocks; i+=2) {
-		os << std::setw(3) << int(memory_.clock_divider_source[i])
+		os << std::setw(1) << int(memory_.clock_divider_source[i])
 			<< " " << memory_.clock_divisor[i]
-			<< " " << std::setw(3) << int(memory_.clock_divider_source[i+1])
+			<< " " << std::setw(1) << int(memory_.clock_divider_source[i+1])
 			<< " " << memory_.clock_divisor[i+1];
 		if (print_tips) {
 			std::stringstream ss;
 			ss << memory_.clock_divisor[i] << memory_.clock_divisor[i+1];
-			os << std::string(29-ss.str().length(), ' ') << "clock "
+			os << std::string(33-ss.str().length(), ' ') << "clock "
 				<< i << ", " << i+1 << " source and divisor";
 		}
 		os << "\n";
