@@ -30,7 +30,7 @@ jobs:
         git clone --recurse-submodules -b v1.66.0 --depth 1 --shallow-submodules https://github.com/grpc/grpc
         cd grpc
     - name: Configure gRPC
-      working-directory: ${{github.workspace}}/dep/grpc
+      working-directory: ${{github.workspace}}/dep_src/grpc
       run: >
         cmake -S . -B ${{github.workspace}}/dep_src/grpc/build -G Ninja
         -DCMAKE_CXX_STANDARD=14
@@ -38,7 +38,6 @@ jobs:
         -DgRPC_BUILD_TESTS=OFF
         -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/dep/grpc
     - name: Install gRPC
-      working-directory: ${{github.workspace}}/dep/grpc
       run: cmake --build ${{github.workspace}}/dep_src/grpc/build --target install -- -j4
     - name: Configure CMake
       run: >
@@ -80,7 +79,7 @@ jobs:
         git clone --recurse-submodules -b v1.66.0 --depth 1 --shallow-submodules https://github.com/grpc/grpc
         cd grpc
     - name: Configure gRPC
-      working-directory: ${{github.workspace}}/dep/grpc
+      working-directory: ${{github.workspace}}/dep_src/grpc
       run: >
         cmake -S . -B ${{github.workspace}}/dep_src/grpc/build -G Ninja
         -DCMAKE_CXX_STANDARD=14
@@ -88,7 +87,7 @@ jobs:
         -DgRPC_BUILD_TESTS=OFF
         -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/dep/grpc
     - name: Install gRPC
-      working-directory: ${{github.workspace}}/dep/grpc
+      working-directory: ${{github.workspace}}/dep_src/grpc
       run: cmake --build ${{github.workspace}}/dep_src/grpc/build --target install -- -j4
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
