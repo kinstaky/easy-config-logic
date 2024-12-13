@@ -1,0 +1,1092 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="kinstaky">
+      
+      
+        <link rel="canonical" href="https://kinstaky.github.io/easy-config-logic/user_guide/advanced/">
+      
+      
+        <link rel="prev" href="../config_examples/">
+      
+      
+        <link rel="next" href="../../developer/syntax/">
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.46">
+    
+    
+      
+        <title>进阶使用 - XIA online GUI</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.6f8fc17f.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="deep-orange" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#_1" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="XIA online GUI" class="md-header__button md-logo" aria-label="XIA online GUI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            XIA online GUI
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              进阶使用
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/kinstaky/easy-config-logic" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kinstaky/easy-config-logic
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="XIA online GUI" class="md-nav__button md-logo" aria-label="XIA online GUI" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    XIA online GUI
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/kinstaky/easy-config-logic" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    kinstaky/easy-config-logic
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    简介
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    硬件说明
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            硬件说明
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/mztio/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    逻辑插件
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/pixie16/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    获取插件
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../hardware/combine/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    结合使用
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    用户指南
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            用户指南
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pre_install/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    开始之前
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quick_start/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    快速开始
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config_syntax/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    配置语法
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../config_examples/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    配置示例
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    进阶使用
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    进阶使用
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      两步配置
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      定标器
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="定标器">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      太长不看版
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="太长不看版">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      命令行界面显示
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      网页图形界面显示
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      记录数据
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      查看数据
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="查看数据">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      实时模式
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      历史模式
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    开发指南
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            开发指南
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/syntax/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    语法库
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/standardize/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    标准化库
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/config/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    配置库
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../developer/standalone/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    执行程序
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      两步配置
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      定标器
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="定标器">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      太长不看版
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="太长不看版">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      命令行界面显示
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      网页图形界面显示
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      记录数据
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      查看数据
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="查看数据">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      实时模式
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      历史模式
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+<h1 id="_1">进阶使用</h1>
+<h2 id="_2">两步配置</h2>
+<p>除了<a href="../quick_start/">快速开始</a><strong>使用</strong>所提到的一步到位的配置方式，还可以选择两步配置的方式。实际上在配置过程中，程序会将配置文件中的表达式转化成直接写 FPGA 内存的低级配置文件，该低级配置文件和 FPGA 内部的设置息息相关，适合有经验的人进一步调试使用。一般的两步方式如下</p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
+<span class="normal"><a href="#__codelineno-0-2">2</a></span>
+<span class="normal"><a href="#__codelineno-0-3">3</a></span>
+<span class="normal"><a href="#__codelineno-0-4">4</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="c1"># 从高级配置文件产生低级配置文件</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2"></a>$<span class="w"> </span>./convert<span class="w"> </span>example_logic_0.txt<span class="w"> </span>example_memory_0.txt
+<a id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="c1"># 读取配置文件配置 FPGA</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4"></a>$<span class="w"> </span>./config<span class="w"> </span>example_memory_0.txt
+</code></pre></div></td></tr></table></div>
+<p>即先根据包含逻辑表达式的高级配置文件产生中间的低级配置文件，随后依然运行 <code>config</code> 程序配置 FPGA 芯片，此时省略 <code>-l</code> 参数。</p>
+<p>同时，考虑到 <code>easy-config-logic</code> 项目编译时间不短，在 zynq7020 的系统内可以考虑使用另一个项目<a href="https://github.com/kinstaky/easy-config-logic-c">easy-config-logic-c</a>，该项目只能使用低级配置文件进行配置，所以需要在另一台机器中产生低级配置文件后再复制到 zynq7020 的系统中。该项目目前还不存在，以后可能也不存在。</p>
+<h2 id="_3">定标器</h2>
+<p>所谓定标器（scaler），即统计信号频率的模块。在配置文件中写好定标器定义后，FPGA 配置好后会将被检测信号的频率记录在内存中。</p>
+<h3 id="_4">太长不看版</h3>
+<h4 id="_5">命令行界面显示</h4>
+<p>在 zynq 的系统中运行程序即可读取</p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1"></a>$<span class="w"> </span>./scaler_server<span class="w"> </span>-p
+</code></pre></div></td></tr></table></div>
+<p>如此，程序将在屏幕中打印所有定标器记录的信号频率，单位 Hz，该值每秒刷新一次。如果定标器未定义，则会显示频率为 0Hz。按 Ctrl+C 退出程序。</p>
+<h4 id="_6">网页图形界面显示</h4>
+<p>在 zynq 的系统中运行</p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1"></a>$<span class="w"> </span>./scaler_server<span class="w"> </span>port
+</code></pre></div></td></tr></table></div>
+<p>在 pc 中运行</p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1"></a>$<span class="w"> </span>./scaler_client<span class="w"> </span>zynq_ip<span class="w"> </span>port
+</code></pre></div></td></tr></table></div>
+<p>以上命令中，port 是一致的端口，zynq_ip 是 MZTIO 中系统的 ip。</p>
+<p>然后 pc 的浏览器打开 <code>standalone/scaler/scaler-visual.html</code>，可以使用如下命令用 firefox 打开</p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1"></a>$<span class="w"> </span>firefox<span class="w"> </span>standalone/scaler/scaler-visual.html
+</code></pre></div></td></tr></table></div>
+<p>然后在浏览器中查看。</p>
+<h3 id="_7">记录数据</h3>
+<p>考虑到可能需要将定标器的值记录在文件中供后续处理，本项目另外提供了两个程序以记录定标器内容。因为考虑到 MZTIO 中搭载的嵌入机性能较差，存储空间小，所以我觉得其作为服务器发送定标器数据到另一台电脑中存储和查看更加适合。因此，两个程序一个是在 MZTIO 中的系统中运行的服务端程序 <code>scaler_server</code>，另一个是在在线电脑中运行的客户端程序 <code>scaler_client</code>。</p>
+<p>第一个程序是 <code>scaler_server</code>，它运行在 MZTIO 的系统中</p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1">1</a></span>
+<span class="normal"><a href="#__codelineno-5-2">2</a></span>
+<span class="normal"><a href="#__codelineno-5-3">3</a></span>
+<span class="normal"><a href="#__codelineno-5-4">4</a></span>
+<span class="normal"><a href="#__codelineno-5-5">5</a></span>
+<span class="normal"><a href="#__codelineno-5-6">6</a></span>
+<span class="normal"><a href="#__codelineno-5-7">7</a></span>
+<span class="normal"><a href="#__codelineno-5-8">8</a></span>
+<span class="normal"><a href="#__codelineno-5-9">9</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1"></a>$<span class="w"> </span>./scaler_server<span class="w"> </span>-h
+<a id="__codelineno-5-2" name="__codelineno-5-2"></a>Usage:<span class="w"> </span>./scaler_server<span class="w"> </span><span class="o">[</span>options<span class="o">]</span><span class="w"> </span><span class="o">[</span>port<span class="o">]</span><span class="w"> </span><span class="o">[</span>log<span class="w"> </span>file<span class="o">]</span><span class="w"> </span><span class="o">[</span>log<span class="w"> </span>level<span class="o">]</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3"></a>Options:
+<a id="__codelineno-5-4" name="__codelineno-5-4"></a><span class="w">  </span>-h<span class="w">           </span>Print<span class="w"> </span><span class="nb">help</span><span class="w"> </span>and<span class="w"> </span>exit.
+<a id="__codelineno-5-5" name="__codelineno-5-5"></a><span class="w">  </span>-v<span class="w">           </span>Print<span class="w"> </span>version<span class="w"> </span>and<span class="w"> </span>exit.
+<a id="__codelineno-5-6" name="__codelineno-5-6"></a><span class="w">  </span>-p<span class="w">           </span>Print<span class="w"> </span>on<span class="w"> </span>screen.
+<a id="__codelineno-5-7" name="__codelineno-5-7"></a><span class="w">  </span>port<span class="w">         </span>Set<span class="w"> </span>the<span class="w"> </span>listening<span class="w"> </span>port,<span class="w"> </span>necessary<span class="w"> </span><span class="k">for</span><span class="w"> </span>server.
+<a id="__codelineno-5-8" name="__codelineno-5-8"></a><span class="w">  </span>log<span class="w"> </span>file<span class="w">     </span>Set<span class="w"> </span>the<span class="w"> </span>log<span class="w"> </span>file<span class="w"> </span>path,<span class="w"> </span><span class="k">do</span><span class="w"> </span>not<span class="w"> </span>log<span class="w"> </span><span class="k">if</span><span class="w"> </span>not<span class="w"> </span>set.
+<a id="__codelineno-5-9" name="__codelineno-5-9"></a><span class="w">  </span>log<span class="w"> </span>level<span class="w">    </span>Set<span class="w"> </span>the<span class="w"> </span>log<span class="w"> </span>level:<span class="w"> </span>error,<span class="w"> </span>warning,<span class="w"> </span>info,<span class="w"> </span>debug,<span class="w"> </span>default<span class="w"> </span>is<span class="w"> </span>warning.
+</code></pre></div></td></tr></table></div>
+<p>该程序主要由两种用法，一是只显示定标器的数值，即前面提到的 <code>./scaler_server -p</code>；二是作为服务端等待客户端的数据请求。如果只是简单的启动服务器，直接 <code>./scaler_server xxxx</code>，将 xxxx 替换为合适的端口。更多的参数如下</p>
+<ul>
+<li><code>-h</code> 打印帮助信息</li>
+<li><code>-v</code> 打印版本信息</li>
+<li>
+<p><code>-p</code> 在屏幕上实时显示定标器的值</p>
+</li>
+<li>
+<p><code>port</code> 服务端的监听端口，设置后就会开启服务器，不设置就必须设置 <code>-p</code> 以显示实时定标器数值</p>
+</li>
+<li><code>log file</code> 日志文件的路径，不设置时不记录日志</li>
+<li><code>log level</code> 日志记录内容，error 只记录错误信息，warning 记录错误和警告信息，如此类推，默认值 warning</li>
+<li></li>
+</ul>
+<p>第二个程序是客户端程序，可以在 zynq7020 的系统中运行，但更推荐在正经的 pc 中运行，运行方法</p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1"> 1</a></span>
+<span class="normal"><a href="#__codelineno-6-2"> 2</a></span>
+<span class="normal"><a href="#__codelineno-6-3"> 3</a></span>
+<span class="normal"><a href="#__codelineno-6-4"> 4</a></span>
+<span class="normal"><a href="#__codelineno-6-5"> 5</a></span>
+<span class="normal"><a href="#__codelineno-6-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-6-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-6-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-6-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-6-10">10</a></span>
+<span class="normal"><a href="#__codelineno-6-11">11</a></span>
+<span class="normal"><a href="#__codelineno-6-12">12</a></span>
+<span class="normal"><a href="#__codelineno-6-13">13</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1"></a>$<span class="w"> </span>./scaler_client<span class="w"> </span>-h
+<a id="__codelineno-6-2" name="__codelineno-6-2"></a>Usage:<span class="w"> </span>./bin/scaler_client<span class="w"> </span><span class="o">[</span>options<span class="o">]</span><span class="w"> </span>host<span class="w"> </span>port<span class="w"> </span><span class="o">[</span>data<span class="w"> </span>path<span class="o">]</span><span class="w"> </span><span class="o">[</span>log<span class="w"> </span>file<span class="o">]</span><span class="w"> </span><span class="o">[</span>log<span class="w"> </span>level<span class="o">]</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3"></a>Options:
+<a id="__codelineno-6-4" name="__codelineno-6-4"></a><span class="w">  </span>-h<span class="w">           </span>Print<span class="w"> </span>this<span class="w"> </span><span class="nb">help</span><span class="w"> </span>and<span class="w"> </span>exit.
+<a id="__codelineno-6-5" name="__codelineno-6-5"></a><span class="w">  </span>-v<span class="w">           </span>Print<span class="w"> </span>version<span class="w"> </span>and<span class="w"> </span>exit.
+<a id="__codelineno-6-6" name="__codelineno-6-6"></a><span class="w">  </span>-t<span class="w">           </span>Record<span class="w"> </span>scaler<span class="w"> </span>values<span class="w"> </span><span class="k">in</span><span class="w"> </span>text<span class="o">(</span><span class="k">in</span><span class="w"> </span>binary<span class="w"> </span>default<span class="o">)</span>.
+<a id="__codelineno-6-7" name="__codelineno-6-7"></a><span class="w">  </span>-p<span class="w">           </span>Print<span class="w"> </span>scaler<span class="w"> </span>value<span class="w"> </span>on<span class="w"> </span>screen.
+<a id="__codelineno-6-8" name="__codelineno-6-8"></a><span class="w">  </span>-s<span class="w">           </span>Run<span class="w"> </span>http<span class="w"> </span>server<span class="w"> </span><span class="k">for</span><span class="w"> </span>visual<span class="w"> </span>scaler<span class="w"> </span>values.
+<a id="__codelineno-6-9" name="__codelineno-6-9"></a><span class="w">  </span>host<span class="w">         </span>Set<span class="w"> </span>the<span class="w"> </span>host<span class="w"> </span>to<span class="w"> </span>connect<span class="w"> </span>to,<span class="w"> </span>necessary.
+<a id="__codelineno-6-10" name="__codelineno-6-10"></a><span class="w">  </span>port<span class="w">         </span>Set<span class="w"> </span>the<span class="w"> </span>port<span class="w"> </span>to<span class="w"> </span>connect<span class="w"> </span>to,<span class="w"> </span>necessary.
+<a id="__codelineno-6-11" name="__codelineno-6-11"></a><span class="w">  </span>data<span class="w"> </span>path<span class="w">    </span>Set<span class="w"> </span>the<span class="w"> </span>path<span class="w"> </span>to<span class="w"> </span>record<span class="w"> </span>data<span class="w"> </span>and<span class="w"> </span>time,<span class="w"> </span>default<span class="w"> </span>is<span class="w"> </span>this<span class="w"> </span>directory<span class="o">(</span>.<span class="o">)</span>.
+<a id="__codelineno-6-12" name="__codelineno-6-12"></a><span class="w">  </span>log<span class="w"> </span>file<span class="w">     </span>Set<span class="w"> </span>the<span class="w"> </span>log<span class="w"> </span>file<span class="w"> </span>path,<span class="w"> </span><span class="k">do</span><span class="w"> </span>not<span class="w"> </span>log<span class="w"> </span><span class="k">if</span><span class="w"> </span>not<span class="w"> </span>set.
+<a id="__codelineno-6-13" name="__codelineno-6-13"></a><span class="w">  </span>log<span class="w"> </span>level<span class="w">    </span>Set<span class="w"> </span>the<span class="w"> </span>log<span class="w"> </span>level:<span class="w"> </span>error,<span class="w"> </span>warning,<span class="w"> </span>info<span class="w"> </span>or<span class="w"> </span>debug,<span class="w"> </span>default<span class="w"> </span>is<span class="w"> </span>warning.
+</code></pre></div></td></tr></table></div>
+<p>该程序将向服务端程序请求定标器记录的数据，并保存在文件中，输入入Ctrl+C 退出程序。</p>
+<ul>
+<li><code>-h</code> 打印帮助信息</li>
+<li><code>-v</code>打印版本信息</li>
+<li><code>-t</code> 将数据保存为可阅读的文本格式，默认为二进制格式</li>
+<li><code>-p</code> 请求数据同时在屏幕中显示实时的定标器数值，和 <code>scaler_server -p</code> 表面上一样</li>
+<li><code>-s</code> 同时启动一个 http 服务器以提供图形化的监视界面</li>
+<li><code>host</code> 服务端的地址，必须设置</li>
+<li><code>port</code> 服务端监听端口，必须设置，与服务端设置的保持一致</li>
+<li><code>data path</code> 数据文件路径，默认为程序运行目录，记录的数据将以天为单位划分，即一天一个文件，比如2022年6月1日记录的数据将保存在 20220601.txt 或 20220601.bin 中</li>
+<li><code>log file</code> 日志文件的路径，不设置时不记录日志</li>
+<li><code>log level</code> 日志记录内容，error 只记录错误信息，warning 记录错误和警告信息，如此类推，默认值 warning</li>
+</ul>
+<h3 id="_8">查看数据</h3>
+<p>一般来说，我喜欢把数据存成二进制的，占用空间小，读写速度快，非顺序读写，缺点是人类看不懂。所以我又写了 1 个花里胡哨的程序来查看数据。</p>
+<p>第一个是用<code>html</code> 和  <code>javascript</code> 写的，用浏览器打开 <code>visual-scaler.html</code> 即可，比如说</p>
+<div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1"></a>$<span class="w"> </span>firefox<span class="w"> </span>standalone/scaler/scaler-visual.html
+</code></pre></div></td></tr></table></div>
+<p>但在打开前，确保 <code>scaler_client</code> 使用了 <code>-s</code> 选项，否则接收不到数据（重启 <code>scaler_client</code> 后记得刷新页面）。打开浏览器即可看到如下界面。</p>
+<p><img alt="visual-scaler-realtime" src="../../resource/images/visual-scaler-realtime.png" /></p>
+<p>界面最上方是选择查看的方式，历史模式 <strong>history</strong> 或者实时模式 <strong>realtime</strong>。按钮变成蓝色表示被选中，如上图就是实时模式。</p>
+<h4 id="_9">实时模式</h4>
+<p>实时模式用于实时监控定标器的数据，点击 <strong>realtime</strong> 按钮后，就会得到上面的界面。</p>
+<p>模式选择下方是观察时间范围选择，可以选择图里显示的时间范围，包括1分钟、20分钟、1小时、10小时和1天。选择后图显示的范围也会相应变化。加载完成后点击图右边栏的图例，即可查看指定定标器的数据。简单来说，这里粗略地模仿了下载或上传文件的实时下载、上传网速显示。</p>
+<p>图表下方的按钮用于实时显示数值的定标器数值，类似于<strong>命令行界面显示</strong>一节，就是显示一堆跳动的数据。按钮内文本是 <strong>+ show scaler value</strong> 点击会显示实时数据，再点击会隐藏实时数据。</p>
+<h4 id="_10">历史模式<img alt="visual-scaler-history" src="../../resource/images/visual-scaler-history.png" /></h4>
+<p>历史模式用于查看过去几天的数据，点击 <strong>history</strong> 后得到如上图的界面。可以看到模式选择下方是日期选择，有两个日期需要设置，开始日期和结束日期，查看的是从（含）开始日期到（含）结束日期之间的定标器数据，选择日期后点击按钮 <strong>request</strong>，请求数据，稍等片刻就会加载完成。同样的，载入数据后需要点击图右边的图例来显示特定定标器的数据。简单来说，这里粗略地模仿了订酒店 app 的交互方式，选日期，看数据。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["content.code.copy", "navigation.expand"], "search": "../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": [{"provider": "mike"}, {"default": "latest"}]}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      
+        <script src="../../javascripts/mathjax.js"></script>
+      
+        <script src="https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js"></script>
+      
+    
+  </body>
+</html>
