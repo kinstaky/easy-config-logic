@@ -733,18 +733,18 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#low-level-config" class="md-nav__link">
     <span class="md-ellipsis">
-      低级配置文件
+      low-level-config
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#config_1" class="md-nav__link">
+  <a href="#run-config" class="md-nav__link">
     <span class="md-ellipsis">
-      运行config
+      run-config
     </span>
   </a>
   
@@ -880,18 +880,18 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#_2" class="md-nav__link">
+  <a href="#low-level-config" class="md-nav__link">
     <span class="md-ellipsis">
-      低级配置文件
+      low-level-config
     </span>
   </a>
   
 </li>
         
           <li class="md-nav__item">
-  <a href="#config_1" class="md-nav__link">
+  <a href="#run-config" class="md-nav__link">
     <span class="md-ellipsis">
-      运行config
+      run-config
     </span>
   </a>
   
@@ -924,7 +924,7 @@
 <p>本节简单介绍 <code>standalone</code> 中生成的可执行文件都是怎么用的，就不解释编程的逻辑了，感兴趣的见代码。其内现在可用的有8个程序：<code>syntax_tree</code>、<code>compare</code>、<code>standardize</code>、<code>convert</code>、<code>config</code>、<code>scaler/scaler</code>、<code>scaler/scaler_server</code>、<code>scaler/scaler_client</code>。</p>
 <h2 id="syntax_tree">syntax_tree</h2>
 <p>实现在 <code>standalone/syntax_tree.cpp</code> 中，用到了 syntax 库。</p>
-<p>这个在<a href="../syntax/#总结">syntax 库</a>一节提到过，这个程序用来展示输入的逻辑表达式解析出来的语法分析树。</p>
+<p>这个在<a href="../syntax/">syntax 库</a>总结一节提到过，这个程序用来展示输入的逻辑表达式解析出来的语法分析树。</p>
 <div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1"> 1</a></span>
 <span class="normal"><a href="#__codelineno-0-2"> 2</a></span>
 <span class="normal"><a href="#__codelineno-0-3"> 3</a></span>
@@ -961,7 +961,7 @@
 </code></pre></div></td></tr></table></div>
 <h2 id="compare">compare</h2>
 <p>实现在 <code>standalone/compare_logical_expression.cpp</code>中，用到了 syntax 库。</p>
-<p>这个在<a href="../syntax/#比较逻辑表达式">syntax 库</a>一节中暗示了，就是用来比较两个逻辑表达式是否等价的。</p>
+<p>这个在<a href="../syntax/">syntax 库</a>比较逻辑表达式一节中暗示了，就是用来比较两个逻辑表达式是否等价的。</p>
 <div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-1-1"> 1</a></span>
 <span class="normal"><a href="#__codelineno-1-2"> 2</a></span>
 <span class="normal"><a href="#__codelineno-1-3"> 3</a></span>
@@ -996,7 +996,7 @@
 </code></pre></div></td></tr></table></div>
 <h2 id="standardize">standardize</h2>
 <p>实现在 <code>standalone/standard_logic_adapter.cpp</code>，用到了 syntax 和 standarize 库。</p>
-<p>这个在<a href="../standardize/#总结">standardize 库</a>一节中提到过，用来标准形式的逻辑表达式是什么样的。</p>
+<p>这个在<a href="../standardize/">standardize 库</a>总结一节中提到过，用来标准形式的逻辑表达式是什么样的。</p>
 <div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-2-1">1</a></span>
 <span class="normal"><a href="#__codelineno-2-2">2</a></span>
 <span class="normal"><a href="#__codelineno-2-3">3</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1"></a>$<span class="w"> </span>./bin/standardize
@@ -1005,13 +1005,13 @@
 </code></pre></div></td></tr></table></div>
 <h2 id="convert">convert</h2>
 <p>实现在 <code>standalone/convert.cpp</code> 中，用到了 sytnax、stadnardize 和 config 库。</p>
-<p>这个在<a href="../user-guide/advanced.md#两步配置">进阶使用</a>中提到，就是用来从高级配置文件产生低级配置文件的。所谓高级配置文件，就是应用<a href="../user-guide/config-syntax.md">配置语法</a>的规则的配置文件，比如说 <code>examples/example_logic_0.txt</code>就是高级配置文件。所谓低级配置文件，就是和 FPGA 内存高度相关的配置文件，里面都是文本形式的十六进制数。</p>
+<p>这个在<a href="../user-guide/advanced.md">进阶使用</a>两步配置中提到，就是用来从高级配置文件产生低级配置文件的。所谓高级配置文件，就是应用<a href="../../user_guide/config_syntax/">配置语法</a>的规则的配置文件，比如说 <code>examples/example_logic_0.txt</code>就是高级配置文件。所谓低级配置文件，就是和 FPGA 内存高度相关的配置文件，里面都是文本形式的十六进制数。</p>
 <div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1"></a>$<span class="w"> </span>./bin/convert<span class="w"> </span>examples/example_logic_0.txt<span class="w"> </span>example_memory_0.txt
 </code></pre></div></td></tr></table></div>
-<p>如上运行程序即可得到名为 <code>example_memory_0.txt</code> 的低级配置文件，因为这个文件太长，我就放在<a href="#低级配置文件">附录</a>了。这个就是那种一般人看不懂的东西。细心的人可能发现这个项目版本已经是2.0了，那么版本1.0其实就是只能读取低级配置文件的项目。考虑到配置过于困难，才有这个项目的出现。</p>
+<p>如上运行程序即可得到名为 <code>example_memory_0.txt</code> 的低级配置文件，因为这个文件太长，我就放在<a href="#low-level-config">附录</a>了。这个就是那种一般人看不懂的东西。细心的人可能发现这个项目版本已经是2.0了，那么版本1.0其实就是只能读取低级配置文件的项目。考虑到配置过于困难，才有这个项目的出现。</p>
 <h2 id="config">config</h2>
 <p>实现在 <code>standalone/config.cpp</code>中，用到了 syntax、standardize 和 config 库。</p>
-<p>这个在<a href="../user-guide/quick-start.md#使用">快速开始</a>和<a href="../user-guide/advanced.md#两步配置">进阶使用</a>中提到，就是读取高级配置文件或者低级配置文件来写 FPGA的，如果你只是想让 FPGA 能跑，那么只跑这个程序就足够了。</p>
+<p>这个在<a href="../../user_guide/quick_start/">快速开始</a>使用和<a href="../../user_guide/advanced/">进阶使用</a>两步配置中提到，就是读取高级配置文件或者低级配置文件来写 FPGA的，如果你只是想让 FPGA 能跑，那么只跑这个程序就足够了。</p>
 <div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1">1</a></span>
 <span class="normal"><a href="#__codelineno-4-2">2</a></span>
 <span class="normal"><a href="#__codelineno-4-3">3</a></span>
@@ -1024,23 +1024,23 @@
 <a id="__codelineno-4-5" name="__codelineno-4-5"></a><span class="c1"># 或者</span>
 <a id="__codelineno-4-6" name="__codelineno-4-6"></a>$<span class="w"> </span>./bin/config<span class="w"> </span>-r<span class="w"> </span>example_memory_0.txt
 </code></pre></div></td></tr></table></div>
-<p>由于输出很长，上面省略了输出的内容，可以在<a href="#运行config">附录</a>查看读取高级配置文件的输出内容。</p>
+<p>由于输出很长，上面省略了输出的内容，可以在<a href="#run-config">附录</a>查看读取高级配置文件的输出内容。</p>
 <h2 id="scaler_server">scaler_server</h2>
 <p>定义和实现在<code>standalone/scaler/scaler_defs.h</code> 和  <code>standalone/scaler/scaler_server.cpp</code> 中。</p>
-<p>这个在<a href="../user-guide/advanced.md#定标器">进阶使用</a>中提到过，这里就不重复介绍了，记得它是在 zynq 的系统里跑的并设置端口号就行。默认是每1秒记录一次定标器数值，可以自己在头文件里面更改 <code>kRecordPeriod</code>来改变记录时间间隔，单位是秒，修改同时需要修改 <code>main.js</code> 中的 <code>setInterval</code> 的参数，比较麻烦。</p>
+<p>这个在<a href="../../user_guide/advanced/">进阶使用</a>定标器中提到过，这里就不重复介绍了，记得它是在 zynq 的系统里跑的并设置端口号就行。默认是每1秒记录一次定标器数值，可以自己在头文件里面更改 <code>kRecordPeriod</code>来改变记录时间间隔，单位是秒，修改同时需要修改 <code>main.js</code> 中的 <code>setInterval</code> 的参数，比较麻烦。</p>
 <div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-5-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1"></a>$<span class="w"> </span>./bin/scaler_server<span class="w"> </span><span class="m">12306</span>
 </code></pre></div></td></tr></table></div>
 <h2 id="scaler_client">scaler_client</h2>
 <p>定义和实现在<code>standalone/scaler/scaler_defs.h</code> 和  <code>standalone/scaler/scaler_client.cpp</code> 中。</p>
-<p>这个在<a href="../user-guide/advanced.md#定标器">进阶使用</a>中提到过，这里就不重复介绍了。它可以在 zynq 的系统里跑，但我觉得正确的用法是在另一台更好的机器里跑。需要输入 zynq 的 ip 地址和服务端设置的端口。默认是服务端每1秒记录一次定标器数值，客户端积累1次的记录（即1秒）再向客户端请求这堆数据。可以修改头文件中的 <code>kRecordPeriod</code> 来更改记录时间间隔，单位为秒。修改头文件中的 <code>kScalerStackSize</code> 来修改记录的积累数量，单位是个。</p>
+<p>这个在<a href="../user-guide/advanced.md">进阶使用</a>定标器中提到过，这里就不重复介绍了。它可以在 zynq 的系统里跑，但我觉得正确的用法是在另一台更好的机器里跑。需要输入 zynq 的 ip 地址和服务端设置的端口。默认是服务端每1秒记录一次定标器数值，客户端积累1次的记录（即1秒）再向客户端请求这堆数据。可以修改头文件中的 <code>kRecordPeriod</code> 来更改记录时间间隔，单位为秒。修改头文件中的 <code>kScalerStackSize</code> 来修改记录的积累数量，单位是个。</p>
 <div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1"></a>$<span class="w"> </span>./bin/scaler_client<span class="w"> </span><span class="m">192</span>.168.1.108<span class="w"> </span><span class="m">12306</span>
 </code></pre></div></td></tr></table></div>
-<p>程序运行后默认将数据输出到运行目录，可以通过输入参数来改变，详见<a href="../user-guide/advanced.md#定标器">进阶使用</a>。</p>
+<p>程序运行后默认将数据输出到运行目录，可以通过输入参数来改变，详见<a href="../../user_guide/advanced/">进阶使用</a>定标器。</p>
 <h2 id="scaler_visual">scaler_visual</h2>
 <p>实现在 <code>standalone/scaler/scaler_visual.html</code> 和 <code>main.js</code>。</p>
-<p>这个是用 html 和 javascript 写的脚本，用于在浏览器中查看历史的或实时的定标器数据，同样在<a href="../user-guide/advanced.md#定标器">进阶使用</a>中提到过。画图主要调用了 <a href="https://echarts.apache.org/en/index.html">echarts</a>，因为我是 html 和 JavaScript 的新手，里面都是乱写的，反正最后能跑我就满足了。感觉写的都是无聊的东西，“设计”一下界面，给按钮加上响应，向服务器请求数据，将数据导入到图里，没了。</p>
+<p>这个是用 html 和 javascript 写的脚本，用于在浏览器中查看历史的或实时的定标器数据，同样在<a href="../user-guide/advanced.md">进阶使用</a>定标器中提到过。画图主要调用了 <a href="https://echarts.apache.org/en/index.html">echarts</a>，因为我是 html 和 JavaScript 的新手，里面都是乱写的，反正最后能跑我就满足了。感觉写的都是无聊的东西，“设计”一下界面，给按钮加上响应，向服务器请求数据，将数据导入到图里，没了。</p>
 <h2 id="_1">附录</h2>
-<h3 id="_2">低级配置文件</h3>
+<h3 id="low-level-config">low-level-config</h3>
 <p><a href="#convert">回到 convert</a></p>
 <div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-1">  1</a></span>
 <span class="normal"><a href="#__codelineno-7-2">  2</a></span>
@@ -1251,7 +1251,7 @@
 <a id="__codelineno-7-104" name="__codelineno-7-104"></a>0x00<span class="w"> </span>0x0<span class="w"> </span>0x00<span class="w"> </span>0x0
 </code></pre></div></td></tr></table></div>
 <p><a href="#convert">回到 convert</a></p>
-<h3 id="config_1">运行config</h3>
+<h3 id="run-config">run-config</h3>
 <p><a href="#config">回到 config</a></p>
 <div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-8-1">  1</a></span>
 <span class="normal"><a href="#__codelineno-8-2">  2</a></span>

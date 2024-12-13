@@ -884,7 +884,7 @@
 <p>不难发现，随着往后推进，就越靠近硬件，功能就越特化。<code>config</code> 就是为了根据配置文件配置 FPGA，所以既有抽象的逻辑表达式部分，也有一点硬件细节。该库包含两个部分，用于读取配置文件的 <code>LogicParser</code>，和用于配置 FPGA 的 <code>MemoryConfig</code> 。<code>LogicParser</code> 会对原来的纯逻辑表达式进行一系列的拓展，以满足设置输入输出、逻辑、分除、定标器监视的需求。<code>MemoryConfig</code>就是纯粹的设置 FPGA 内存了，是非常枯燥重复的东西，但如果不了解 FPGA 中的内存细节，就很难理解里面的内容。</p>
 <h2 id="logicparser">LogicParser</h2>
 <p>定义和实现在 <code>include/config/logic_parser.h</code> 和 <code>src/config/logic_parser.cpp</code></p>
-<p>前面提到了，这个类就是用来读取配置文件的，而配置文件的语法在<a href="../user-guide/config-syntax.md">配置语法</a>一节中已经说明了。配置语法与之前一直处理的逻辑表达式对比，区别主要体现在两点：</p>
+<p>前面提到了，这个类就是用来读取配置文件的，而配置文件的语法在<a href="../../user_guide/config_syntax/">配置语法</a>一节中已经说明了。配置语法与之前一直处理的逻辑表达式对比，区别主要体现在两点：</p>
 <ul>
 <li>每个表达式都变成了赋值语句，增加了左式和等于号</li>
 <li>增加了定义分除的语法，会在右式的最右边增加除号和一个数</li>
@@ -920,7 +920,7 @@
 <h4 id="_3">生成门</h4>
 <p><code>GenerateGates</code> 和 <code>GenerateDividerGate</code> 可能会令人稍许迷惑，因为标准形式的表达式实际上已经隐含了与门和或门。所以这两个函数实际上不产生任何新的门，但是会提取表达式中关于与门和或门的信息，甄别多行表达式中的重复的门，将这些门记录成更贴近 FPGA 中设置的样式。简单来说，就是表达式中的门的元素，对应的是子表达式和变量，而这里记录的门的元素，代表变量和其他门的序号。比如说表达式 A0 &amp; A1，产生的与门会记录下信息0和1，用来表示 A0 和 A1，所以我说是更贴近 FPGA 中的样式。这段写的有点乱，看不懂的还是看代码吧。</p>
 <h3 id="_4">获取结果</h3>
-<p>解析后的结果可以通过一系列方法得到。比如说 <code>OrGateSize</code> 获取或门的数量，<code>OrGate</code> 获取特定或门的信息，具体见代码或者<a href="../reference/reference.md">api文档</a></p>
+<p>解析后的结果可以通过一系列方法得到。比如说 <code>OrGateSize</code> 获取或门的数量，<code>OrGate</code> 获取特定或门的信息，具体参见代码。</p>
 <h3 id="_5">小结</h3>
 <p><code>LogicParser</code> 就是读取配置文件，将配置信息转化成贴近 FPGA 的与门、或门、分除、定标器信息，方便 <code>MemoryConfig</code> 读取。</p>
 <h2 id="memoryconfig">MemoryConfig</h2>
