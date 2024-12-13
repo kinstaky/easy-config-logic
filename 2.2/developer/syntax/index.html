@@ -1106,7 +1106,7 @@
 <h3 id="slrsyntaxparser">SLRSyntaxParser</h3>
 <p>定义和实现在 <code>include/syntax/parser/syntax_parser.h</code> 和 <code>src/syntax/parser/syntax_parser.cpp</code></p>
 <p><code>SLRSyntaxParser</code> 的主要功能函数 <code>Parse</code> 读入从<code>Lexer</code> 传递的  <code>std::vector&lt;TokenPtr&gt;</code>，然后构建语法分析树。构建后，可以从方法 <code>Root()</code>得到语法分析树的根节点，也可以通过方法 <code>PrintTree</code> 将其带结构地输出；如果已经给表达式中的变量附上 C++ 变量（就是赋值），还可以使用方法 <code>Eval</code> 求值。</p>
-<p>为了可以实现 <code>Parse</code> 的功能，我按照书上的 SLR 语法分析器的算法，如 <a href="./#Grammar">Grammar</a> 一节中所说，先构建项集，然后构建行为表，这两部都写在了构造函数中。由于没有提前定义表示结束的符号 $，这里认为结束符号就是符号表中最后一个符号，它的序号等于符号表的长度，所以它是一个特殊的符号，需要小心地处理。我觉得更合理的可能是定义一个特殊的符号来代表结束符号，而不是像现在这样用特殊的方式处理。除此之外，我觉得这里比较复杂的是<code>Parse</code> 函数中  <code>itoken</code> 和 <code>look_symbol</code> 两个变量。<code>itoken</code> 用来指示语法分析器处理到了输入的记号串的位置，用以表示书中的队列。<code>look_symbol</code> 则是表示当前在看的符号，可能是输入的记号，也可能规约后的非终结符号，同时还是在行为表中查找当前需要执行的行为的依据。</p>
+<p>为了可以实现 <code>Parse</code> 的功能，我按照书上的 SLR 语法分析器的算法，如 <a href="./#grammar">Grammar</a> 一节中所说，先构建项集，然后构建行为表，这两部都写在了构造函数中。由于没有提前定义表示结束的符号 $，这里认为结束符号就是符号表中最后一个符号，它的序号等于符号表的长度，所以它是一个特殊的符号，需要小心地处理。我觉得更合理的可能是定义一个特殊的符号来代表结束符号，而不是像现在这样用特殊的方式处理。除此之外，我觉得这里比较复杂的是<code>Parse</code> 函数中  <code>itoken</code> 和 <code>look_symbol</code> 两个变量。<code>itoken</code> 用来指示语法分析器处理到了输入的记号串的位置，用以表示书中的队列。<code>look_symbol</code> 则是表示当前在看的符号，可能是输入的记号，也可能规约后的非终结符号，同时还是在行为表中查找当前需要执行的行为的依据。</p>
 <h4 id="actiontable">ActionTable</h4>
 <p>为了方便写入和查找行为表，我添加了类 <code>ActionTable</code>，定义和实现都与 <code>SLRSyntaxParser</code> 在同一文件中。</p>
 <p>我们知道在 SLR 语法分析器中，主要有4种行为</p>
