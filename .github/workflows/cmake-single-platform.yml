@@ -43,7 +43,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
         -DCMAKE_PREFIX_PATH=${{github.workspace}}/dep/grpc \
         -DCMAKE_CXX_STANDARD=14 \
-        -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -m32"
+        -DCMAKE_CXX_FLAGS=-m32
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
     - name: Test
@@ -90,7 +90,7 @@ jobs:
         -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
         -DCMAKE_PREFIX_PATH=${{github.workspace}}/dep/grpc \
         -DCMAKE_CXX_STANDARD=14 \
-        -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -m32"
+        -DCMAKE_CXX_FLAGS=-m32
     - name: Build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -- -j4
