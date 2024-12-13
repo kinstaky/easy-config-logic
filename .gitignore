@@ -1,23 +1,8 @@
-# binary file
-*
-!*.*
-!*/
-
-# C/C++ build outputs
-.build/
-bins
-gens
-libs
-objs
-
-# make build files
-*.o
-# standalone
-*.log
-*.bin
-
 # cmake build files
 build*/
 
 # Visual Studio Code artifacts
 .vscode/*
+
+# docs build
+docs/site
