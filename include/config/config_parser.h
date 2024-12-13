@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include "parse_result.h"
 #include "config/memory.h"
 #include "syntax/parser/token.h"
 #include "standardize/standard_logic_downscale_tree.h"
@@ -118,9 +119,9 @@ public:
 	/// @brief parse the expression and generate the standard logic tree
 	///
 	/// @param[in] expr the logic expression to parse
-	/// @returns 0 on success, -1 on failure
+	/// @returns parsed result
 	///
-	int Parse(const std::string &expr) noexcept;
+	ParseResult Parse(const std::string &expr) noexcept;
 
 
 	/// @brief clear the varibles and go back to initial state
@@ -141,16 +142,20 @@ public:
 
 	/// @brief check the form of identifiers
 	/// @param[in] tokens identifiers list to check
-	/// @returns true if identifier in appropirate form, false otherwise
+	/// @returns ok if identifier in appropirate form
 	///
-	bool CheckIdentifiers(const std::vector<TokenPtr> &tokens) const noexcept;
+	ParseResult CheckIdentifiers(
+		const std::vector<TokenPtr> &tokens
+	) const noexcept;
 
 
 	/// @brief check whether there is io conflict
 	/// @param[in] tokens identifiers list to check
-	/// @returns true if no conflict up to now, false otherwise
+	/// @returns ok if no conflict up to now
 	///
-	bool CheckIoConflict(const std::vector<TokenPtr> &tokens) const noexcept;
+	ParseResult CheckIoConflict(
+		const std::vector<TokenPtr> &tokens
+	) const noexcept;
 
 
 	/// @brief check the identifier is in FrontIo form
@@ -545,10 +550,10 @@ public:
 
 
 	/// @brief save config information and get file name
-	/// @param[in] logic logic or register input
+	/// @param[in] expression expression or register input
 	/// @returns the file name
 	///
-	std::string SaveConfigInformation(bool logic) const noexcept;
+	std::string SaveConfigInformation(bool expression) const noexcept;
 
 private:
 	std::vector<PortSource> front_outputs_;

@@ -7,7 +7,7 @@ service EasyConfigLogic {
 	rpc GetScalerRecent(RecentRequest) returns (stream Response) {}
 	rpc GetScalerDate(DateRequest) returns (stream Response) {}
 	rpc GetConfig(Request) returns (stream Expression) {}
-	rpc SetConfig(stream Expression) returns (Response) {}
+	rpc SetConfig(stream Expression) returns (ParseResponse) {}
 };
 
 message Request {
@@ -32,4 +32,11 @@ message DateRequest {
 
 message Expression {
 	string value = 1;
+}
+
+message ParseResponse {
+	int32 value = 1;
+	int32 index = 2;
+	int32 position = 3;
+	int32 length = 4;
 }

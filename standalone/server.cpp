@@ -4,7 +4,6 @@
 
 #include "service.h"
 #include "external/cxxopts.hpp"
-#define TOML_ENABLE_FORMATTERS 0
 #include "external/toml.hpp"
 
 
@@ -87,20 +86,14 @@ int main(int argc, char **argv) {
 
 	// read config file
 	if (!config_file.empty()) {
-		toml::table tbl;
-		try {
-			tbl = toml::parse_file(config_file);
-			test = tbl["test"].value_or(0);
-			port = tbl["port"].value_or(2233);
-			path = tbl["data_path"].value_or("./");
-			device_name = tbl["name"].value_or("");
-			std::string level_name = tbl["log_level"].value_or("warn");
-			log_level = ParseLogLevel(level_name.c_str());
-		} catch (const toml::parse_error &e) {
-			std::cerr << "[Error] Parse config failed:\n"
-				<< e << "\n";
-			return -2;
-		}
+		auto toml_data = toml::parse(config_file);
+		test = toml::find_or<int>(toml_data, "test", 0);
+		port = toml::find_or<int>(toml_data, "port", 2233);
+		path = toml::find_or<std::string>(toml_data, "path", "./");
+		device_name = toml::find_or<std::string>(toml_data, "name", "");
+		std::string level_name =
+			toml::find_or<std::string>(toml_data, "log_level", "warn");
+		log_level = ParseLogLevel(level_name.c_str());
 	}
 
 	ServiceOption option;
@@ -111,11 +104,11 @@ int main(int argc, char **argv) {
 
 	if (show) {
 		option.port = -1;
-		ScalerService service(option);
+		Service service(option);
 		service.PrintScaler();
 	} else {
 		option.port = port;
-		ScalerService service(option);
+		Service service(option);
 		service.Serve();
 	}
 

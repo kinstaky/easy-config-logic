@@ -18,9 +18,12 @@ target_link_libraries(grammar PUBLIC token production)
 
 # lexer library
 add_library(lexer STATIC lexer.cpp)
-target_link_libraries(lexer PUBLIC token)
+target_link_libraries(lexer PUBLIC token parse_result)
 
 
 # syntax parser library
 add_library(syntax_parser STATIC syntax_parser.cpp)
-target_link_libraries(syntax_parser PUBLIC token production grammar)
+target_link_libraries(
+	syntax_parser PUBLIC
+	token production grammar parse_result
+)

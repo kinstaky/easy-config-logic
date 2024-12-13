@@ -3,7 +3,11 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#if __cplusplus >= 201703L
 #include <filesystem>
+#else
+#include <experimental/filesystem>
+#endif
 
 #include "syntax/parser/lexer.h"
 #include "syntax/parser/syntax_parser.h"
@@ -73,8 +77,10 @@ int ConfigParser::Read(const std::string &path) noexcept {
 		std::string line;
 		std::getline(fin, line);
 		if (line.empty()) continue;
-		if (Parse(line) != 0) {
-			std::cerr << "Error: Parse failure " << line << "\n";
+		ParseResult result = Parse(line);
+		if (!result.Ok()) {
+			// std::cerr << "Error: Parse failure " << line << "\n";
+			std::cerr << result.Message(line);
 			return -1;
 		}
 	}
@@ -83,7 +89,7 @@ int ConfigParser::Read(const std::string &path) noexcept {
 }
 
 
-int ConfigParser::Parse(const std::string &expr) noexcept {
+ParseResult ConfigParser::Parse(const std::string &expr) noexcept {
 	// save it
 	expressions_.push_back(expr);
 	// lexer analysis
@@ -91,31 +97,20 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 	// tokens
 	std::vector<TokenPtr> tokens;
 	// get tokens
-	int lex_result = lexer.Analyse(expr, tokens);
-	if (lex_result == -1) {
-		std::cerr << "Error: Invalid character in expression: "
-			<< expr << "\n";
-		return -1;
-	} else if (lex_result == -2) {
-		std::cerr << "Error: Variable starts with digits: "
-			<< expr << "\n";
-		return -1;
-	} else if (lex_result == -3) {
-		std::cerr << "Error: Variable starts with underscore '_': "
-			<< expr << "\n";
-		return -1;
-	}
-	if (tokens.size() < 3) return -1;
+	ParseResult lex_result = lexer.Analyse(expr, tokens);
+	if (!lex_result.Ok()) return lex_result;
 
 	// check identifiers form
-	if (!CheckIdentifiers(tokens)) {
-		std::cerr << "Error: Identifiers form!" << std::endl;
-		return -1;
+	ParseResult check_result = CheckIdentifiers(tokens);
+	if (!check_result.Ok()) {
+		// std::cerr << "Error: Identifiers form!" << std::endl;
+		return check_result;
 	}
 	// check port input and output conflict
-	if (!CheckIoConflict(tokens)) {
-		std::cerr << "Error: Input output conflict!" << std::endl;
-		return -1;
+	check_result = CheckIoConflict(tokens);
+	if (!check_result.Ok()) {
+		// std::cerr << "Error: Input output conflict!" << std::endl;
+		return check_result;
 	}
 
 	std::vector<TokenPtr> right_tokens;
@@ -128,11 +123,6 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 
 	// generate new tokens
 	tokens.resize(2);
-	// TokenPtr left_token = tokens[0];
-	// TokenPtr equal_token = tokens[1];
-	// tokens.clear();
-	// tokens.push_back(left_token);
-	// tokens.push_back(equal_token);
 	for (size_t i = 0; i < right_tokens.size(); ++i) {
 		tokens.push_back(right_tokens[i]);
 	}
@@ -142,15 +132,16 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 	// parser
 	SLRSyntaxParser<int> parser(&grammar);
 	// parse tokens
-	if (parser.Parse(tokens)) {
-		std::cerr << "Error: Parse failed: " << expr << "\n";
-		return -2;
+	ParseResult syntax_result = parser.Parse(tokens);
+	if (!syntax_result.Ok()) {
+		// std::cerr << "Error: Parse failed: " << expr << "\n";
+		return syntax_result;
 	}
 	// check nested downscale
 	if (parser.Eval() >= 2) {
-		std::cerr << "Error: Unable to parse expression"
-			<< " with nested downscale expression." << expr << "\n";
-		return -2;
+		// std::cerr << "Error: Unable to parse expression"
+		// 	<< " with nested downscale expression." << expr << "\n";
+		return ParseResult(208);
 	}
 
 	// left side token name
@@ -158,7 +149,9 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 
 
 	// standardize
-	StandardLogicDownscaleTree tree((Production<int>*)(parser.Root()->Child(2)));
+	StandardLogicDownscaleTree tree(
+		(Production<int>*)(parser.Root()->Child(2))
+	);
 
 	// // for debug and print tree
 	// std::cout << "Root:\n";
@@ -189,7 +182,7 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 	}
 	if (generate_index < 0) {
 		std::cerr << "Error: Generate gates failed.\n";
-		return -1;
+		return ParseResult(300);
 	}
 
 	// left side token index
@@ -217,7 +210,7 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 		});
 		scaler_use_.set(left_index-kScalersOffset);
 	} else if (IsExternalClock(left_name)) {
-		extern_clock_ = generate_index;
+		extern_clock_ = generate_index - kClocksOffset;
 	} else {
 		VariableInfo info;
 		info.name = left_name;
@@ -227,7 +220,7 @@ int ConfigParser::Parse(const std::string &expr) noexcept {
 		variables_.push_back(info);
 	}
 
-	return 0;
+	return ParseResult(0);
 }
 
 
@@ -261,26 +254,26 @@ std::vector<TokenPtr> ConfigParser::ReplaceVariables(
 }
 
 
-bool ConfigParser::CheckIdentifiers(
+ParseResult ConfigParser::CheckIdentifiers(
 	const std::vector<TokenPtr> &tokens
 ) const noexcept {
 	// left side token name
 	std::string left = tokens[0]->Name();
 	// check left side identifier
-	if (tokens.size() < 3) return false;
+	if (tokens.size() < 3) return ParseResult(201);
 	// check right side identifier
 	if (tokens.size() == 3) {
 		if (
 			tokens[2]->Type() != kSymbolType_Variable
 			&& tokens[2]->Type() != kSymbolType_Literal
 		) {
-			return false;
+			return ParseResult(202, tokens[2]->Position(), tokens[2]->Size());
 		}
 		if (IsClock(tokens[2]->Name())) {
 			if (!IsFrontIo(left) && !IsExternalClock(left)) {
 				// if right is clock, left must be front io port
 				// or external clock port
-				return false;
+				return ParseResult(202, tokens[2]->Position(), tokens[2]->Size());
 			}
 		} else if (
 			!IsFrontIo(tokens[2]->Name())
@@ -288,33 +281,35 @@ bool ConfigParser::CheckIdentifiers(
 			&& tokens[2]->Name() != "0"
 			&& tokens[2]->Name() != "1"
 		) {
-			return false;
+			return ParseResult(202, tokens[2]->Position(), tokens[2]->Size());
 		}
 	} else {
 		for (size_t i = 2; i < tokens.size(); ++i) {
 			auto &id = tokens[i];
 			if (id->Type() == kSymbolType_Variable) {
 				if (!IsFrontIo(id->Name()) && !IsDefinedVariable(id->Name())) {
-					std::cerr << "Error: Expected identifier is in "
-						<< "front io port form or is defined variable "
-						<< id->Name() << "\n";
-					return false;
+					// std::cerr << "Error: Expected identifier is in "
+					// 	<< "front io port form or is defined variable "
+					// 	<< id->Name() << "\n";
+					return ParseResult(
+						202, tokens[i]->Position(), tokens[i]->Size()
+					);
 				}
 			} else if (
 				id->Type() != kSymbolType_Operator
 				&& id->Type() != kSymbolType_Literal
 			) {
-				std::cerr << "Error: Invalid identifier type "
-					<< id->Type() << "\n";
-				return false;
+				// std::cerr << "Error: Invalid identifier type "
+				// 	<< id->Type() << "\n";
+				return ParseResult(202, tokens[i]->Position(), tokens[i]->Size());
 			}
 		}
 	}
-	return true;
+	return ParseResult(0);
 }
 
 
-bool ConfigParser::CheckIoConflict(
+ParseResult ConfigParser::CheckIoConflict(
 	const std::vector<TokenPtr> &tokens
 ) const noexcept {
 	std::string left = tokens[0]->Name();
@@ -323,36 +318,43 @@ bool ConfigParser::CheckIoConflict(
 		// check back output conflict
 		if (back_output_ != size_t(-1)) {
 			// two source of back
-			std::cerr << "Error: Multiple source of back plane port.\n";
-			return false;
+			// std::cerr << "Error: Multiple source of back plane port.\n";
+			return ParseResult(203, tokens[0]->Position(), tokens[0]->Size());
 		}
 	} else if (IsExternalClock(left)) {
 		// check external clock output conflict
 		if (extern_clock_ != size_t(-1)) {
 			// two source of external clock
-			std::cerr << "Error: Multiple source of external clock.\n";
-			return false;
+			// std::cerr << "Error: Multiple source of external clock.\n";
+			return ParseResult(203, tokens[0]->Position(), tokens[0]->Size());
+		}
+		if (tokens.size() != 3 || !IsClock(tokens[2]->Name())) {
+			return ParseResult(209, tokens[2]->Position(), tokens[2]->Size());
 		}
 	} else if (IsFrontIo(left)) {
 		// check front output port conflict
 		if (front_out_use_.test(IdentifierIndex(left))) {
 			// front output conflict
-			std::cerr << "Error: Multiple source of fornt port " << left << std::endl;
-			return false;
+			// std::cerr << "Error: Multiple source of fornt port " << left << std::endl;
+			return ParseResult(203, tokens[0]->Position(), tokens[0]->Size());
 		}
 	} else if (IsScaler(left)) {
 		// check scaler source conflict
 		if (scaler_use_.test(IdentifierIndex(left)-kScalersOffset)) {
 			// scaler source conflict
-			std::cerr << "Error: Multiple source of scaler " << left << std::endl;
-			return false;
+			// std::cerr << "Error: Multiple source of scaler " << left << std::endl;
+			return ParseResult(203, tokens[0]->Position(), tokens[0]->Size());
 		}
 	} else {
 		// check user defined variable
 		// check redefinition
 		for (size_t i = 0; i < variables_.size(); ++i) {
 			// found redefinition
-			if (variables_[i].name == left) return false;
+			if (variables_[i].name == left) {
+				return ParseResult(
+					203, tokens[0]->Position(), tokens[0]->Size()
+				);
+			}
 		}
 	}
 
@@ -365,27 +367,31 @@ bool ConfigParser::CheckIoConflict(
 				continue;
 			}
 			if (tokens[i]->Name() == left) {
-				std::cerr << "Error: Input and output in the same port "
-					<< left << ".\n";
-				return false;
+				// std::cerr << "Error: Input and output in the same port "
+				// 	<< left << ".\n";
+				return ParseResult(
+					204, tokens[0]->Position(), tokens[0]->Size()
+				);
 			}
 		}
 	}
 
 	// check this output with previous inputs
 	if (IsFrontIo(left) && front_in_use_.test(IdentifierIndex(left))) {
-		std::cerr << "Error: Output port defined as input port before "
-			<< left << ".\n";
-		return false;
+		// std::cerr << "Error: Output port defined as input port before "
+		// 	<< left << ".\n";
+		return ParseResult(204, tokens[0]->Position(), tokens[0]->Size());
 	}
 	// check this inputs with previous outputs
 	if (!IsClock(tokens[2]->Name())) {
 		// not the clock
 		if (IsScaler(left) && tokens.size() == 3) {
 			if (tokens[2]->Type() != kSymbolType_Variable) {
-				std::cerr << "Error: The only token is not identifier "
-					<< tokens[2]->Name() << ".\n";
-				return false;
+				// std::cerr << "Error: The only token is not identifier "
+				// 	<< tokens[2]->Name() << ".\n";
+				return ParseResult(
+					205, tokens[2]->Position(), tokens[2]->Size()
+				);
 			}
 		} else {
 			for (size_t i = 2; i < tokens.size(); ++i) {
@@ -398,9 +404,11 @@ bool ConfigParser::CheckIoConflict(
 					continue;
 				}
 				if (front_out_use_.test(IdentifierIndex(tokens[i]->Name()))) {
-					std::cerr << "Error: Input port defined as output port before "
-						<< tokens[i]->Name() << ".\n";
-					return false;
+					// std::cerr << "Error: Input port defined as output port before "
+					// 	<< tokens[i]->Name() << ".\n";
+					return ParseResult(
+						204, tokens[i]->Position(), tokens[i]->Size()
+					);
 				}
 			}
 		}
@@ -413,15 +421,15 @@ bool ConfigParser::CheckIoConflict(
 		if (!front_in_use_.test(IdentifierIndex(tokens[i]->Name()))) continue;
 		if (front_use_lemo_.test(IdentifierIndex(tokens[i]->Name()))) {
 			if (!IsLemoIo(tokens[i]->Name())) {
-				std::cerr << "Error: Input port was defined as lemo input before "
-					<< tokens[i]->Name() << ".\n";
-				return false;
+				// std::cerr << "Error: Input port was defined as lemo input before "
+				// 	<< tokens[i]->Name() << ".\n";
+				return ParseResult(206, tokens[i]->Position(), tokens[i]->Size());
 			}
 		} else {
 			if (IsLemoIo(tokens[i]->Name())) {
-				std::cerr << "Error: Input port wasn't defined as lemo input before "
-					<< tokens[i]->Name() << ".\n";
-				return false;
+				// std::cerr << "Error: Input port wasn't defined as lemo input before "
+				// 	<< tokens[i]->Name() << ".\n";
+				return ParseResult(206, tokens[i]->Position(), tokens[i]->Size());
 			}
 		}
 	}
@@ -438,13 +446,13 @@ bool ConfigParser::CheckIoConflict(
 			}
 		}
 		if (!found) {
-			std::cerr << "Error: Variable used but not defined "
-				<< tokens[i]->Name() << "\n";
-			return false;
+			// std::cerr << "Error: Variable used but not defined "
+			// 	<< tokens[i]->Name() << "\n";
+			return ParseResult(207, tokens[i]->Position(), tokens[i]->Size());
 		}
 	}
 
-	return true;
+	return ParseResult(0);
 }
 
 
@@ -752,12 +760,16 @@ size_t ConfigParser::ParseFrequency(const std::string &clock) const noexcept {
 }
 
 
-std::string ConfigParser::SaveConfigInformation(bool logic) const noexcept {
+std::string ConfigParser::SaveConfigInformation(bool expression) const noexcept {
 	// create directories if not existed
 	std::string path = std::string(getenv("HOME")) + "/.easy-config-logic";
+#if __cplusplus >= 201703L
 	std::filesystem::create_directories(path);
 	std::filesystem::create_directories(path+"/backup");
-
+#else
+	std::experimental::filesystem::create_directories(path);
+	std::experimental::filesystem::create_directories(path+"/backup");
+#endif
 	// get current time
 	time_t current_time = time(NULL);
 	tm* current = localtime(&current_time);
@@ -770,7 +782,7 @@ std::string ConfigParser::SaveConfigInformation(bool logic) const noexcept {
 	std::string file_name = path + "/backup/" + file_name_time + "-backup";
 
 	// save configuration information to the last config file
-	if (logic) {
+	if (expression) {
 		std::ofstream last_info_file(path+"/last-config.txt");
 		last_info_file << "0\n"
 			<< time_str << "\n"
@@ -782,12 +794,12 @@ std::string ConfigParser::SaveConfigInformation(bool logic) const noexcept {
 	std::ofstream info_file(path+"/config-log.txt", std::ios::app);
 	info_file << "0, "
 		<< time_str << ", "
-		<< (logic ? "logic" : "register") << ", "
+		<< (expression ? "expression" : "register") << ", "
 		<< file_name << "\n";
 	info_file.close();
 
 	// save configuration backup
-	if (logic) {
+	if (expression) {
 		std::ofstream backup_file(file_name+".txt");
 		for (const auto &expr : expressions_) {
 			backup_file << expr << "\n";

@@ -29,12 +29,17 @@ target_link_libraries(config PRIVATE memory_config config_parser)
 add_executable(logic_test logic_test.cpp)
 target_link_libraries(logic_test PRIVATE memory_config config_parser)
 
-# scaler server
-add_executable(server server.cpp)
-target_link_libraries(server PRIVATE service)
-
+if (BUILD_GRPC_SERVER)
+	# scaler server
+	add_executable(server server.cpp)
+	target_link_libraries(server PRIVATE service stdc++compact)
+endif()
 
 install(
 	TARGETS syntax_tree compare standardize convert config logic_test
-	DESTINATION "${CMAKE_BINARY_DIR}/bin"
+	DESTINATION "${ECL_INSTALL_PATH}/bin"
 )
+
+if (BUILD_GRPC_SERVER)
+	install(TARGETS server DESTINATION "${ECL_INSTALL_PATH}/bin")
+endif()

@@ -311,7 +311,9 @@ SLRSyntaxParser<VarType>::~SLRSyntaxParser() noexcept {
 
 
 template<typename VarType>
-int SLRSyntaxParser<VarType>::Parse(const std::vector<TokenPtr> &tokens) {
+ParseResult SLRSyntaxParser<VarType>::Parse(
+	const std::vector<TokenPtr> &tokens
+) {
 
 	// GenerateSyntaxTable(tokens);
 
@@ -325,8 +327,8 @@ int SLRSyntaxParser<VarType>::Parse(const std::vector<TokenPtr> &tokens) {
 	// is the result of reduce action
 	int look_symbol = this->FindSymbol(tokens[0]);
 	if (look_symbol < 0) {
-		std::cerr << "Error: Invalid token " << tokens[0]->Name() << std::endl;
-		return -1;			// invalid symbol
+		// std::cerr << "Error: Invalid token " << tokens[0]->Name() << std::endl;
+		return ParseResult(101, tokens[0]->Position(), tokens[0]->Size());			// invalid symbol
 	}
 	// the processing token index
 	size_t itoken = 0;
@@ -374,8 +376,12 @@ int SLRSyntaxParser<VarType>::Parse(const std::vector<TokenPtr> &tokens) {
 						}
 					}
 					if (!id) {
-						std::cerr << "Error: The shifting identifier not found.\n";
-						return -1;
+						// std::cerr << "Error: The shifting identifier not found.\n";
+						return ParseResult(
+							102,
+							tokens[itoken]->Position(),
+							tokens[itoken]->Size()
+						);
 					}
 					processing_symbols.push(id);
 				} else if (tokens[itoken]->Type() == kSymbolType_Literal) {
@@ -407,8 +413,13 @@ int SLRSyntaxParser<VarType>::Parse(const std::vector<TokenPtr> &tokens) {
 				// look for next token
 				look_symbol = this->FindSymbol(tokens[itoken]);
 				if (look_symbol < 0) {
-					std::cerr << "Error: Invalid token " << tokens[itoken]->Name() << std::endl;
-					return -1;			// invalid symbol
+					// std::cerr << "Error: Invalid token "
+					// 	<< tokens[itoken]->Name() << std::endl;
+					return ParseResult(
+						101,
+						tokens[itoken]->Position(),
+						tokens[itoken]->Size()
+					);			// invalid symbol
 				}
 
 
@@ -438,20 +449,27 @@ int SLRSyntaxParser<VarType>::Parse(const std::vector<TokenPtr> &tokens) {
 					}
 
 				} else if (tokens[itoken]->Type() == kSymbolType_Literal) {
-
+					// do nothing
 				} else if (tokens[itoken]->Type() == kSymbolType_Operator) {
-
+					// do nothing
 // std::cout << "    Next symbol is operator " << tokens[itoken]->Type() << std::endl;
 
 				} else {
-					std::cerr << "Error: Invalid token type " << tokens[itoken]->Type() << std::endl;
+					// std::cerr << "Error: Invalid token type "
+					// 	<< tokens[itoken]->Type() << std::endl;
+					return ParseResult(
+						103,
+						tokens[itoken]->Position(),
+						tokens[itoken]->Size()
+					);
 				}
 			}
 
 
 		} else if (action->type == Action::kTypeReduce) {
 
-			ProductionFactory<VarType> *factory = (ProductionFactory<VarType>*)(action->production);
+			ProductionFactory<VarType> *factory =
+				(ProductionFactory<VarType>*)(action->production);
 
 			// pop several collections
 			for (size_t i = 0; i < factory->size(); ++i) {
@@ -490,7 +508,8 @@ int SLRSyntaxParser<VarType>::Parse(const std::vector<TokenPtr> &tokens) {
 
 // std::cout << "  Action ACCETP! Break the loop." << std::endl;
 
-			this->syntax_tree_root_ = (Production<VarType>*)(processing_symbols.top());
+			this->syntax_tree_root_ =
+				(Production<VarType>*)(processing_symbols.top());
 			break;
 
 
@@ -500,7 +519,12 @@ int SLRSyntaxParser<VarType>::Parse(const std::vector<TokenPtr> &tokens) {
 			std::cerr << "Error: Invalid action type: " << action->type
 				<< ", stack top symbol is " << top << ", next symbol is "
 				<< name << "\n";
-			return -2;
+			if (itoken == tokens.size()) {
+				return ParseResult(104, tokens.size());
+			}
+			return ParseResult(
+				104, tokens[itoken]->Position(), tokens[itoken]->Size()
+			);
 		}
 
 	}
@@ -508,7 +532,7 @@ int SLRSyntaxParser<VarType>::Parse(const std::vector<TokenPtr> &tokens) {
 
 // this->PrintTree(this->syntax_tree_root_);
 
-	return 0;
+	return ParseResult(0);
 }
 
 

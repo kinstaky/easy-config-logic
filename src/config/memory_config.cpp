@@ -15,8 +15,7 @@ MemoryConfig::MemoryConfig() noexcept {
 void MemoryConfig::Clear() noexcept {
 	memset(&memory_, 0, sizeof(Memory));
 	for (size_t i = 0; i < kMaxClocks; ++i) {
-		memory_.clock_divider_source[i] =
-			ConvertSource(kInternalClocksOffset);
+		memory_.clock_divider_source[i] = 0;
 	}
 	for (size_t i = 0; i < kMaxDividers; ++i) {
 		memory_.divisor[i] = 1u;
@@ -85,10 +84,10 @@ int MemoryConfig::Read(ConfigParser *parser) noexcept {
 		// set enable
 		memory_.trigger_all_out_enable |= 0x1 << 27;
 		// selection
-		uint8_t selection = ConvertSource(parser->ExternalClock());
+		uint8_t selection = parser->ExternalClock();
 		if (selection == uint8_t(-1)) {
 			std::cerr << "Error: Invalid external clock selection "
-				<< parser->ExternalClock() << "\n";
+				<< selection << "\n";
 			return -1;
 		}
 		memory_.extern_ts_selection = selection;
@@ -196,13 +195,13 @@ int MemoryConfig::Read(ConfigParser *parser) noexcept {
 	// read clock config
 	for (size_t i = 0; i < parser->ClockSize(); ++i) {
 		size_t frequency = parser->ClockFrequency(i);
-		uint8_t selection = ConvertSource(kInternalClocksOffset);
-		if (selection == uint8_t(-1)) {
-			std::cerr << "Error: Invalid clock source "
-				<< kInternalClocksOffset << "\n";
-			return -1;
-		}
-		memory_.clock_divider_source[i] = selection;
+		// uint8_t selection = ConvertSource(kInternalClocksOffset);
+		// if (selection == uint8_t(-1)) {
+		// 	std::cerr << "Error: Invalid clock source "
+		// 		<< kInternalClocksOffset << "\n";
+		// 	return -1;
+		// }
+		memory_.clock_divider_source[i] = 0;
 		memory_.clock_divisor[i] = 100'000'000ul / frequency;
 	}
 

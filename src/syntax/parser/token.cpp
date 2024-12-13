@@ -20,8 +20,13 @@ Symbol::Symbol(int type) noexcept
 // 									Token
 //-----------------------------------------------------------------------------
 
-Token::Token(int type, const std::string &name) noexcept
-: Symbol(type), name_(name) {
+Token::Token(
+	int type,
+	const std::string &name,
+	size_t position,
+	size_t size
+) noexcept
+: Symbol(type), name_(name), position_(position), size_(size) {
 }
 
 
@@ -30,13 +35,17 @@ Token::Token(int type, const std::string &name) noexcept
 // 									Variable
 //-----------------------------------------------------------------------------
 
-Variable::Variable(const std::string &name) noexcept
-: Token(kSymbolType_Variable, name) {
+Variable::Variable(
+	const std::string &name,
+	size_t position,
+	size_t size
+) noexcept
+: Token(kSymbolType_Variable, name, position, size) {
 }
 
 
-Variable::Variable(char name) noexcept
-: Variable(std::string(1, name)) {
+Variable::Variable(char name, size_t position, size_t size) noexcept
+: Variable(std::string(1, name), position, size) {
 }
 
 
@@ -56,13 +65,13 @@ void* Variable::GetAttached() const noexcept {
 // 										Operator
 //-----------------------------------------------------------------------------
 
-Operator::Operator(const std::string &name) noexcept
-:Token(kSymbolType_Operator, name) {
+Operator::Operator(const std::string &name, size_t position) noexcept
+:Token(kSymbolType_Operator, name, position, name.size()) {
 }
 
 
-Operator::Operator(char name) noexcept
-:Operator(std::string(1, name)) {
+Operator::Operator(char name, size_t position) noexcept
+:Token(kSymbolType_Operator, std::string(1, name), position, 1) {
 }
 
 
@@ -70,10 +79,9 @@ Operator::Operator(char name) noexcept
 //								NumberLiteral
 //-----------------------------------------------------------------------------
 
-NumberLiteral::NumberLiteral(int value) noexcept
-: Token(kSymbolType_Literal, std::to_string(value))
+NumberLiteral::NumberLiteral(int value, size_t position, size_t size) noexcept
+: Token(kSymbolType_Literal, std::to_string(value), position, size)
 , value_(value) {
-
 }
 
 }				// namespace ecl
