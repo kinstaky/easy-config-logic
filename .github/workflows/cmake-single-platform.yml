@@ -20,7 +20,7 @@ jobs:
     - name: Install Dependency Packages
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential autoconf libtool pkg-config ninja-build
+        sudo apt-get install -y build-essential autoconf libtool pkg-config ninja-build g++-multilib linux-libc-dev:i386
     - name: Install gRPC
       run: |
         mkdir -p dep/grpc
@@ -38,11 +38,13 @@ jobs:
         cmake --build ${{github.workspace}}/dep_src/grpc/build -- -j4
         cmake --build ${{github.workspace}}/dep_src/grpc/build --target install
     - name: Configure CMake
-      run: cmake -S ${{github.workspace}}
-        -B ${{github.workspace}}/build
-        -G Ninja
-        -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-        -DCMAKE_PREFIX_PATH=${{github.workspace}}/dep/grpc
+      run: cmake -S ${{github.workspace}} \
+        -B ${{github.workspace}}/build \
+        -G Ninja \
+        -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+        -DCMAKE_PREFIX_PATH=${{github.workspace}}/dep/grpc \
+        -DCMAKE_CXX_STANDARD=14 \
+        -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -m32"
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
     - name: Test
@@ -64,7 +66,7 @@ jobs:
     - name: Install Dependency Packages
       run: |
         sudo apt-get update
-        sudo apt-get install -y build-essential autoconf libtool pkg-config ninja-build
+        sudo apt-get install -y build-essential autoconf libtool pkg-config ninja-build g++-multilib linux-libc-dev:i386
     - name: Install gRPC
       run: |
         mkdir -p dep/grpc
@@ -84,11 +86,13 @@ jobs:
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -S ${{github.workspace}}
-        -B ${{github.workspace}}/build
-        -G Ninja
-        -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-        -DCMAKE_PREFIX_PATH=${{github.workspace}}/dep/grpc
+      run: cmake -S ${{github.workspace}} \
+        -B ${{github.workspace}}/build \
+        -G Ninja \
+        -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} \
+        -DCMAKE_PREFIX_PATH=${{github.workspace}}/dep/grpc \
+        -DCMAKE_CXX_STANDARD=14 \
+        -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -m32"
     - name: Build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -- -j4
