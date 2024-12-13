@@ -912,7 +912,7 @@
 
 <h1 id="_1">进阶使用</h1>
 <h2 id="_2">两步配置</h2>
-<p>除了<a href="quick-start.md#使用">快速开始</a>所提到的一步到位的配置方式，还可以选择两步配置的方式。实际上在配置过程中，程序会将配置文件中的表达式转化成直接写 FPGA 内存的低级配置文件，该低级配置文件和 FPGA 内部的设置息息相关，适合有经验的人进一步调试使用。一般的两步方式如下</p>
+<p>除了<a href="../quick_start/">快速开始</a><strong>使用</strong>所提到的一步到位的配置方式，还可以选择两步配置的方式。实际上在配置过程中，程序会将配置文件中的表达式转化成直接写 FPGA 内存的低级配置文件，该低级配置文件和 FPGA 内部的设置息息相关，适合有经验的人进一步调试使用。一般的两步方式如下</p>
 <div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-1">1</a></span>
 <span class="normal"><a href="#__codelineno-0-2">2</a></span>
 <span class="normal"><a href="#__codelineno-0-3">3</a></span>
@@ -922,7 +922,7 @@
 <a id="__codelineno-0-4" name="__codelineno-0-4"></a>$<span class="w"> </span>./config<span class="w"> </span>example_memory_0.txt
 </code></pre></div></td></tr></table></div>
 <p>即先根据包含逻辑表达式的高级配置文件产生中间的低级配置文件，随后依然运行 <code>config</code> 程序配置 FPGA 芯片，此时省略 <code>-l</code> 参数。</p>
-<p>同时，考虑到 <code>easy-config-logic</code> 项目编译时间不短，在 zynq7020 的系统内可以考虑使用另一个项目<a href="https://github.com/kinstaky/easy-config-logic-c">easy-config-logic-c</a>，该项目只能使用低级配置文件进行配置，所以需要在另一台机器中产生低级配置文件后再复制到 zynq7020 的系统中。</p>
+<p>同时，考虑到 <code>easy-config-logic</code> 项目编译时间不短，在 zynq7020 的系统内可以考虑使用另一个项目<a href="https://github.com/kinstaky/easy-config-logic-c">easy-config-logic-c</a>，该项目只能使用低级配置文件进行配置，所以需要在另一台机器中产生低级配置文件后再复制到 zynq7020 的系统中。该项目目前还不存在，以后可能也不存在。</p>
 <h2 id="_3">定标器</h2>
 <p>所谓定标器（scaler），即统计信号频率的模块。在配置文件中写好定标器定义后，FPGA 配置好后会将被检测信号的频率记录在内存中。</p>
 <h3 id="_4">太长不看版</h3>
@@ -1024,13 +1024,13 @@
 <div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-7-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1"></a>$<span class="w"> </span>firefox<span class="w"> </span>standalone/scaler/scaler-visual.html
 </code></pre></div></td></tr></table></div>
 <p>但在打开前，确保 <code>scaler_client</code> 使用了 <code>-s</code> 选项，否则接收不到数据（重启 <code>scaler_client</code> 后记得刷新页面）。打开浏览器即可看到如下界面。</p>
-<p><img alt="visual-scaler-realtime" src="../resource/images/visual-scaler-realtime.png" /></p>
+<p><img alt="visual-scaler-realtime" src="../../resource/images/visual-scaler-realtime.png" /></p>
 <p>界面最上方是选择查看的方式，历史模式 <strong>history</strong> 或者实时模式 <strong>realtime</strong>。按钮变成蓝色表示被选中，如上图就是实时模式。</p>
 <h4 id="_9">实时模式</h4>
 <p>实时模式用于实时监控定标器的数据，点击 <strong>realtime</strong> 按钮后，就会得到上面的界面。</p>
 <p>模式选择下方是观察时间范围选择，可以选择图里显示的时间范围，包括1分钟、20分钟、1小时、10小时和1天。选择后图显示的范围也会相应变化。加载完成后点击图右边栏的图例，即可查看指定定标器的数据。简单来说，这里粗略地模仿了下载或上传文件的实时下载、上传网速显示。</p>
 <p>图表下方的按钮用于实时显示数值的定标器数值，类似于<a href="#命令行界面显示">命令行界面显示</a>，就是显示一堆跳动的数据。按钮内文本是 <strong>+ show scaler value</strong> 点击会显示实时数据，再点击会隐藏实时数据。</p>
-<h4 id="_10">历史模式<img alt="visual-scaler-history" src="../resource/images/visual-scaler-history.png" /></h4>
+<h4 id="_10">历史模式<img alt="visual-scaler-history" src="../../resource/images/visual-scaler-history.png" /></h4>
 <p>历史模式用于查看过去几天的数据，点击 <strong>history</strong> 后得到如上图的界面。可以看到模式选择下方是日期选择，有两个日期需要设置，开始日期和结束日期，查看的是从（含）开始日期到（含）结束日期之间的定标器数据，选择日期后点击按钮 <strong>request</strong>，请求数据，稍等片刻就会加载完成。同样的，载入数据后需要点击图右边的图例来显示特定定标器的数据。简单来说，这里粗略地模仿了订酒店 app 的交互方式，选日期，看数据。</p>
 
 
