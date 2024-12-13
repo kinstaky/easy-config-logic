@@ -33,8 +33,7 @@ jobs:
           -DgRPC_INSTALL=ON \
           -DgRPC_BUILD_TESTS=OFF \
           -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/dep/grpc \
-          -DCMAKE_CXX_STANDARD=14 \
-          -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -m32"
+          -DCMAKE_CXX_STANDARD=14
         cmake --build ${{github.workspace}}/dep_src/grpc/build -- -j4
         cmake --build ${{github.workspace}}/dep_src/grpc/build --target install
     - name: Configure CMake
@@ -79,8 +78,7 @@ jobs:
           -DgRPC_INSTALL=ON \
           -DgRPC_BUILD_TESTS=OFF \
           -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/dep/grpc \
-          -DCMAKE_CXX_STANDARD=14 \
-          -DCMAKE_CXX_FLAGS="${CMAKE_CXX_FLAGS} -m32"
+          -DCMAKE_CXX_STANDARD=14
         cmake --build ${{github.workspace}}/dep_src/grpc/build -- -j4
         cmake --build ${{github.workspace}}/dep_src/grpc/build --target install
     - name: Configure CMake
