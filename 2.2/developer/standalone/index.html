@@ -1005,7 +1005,7 @@
 </code></pre></div></td></tr></table></div>
 <h2 id="convert">convert</h2>
 <p>实现在 <code>standalone/convert.cpp</code> 中，用到了 sytnax、stadnardize 和 config 库。</p>
-<p>这个在<a href="../user-guide/advanced.md">进阶使用</a>两步配置中提到，就是用来从高级配置文件产生低级配置文件的。所谓高级配置文件，就是应用<a href="../../user_guide/config_syntax/">配置语法</a>的规则的配置文件，比如说 <code>examples/example_logic_0.txt</code>就是高级配置文件。所谓低级配置文件，就是和 FPGA 内存高度相关的配置文件，里面都是文本形式的十六进制数。</p>
+<p>这个在<a href="../../user_guide/advanced/">进阶使用</a>两步配置中提到，就是用来从高级配置文件产生低级配置文件的。所谓高级配置文件，就是应用<a href="../../user_guide/config_syntax/">配置语法</a>的规则的配置文件，比如说 <code>examples/example_logic_0.txt</code>就是高级配置文件。所谓低级配置文件，就是和 FPGA 内存高度相关的配置文件，里面都是文本形式的十六进制数。</p>
 <div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1"></a>$<span class="w"> </span>./bin/convert<span class="w"> </span>examples/example_logic_0.txt<span class="w"> </span>example_memory_0.txt
 </code></pre></div></td></tr></table></div>
 <p>如上运行程序即可得到名为 <code>example_memory_0.txt</code> 的低级配置文件，因为这个文件太长，我就放在<a href="#low-level-config">附录</a>了。这个就是那种一般人看不懂的东西。细心的人可能发现这个项目版本已经是2.0了，那么版本1.0其实就是只能读取低级配置文件的项目。考虑到配置过于困难，才有这个项目的出现。</p>
@@ -1032,13 +1032,13 @@
 </code></pre></div></td></tr></table></div>
 <h2 id="scaler_client">scaler_client</h2>
 <p>定义和实现在<code>standalone/scaler/scaler_defs.h</code> 和  <code>standalone/scaler/scaler_client.cpp</code> 中。</p>
-<p>这个在<a href="../user-guide/advanced.md">进阶使用</a>定标器中提到过，这里就不重复介绍了。它可以在 zynq 的系统里跑，但我觉得正确的用法是在另一台更好的机器里跑。需要输入 zynq 的 ip 地址和服务端设置的端口。默认是服务端每1秒记录一次定标器数值，客户端积累1次的记录（即1秒）再向客户端请求这堆数据。可以修改头文件中的 <code>kRecordPeriod</code> 来更改记录时间间隔，单位为秒。修改头文件中的 <code>kScalerStackSize</code> 来修改记录的积累数量，单位是个。</p>
+<p>这个在<a href="../../user_guide/advanced/">进阶使用</a>定标器中提到过，这里就不重复介绍了。它可以在 zynq 的系统里跑，但我觉得正确的用法是在另一台更好的机器里跑。需要输入 zynq 的 ip 地址和服务端设置的端口。默认是服务端每1秒记录一次定标器数值，客户端积累1次的记录（即1秒）再向客户端请求这堆数据。可以修改头文件中的 <code>kRecordPeriod</code> 来更改记录时间间隔，单位为秒。修改头文件中的 <code>kScalerStackSize</code> 来修改记录的积累数量，单位是个。</p>
 <div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-6-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1"></a>$<span class="w"> </span>./bin/scaler_client<span class="w"> </span><span class="m">192</span>.168.1.108<span class="w"> </span><span class="m">12306</span>
 </code></pre></div></td></tr></table></div>
 <p>程序运行后默认将数据输出到运行目录，可以通过输入参数来改变，详见<a href="../../user_guide/advanced/">进阶使用</a>定标器。</p>
 <h2 id="scaler_visual">scaler_visual</h2>
 <p>实现在 <code>standalone/scaler/scaler_visual.html</code> 和 <code>main.js</code>。</p>
-<p>这个是用 html 和 javascript 写的脚本，用于在浏览器中查看历史的或实时的定标器数据，同样在<a href="../user-guide/advanced.md">进阶使用</a>定标器中提到过。画图主要调用了 <a href="https://echarts.apache.org/en/index.html">echarts</a>，因为我是 html 和 JavaScript 的新手，里面都是乱写的，反正最后能跑我就满足了。感觉写的都是无聊的东西，“设计”一下界面，给按钮加上响应，向服务器请求数据，将数据导入到图里，没了。</p>
+<p>这个是用 html 和 javascript 写的脚本，用于在浏览器中查看历史的或实时的定标器数据，同样在<a href="../../user_guide/advanced/">进阶使用</a>定标器中提到过。画图主要调用了 <a href="https://echarts.apache.org/en/index.html">echarts</a>，因为我是 html 和 JavaScript 的新手，里面都是乱写的，反正最后能跑我就满足了。感觉写的都是无聊的东西，“设计”一下界面，给按钮加上响应，向服务器请求数据，将数据导入到图里，没了。</p>
 <h2 id="_1">附录</h2>
 <h3 id="low-level-config">low-level-config</h3>
 <p><a href="#convert">回到 convert</a></p>
