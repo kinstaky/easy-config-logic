@@ -1021,7 +1021,7 @@ $$
 <p>定义和实现在 <code>include/standardize/standard_logic_tree.h</code> 和 <code>src/standardize/standard_logic_tree.cpp</code> 中。</p>
 <p>实际上，一个根节点足以表示树，这里添加 <code>StandardLogicTree</code> 类是方便封装一些函数进去。另一方面，除了表示根节点的变量 <code>tree_root_</code> 外，因为使用 <code>std::bitset</code> 来表示叶节点即变量（即使用一个序号来表示一个变量），我们需要变量 <code>id_list_</code> 来给出变量和序号的映射关系。</p>
 <p><code>StandardLogicTree</code> 是在语法分析树的基础上构建的，所以构造函数需要读入表达式的根节点（<code>SLRSyntaxParser::Root</code>）来构建，同时需要辅助函数 <code>ParseE</code> 和 <code>ParseT</code> 来递归解析产生式。读入后将直接构建对应的树，不一定是标准形式，所以需要通过调用 <code>Standardize</code> 来标准化。</p>
-<p><code>Standardize</code> 的方法就是上节<a href="#标准化证明">标准化证明</a>的小结部分提到的，调用方法 <code>ReduceLayers</code> 减少层数，调用方法 <code>ExchangeOrder</code> 交换两层的运算。</p>
+<p><code>Standardize</code> 的方法就是上节<strong>标准化证明</strong>的小结部分提到的，调用方法 <code>ReduceLayers</code> 减少层数，调用方法 <code>ExchangeOrder</code> 交换两层的运算。</p>
 <p>标准化后的树可以调用方法 <code>PrintTree</code> 保留结构地输出，也可以调用方法 <code>Root</code> 获得树的根目录。</p>
 <h3 id="_6">优化</h3>
 <p>现实总是比理想残酷，虽然理论上是对的，但是该方法在面对多层的逻辑表达式时往往需要大量的时间，对于5层及以上的表达式的运行时间无可计数，所以需要进行优化。</p>
