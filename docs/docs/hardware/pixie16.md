@@ -28,7 +28,7 @@
 
 + 第1路，输出，通道1的 Multiplicity/Coincidence 触发
 + 第2路，输入，Module Fast Trigger 的可用来源
-+ 第3路，输出，Module Validation Trigger 的可用来源
++ 第3路，输入，Module Validation Trigger 的可用来源
 + 第4路，输出，通道0的 Multiplicity/Coincidence 触发
 
 背板在本项目中相当于单路的输入或者输出
