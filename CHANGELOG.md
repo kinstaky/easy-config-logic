@@ -2,9 +2,15 @@
 
 ## 2.3.0
 ### New features
++ modern GUI powered by flutter
++ multiple downscale expression in one line
++ user defined variables in logic expression
++ number literal (0 and 1) in logic expression
++ config backup and scaler names backup
 
 ### Optimization
-+ rewrite bitsteram of fpga
++ rewrite bitsteram of FPGA
++ better scaler in FPGA
 
 
 ## 2.2.0
@@ -12,7 +18,7 @@
 + read scaler names from file when using web page visual mode
 + change scaler names in web page visual mode
 ### Optimization
-+ rewrite scaler in fpga
++ rewrite scaler in FPGA
 
 ## 2.1.3
 + Add displaying scaler value in webpage in realtime mode below the realtime chart.
