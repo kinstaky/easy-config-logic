@@ -1244,7 +1244,7 @@
 <p>如果要从背板输出单路的信号，只需设置<strong>左式</strong>为 <code>Back</code></p>
 <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-3-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="n">Back</span> <span class="o">=</span> <span class="n">A0</span> <span class="o">&amp;</span> <span class="n">A3</span>
 </code></pre></div></td></tr></table></div>
-<p>该<strong>语句</strong>和<a href="#前面板组合逻辑">前面板组合逻辑</a>一节中的只有<strong>左式</strong>不同，表示前面板第1个端口和第4个端口的输入做<strong>与</strong>符合，符合结果在背板输出。</p>
+<p>该<strong>语句</strong>和前面板组合逻辑小节中的只有<strong>左式</strong>不同，表示前面板第1个端口和第4个端口的输入做<strong>与</strong>符合，符合结果在背板输出。</p>
 <h3 id="_18">时钟输出</h3>
 <p>前面板端口和背板都可以输出时钟信号，但是前面板任意一个端口都可以输出时钟信号，而背板只有一路可以输出</p>
 <div class="language-python highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="n">C25</span> <span class="o">=</span> <span class="n">clock_5MHz</span>

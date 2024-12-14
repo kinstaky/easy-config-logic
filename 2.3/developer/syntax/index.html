@@ -1081,7 +1081,7 @@
 <p>还没更新，可能是过期内容，谨慎参考</p>
 </div>
 <h2 id="_1">简介</h2>
-<p>这个库用于对逻辑表达式进行词法分析和语法分析。显然，实际上网上有更好的词法分析和语法分析的库，这里纯粹以学习和实践编译原理为目的而从头开始写。如果没有学习过编译原理，可以先学习一下， 或者简单学习一下<a href="https://en.wikipedia.org/wiki/Context-free_grammar">上下文无关文法</a>，然后看一下我处理逻辑表达式所使用的的<a href="#语法分析">文法</a>，最后直接跳到页尾<a href="#总结">总结</a>查看处理后生成的语法分析树。</p>
+<p>这个库用于对逻辑表达式进行词法分析和语法分析。显然，实际上网上有更好的词法分析和语法分析的库，这里纯粹以学习和实践编译原理为目的而从头开始写。如果没有学习过编译原理，可以先学习一下， 或者简单学习一下<a href="https://en.wikipedia.org/wiki/Context-free_grammar">上下文无关文法</a>，然后看一下我处理逻辑表达式所使用的的文法，最后直接跳到页尾总结查看处理后生成的语法分析树。</p>
 <h2 id="_2">词法分析</h2>
 <p>以我浅薄的编译原理知识来看，词法分析涉及到正则表达式，有穷自动机之类的，但是这里为了图省事，并没有写通用的东西，而只是实现了对<strong>变量</strong>和<strong>运算符</strong>的提取。<strong>变量</strong>指的是以字母或者下划线'_'开头的包含字母、数字和下划线的字符串。<strong>运算符</strong>指 ( 、) 、&amp; 、| 四个运算符，是本项目中逻辑表达式中仅有的可以出现的运算符。</p>
 <p>词法分析类命名为 <code>Lexer</code>，通过函数 <code>Analyse</code> 将 <code>std::string</code> 类型的表达式提取成 <code>std::vector&lt;std::shared_ptr&lt;Token&gt;&gt;</code>，其中 <code>Token</code> 表示的是<strong>变量</strong>或者<strong>运算符</strong>。提取出的<a href="https://en.wikipedia.org/wiki/Lexical_analysis#Token">记号</a>（token）串将被传递给语法分析器。</p>
@@ -1096,7 +1096,7 @@
 <li>T -&gt; ( E )</li>
 <li>T -&gt; id</li>
 </ol>
-<p><a href="https://en.wikipedia.org/wiki/Production_(computer_science)">产生式</a>0是起始产生式，产生式1表示逻辑或，产生式2表示逻辑与，产生式3终结 E 的递归，产生式4表示优先运算，产生式5终结 T 的递归。其中 S、E、T 都是<a href="https://en.wikipedia.org/wiki/Terminal_and_nonterminal_symbols">非终结符号</a>，<a href="#词法分析">词法分析</a>提到的四个运算符还有 id 都是<a href="https://en.wikipedia.org/wiki/Terminal_and_nonterminal_symbols">终结符号</a>，其中 id 是变量标识符（用于表示变量）。这里 S 的命名来自于单词 start，E 和 T 则是直接抄教科书中四则运算中的 E 和 T。但是实际上四则运算中 E 应该表示 Expression，T 表示 Term， 还有 F 表示 Factor，是有含义的，我这里属于是生搬硬套了。</p>
+<p><a href="https://en.wikipedia.org/wiki/Production_(computer_science)">产生式</a>0是起始产生式，产生式1表示逻辑或，产生式2表示逻辑与，产生式3终结 E 的递归，产生式4表示优先运算，产生式5终结 T 的递归。其中 S、E、T 都是<a href="https://en.wikipedia.org/wiki/Terminal_and_nonterminal_symbols">非终结符号</a>，词法分析一节提到的四个运算符还有 id 都是<a href="https://en.wikipedia.org/wiki/Terminal_and_nonterminal_symbols">终结符号</a>，其中 id 是变量标识符（用于表示变量）。这里 S 的命名来自于单词 start，E 和 T 则是直接抄教科书中四则运算中的 E 和 T。但是实际上四则运算中 E 应该表示 Expression，T 表示 Term， 还有 F 表示 Factor，是有含义的，我这里属于是生搬硬套了。</p>
 <p>简单理解，这个文法所构成的“逻辑语言”</p>
 <ul>
 <li>基本元素是变量和运算符</li>
@@ -1175,7 +1175,7 @@
 <h3 id="slrsyntaxparser">SLRSyntaxParser</h3>
 <p>定义和实现在 <code>include/syntax/parser/syntax_parser.h</code> 和 <code>src/syntax/parser/syntax_parser.cpp</code></p>
 <p><code>SLRSyntaxParser</code> 的主要功能函数 <code>Parse</code> 读入从<code>Lexer</code> 传递的  <code>std::vector&lt;TokenPtr&gt;</code>，然后构建语法分析树。构建后，可以从方法 <code>Root()</code>得到语法分析树的根节点，也可以通过方法 <code>PrintTree</code> 将其带结构地输出；如果已经给表达式中的变量附上 C++ 变量（就是赋值），还可以使用方法 <code>Eval</code> 求值。</p>
-<p>为了可以实现 <code>Parse</code> 的功能，我按照书上的 SLR 语法分析器的算法，如 <a href="#Grammar">Grammar</a> 一节中所说，先构建项集，然后构建行为表，这两部都写在了构造函数中。由于没有提前定义表示结束的符号 $，这里认为结束符号就是符号表中最后一个符号，它的序号等于符号表的长度，所以它是一个特殊的符号，需要小心地处理。我觉得更合理的可能是定义一个特殊的符号来代表结束符号，而不是像现在这样用特殊的方式处理。除此之外，我觉得这里比较复杂的是<code>Parse</code> 函数中  <code>itoken</code> 和 <code>look_symbol</code> 两个变量。<code>itoken</code> 用来指示语法分析器处理到了输入的记号串的位置，用以表示书中的队列。<code>look_symbol</code> 则是表示当前在看的符号，可能是输入的记号，也可能规约后的非终结符号，同时还是在行为表中查找当前需要执行的行为的依据。</p>
+<p>为了可以实现 <code>Parse</code> 的功能，我按照书上的 SLR 语法分析器的算法，如 <a href="#grammar">Grammar</a> 一节中所说，先构建项集，然后构建行为表，这两部都写在了构造函数中。由于没有提前定义表示结束的符号 $，这里认为结束符号就是符号表中最后一个符号，它的序号等于符号表的长度，所以它是一个特殊的符号，需要小心地处理。我觉得更合理的可能是定义一个特殊的符号来代表结束符号，而不是像现在这样用特殊的方式处理。除此之外，我觉得这里比较复杂的是<code>Parse</code> 函数中  <code>itoken</code> 和 <code>look_symbol</code> 两个变量。<code>itoken</code> 用来指示语法分析器处理到了输入的记号串的位置，用以表示书中的队列。<code>look_symbol</code> 则是表示当前在看的符号，可能是输入的记号，也可能规约后的非终结符号，同时还是在行为表中查找当前需要执行的行为的依据。</p>
 <h4 id="actiontable">ActionTable</h4>
 <p>为了方便写入和查找行为表，我添加了类 <code>ActionTable</code>，定义和实现都与 <code>SLRSyntaxParser</code> 在同一文件中。</p>
 <p>我们知道在 SLR 语法分析器中，主要有4种行为</p>
