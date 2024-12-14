@@ -135,7 +135,8 @@ const std::vector<std::string> kSyntaxErrorExpression = {
 	"A2 = A4 | A5 | S6",
 	"S6 = clock_100Hz",
 	"A0 = clock_100Hz / 100",
-	"A1 = A2 / 0"
+	"A1 = A2 / 0",
+	"Extern = A1 & A2",
 };
 // conflict input output group
 const std::vector<std::vector<std::string>> kConflictExpression = {
@@ -184,6 +185,10 @@ const std::vector<std::vector<std::string>> kConflictExpression = {
 	{
 		"A0 = A10",
 		"A1 = A26"
+	},
+	{
+		"Extern = clock_5kHz",
+		"Extern = clock_3kHz"
 	}
 };
 
@@ -313,7 +318,7 @@ const std::vector<size_t> kBackOutputGroup = {
 	kAndGatesOffset + 1, kAndGatesOffset + 0, -1ul
 };
 const std::vector<size_t> kExternalClockOutput = {
-	kClocksOffset+1, -1ul, kClocksOffset+1
+	1, -1ul, 1
 };
 const std::vector<std::vector<DividerInfo>> kDividerGroup = {
 	{
@@ -378,7 +383,7 @@ const std::vector<std::vector<uint64_t>> kClockFrequencyGroup = {
 TEST(ConfigParserTest, Clear) {
 	ConfigParser parser;
 	for (size_t i = 0; i < kExpressions.size(); ++i) {
-		EXPECT_EQ(parser.Parse(kExpressions[i]), 0)
+		EXPECT_TRUE(parser.Parse(kExpressions[i]).Ok())
 			<< "Error: Parse " << i;
 	}
 
@@ -644,10 +649,10 @@ TEST(ConfigParserTest, CheckIdentifiers) {
 	for (size_t i = 0; i < kExpressions.size(); ++i) {
 		Lexer lexer;
 		std::vector<TokenPtr> tokens;
-		EXPECT_EQ(lexer.Analyse(kExpressions[i], tokens), 0)
+		EXPECT_TRUE(lexer.Analyse(kExpressions[i], tokens).Ok())
 			<< "Error: Lexer analyse failed " << i;
 
-		EXPECT_TRUE(parser.CheckIdentifiers(tokens))
+		EXPECT_TRUE(parser.CheckIdentifiers(tokens).Ok())
 			<< "Erorr: CheckIdentifiers failed " << i;
 	}
 }
@@ -656,7 +661,7 @@ TEST(ConfigParserTest, CheckIdentifiers) {
 TEST(ConfigParserTest, GenerateGates) {
 	ConfigParser parser;
 	for (size_t i = 0; i < kExpressions.size(); ++i) {
-		EXPECT_EQ(parser.Parse(kExpressions[i]), 0)
+		EXPECT_TRUE(parser.Parse(kExpressions[i]).Ok())
 			<< "Error: Parse " << i;
 
 		EXPECT_EQ(parser.FrontOutputSize(), kOutputSize[i])
@@ -769,7 +774,7 @@ TEST(ConfigParserTest, GenerateClocks) {
 TEST(ConfigParserTest, ParseError) {
 	for (const std::string &expr : kSyntaxErrorExpression) {
 		ConfigParser parser;
-		EXPECT_LE(parser.Parse(expr), -1)
+		EXPECT_FALSE(parser.Parse(expr).Ok())
 			<< "Error: Parse success: " << expr;
 	}
 }
@@ -780,7 +785,7 @@ TEST(ConfigParserTest, IoPortConflict) {
 		bool success = true;
 		ConfigParser parser;
 		for (const auto &expr : kConflictExpression[i]) {
-			if (parser.Parse(expr) != 0) {
+			if (!parser.Parse(expr).Ok()) {
 				success = false;
 				break;
 			}
@@ -795,7 +800,7 @@ TEST(ConfigParserTest, Parse) {
 	for (size_t group = 0; group < kExpressionGroup.size(); ++group) {
 		ConfigParser parser;
 		for (const auto &expr : kExpressionGroup[group]) {
-			ASSERT_EQ(parser.Parse(expr), 0)
+			ASSERT_TRUE(parser.Parse(expr).Ok())
 				<< "Error: Parse group " << group << " expression " << expr;
 		}
 

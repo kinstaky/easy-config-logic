@@ -6,53 +6,12 @@
 #include <string>
 #include <vector>
 
+#include "parse_result.h"
 #include "config/memory.h"
 #include "syntax/parser/token.h"
 #include "standardize/standard_logic_downscale_tree.h"
 
 namespace ecl {
-
-const size_t kFrontIoGroupNum = 3;
-const size_t kFrontIoGroupSize = 16;
-const size_t kFrontIoNum = 48;
-
-const size_t kMaxMultiGates = 16;
-
-const size_t kOrGatesOffset = kFrontIoNum;
-const size_t kOrBits = kFrontIoNum;
-const size_t kMaxOrGates = 16;
-
-const size_t kAndGatesOffset = kOrGatesOffset + kMaxOrGates;
-const size_t kAndBits = kOrBits + kMaxOrGates;
-const size_t kMaxAndGates = 16;
-
-const size_t kDividersOffset = kAndGatesOffset + kMaxAndGates;
-const size_t kMaxDividers = 8;
-
-const size_t kDividerOrGatesOffset = kDividersOffset + kMaxDividers;
-const size_t kDividerOrBits = kAndBits + kMaxAndGates + kMaxDividers;
-const size_t kMaxDividerOrGates = 8;
-
-const size_t kDividerAndGatesOffset = kDividerOrGatesOffset + kMaxDividerOrGates;
-const size_t kDividerAndBits = kDividerOrBits + kMaxDividerOrGates;
-const size_t kMaxDividerAndGates = 8;
-
-const size_t kClocksOffset = kDividerAndGatesOffset + kMaxDividerAndGates;
-const size_t kMaxClocks = 4;
-
-const size_t kInternalClocksOffset = kClocksOffset + kMaxClocks;
-const size_t kMaxInternalClocks = 4;
-const size_t kExternalClockOffset = kInternalClocksOffset + kMaxInternalClocks;
-const size_t kBackOffset = kExternalClockOffset + 1;
-const size_t kZeroValueOffset = kBackOffset + 1;
-
-const size_t kMaxScalers = 32;
-const size_t kScalersOffset = 255 - kMaxScalers;
-
-const size_t kOrGateWidth = (kOrBits + 63) / 64;
-const size_t kAndGateWidth = (kAndBits + 63) / 64;
-const size_t kDividerOrGateWidth = (kDividerOrBits + 63) / 64;
-const size_t kDividerAndGateWidth = (kDividerAndBits + 63) / 64;
 
 
 struct PortSource {
@@ -160,9 +119,9 @@ public:
 	/// @brief parse the expression and generate the standard logic tree
 	///
 	/// @param[in] expr the logic expression to parse
-	/// @returns 0 on success, -1 on failure
+	/// @returns parsed result
 	///
-	int Parse(const std::string &expr) noexcept;
+	ParseResult Parse(const std::string &expr) noexcept;
 
 
 	/// @brief clear the varibles and go back to initial state
@@ -183,16 +142,20 @@ public:
 
 	/// @brief check the form of identifiers
 	/// @param[in] tokens identifiers list to check
-	/// @returns true if identifier in appropirate form, false otherwise
+	/// @returns ok if identifier in appropirate form
 	///
-	bool CheckIdentifiers(const std::vector<TokenPtr> &tokens) const noexcept;
+	ParseResult CheckIdentifiers(
+		const std::vector<TokenPtr> &tokens
+	) const noexcept;
 
 
 	/// @brief check whether there is io conflict
 	/// @param[in] tokens identifiers list to check
-	/// @returns true if no conflict up to now, false otherwise
+	/// @returns ok if no conflict up to now
 	///
-	bool CheckIoConflict(const std::vector<TokenPtr> &tokens) const noexcept;
+	ParseResult CheckIoConflict(
+		const std::vector<TokenPtr> &tokens
+	) const noexcept;
 
 
 	/// @brief check the identifier is in FrontIo form
@@ -580,6 +543,18 @@ public:
 		return dividers_[index];
 	}
 
+
+	//-------------------------------------------------------------------------
+	//							write log
+	//-------------------------------------------------------------------------
+
+
+	/// @brief save config information and get file name
+	/// @param[in] expression expression or register input
+	/// @returns the file name
+	///
+	std::string SaveConfigInformation(bool expression) const noexcept;
+
 private:
 	std::vector<PortSource> front_outputs_;
 	std::bitset<kFrontIoNum> front_out_use_;
@@ -602,6 +577,9 @@ private:
 	std::bitset<kMaxScalers> scaler_use_;
 	// user defined variable list
 	std::vector<VariableInfo> variables_;
+
+	// record information
+	std::vector<std::string> expressions_;
 };
 
 }				// namespace ecl

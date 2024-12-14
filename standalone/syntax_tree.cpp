@@ -40,8 +40,8 @@ int main(int argc, char **argv) {
 	// lexer analyse
 	ecl::Lexer lex;
 	std::vector<ecl::TokenPtr> tokens;
-	int result = lex.Analyse(line, tokens);
-	if (result) {
+	ecl::ParseResult result = lex.Analyse(line, tokens);
+	if (!result.Ok()) {
 		std::cerr << "Error: Lexer parse failed.\n";
 		return -1;
 	}

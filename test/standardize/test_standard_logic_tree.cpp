@@ -50,12 +50,12 @@ TEST(StandardLogicTreeTest, CompareValue) {
 	for (size_t i = 0; i < kOutput.size(); ++i) {
 		Lexer lexer;
 		LogicalGrammar grammar;
-		SLRSyntaxParser parser(&grammar);
+		SLRSyntaxParser<bool> parser(&grammar);
 		std::vector<TokenPtr> tokens;
 
-		ASSERT_EQ(lexer.Analyse(kExpression[i], tokens), 0)
+		ASSERT_TRUE(lexer.Analyse(kExpression[i], tokens).Ok())
 			<< "Error: lexer analyse " << i;
-		ASSERT_EQ(parser.Parse(tokens), 0)
+		ASSERT_TRUE(parser.Parse(tokens).Ok())
 			<< "Error: parser parse " << i;
 
 
@@ -83,12 +83,12 @@ TEST(StandardLogicTreeTest, OutputString) {
 	for (size_t i = 0; i < kOutput.size(); ++i) {
 		Lexer lexer;
 		LogicalGrammar grammar;
-		SLRSyntaxParser parser(&grammar);
+		SLRSyntaxParser<bool> parser(&grammar);
 		std::vector<TokenPtr> tokens;
 
-		ASSERT_EQ(lexer.Analyse(kExpression[i], tokens), 0)
+		ASSERT_TRUE(lexer.Analyse(kExpression[i], tokens).Ok())
 			<< "Error: lexer analyse " << i;
-		ASSERT_EQ(parser.Parse(tokens), 0)
+		ASSERT_TRUE(parser.Parse(tokens).Ok())
 			<< "Error: parser parse " << i;
 
 

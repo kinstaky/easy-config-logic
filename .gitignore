@@ -1,31 +1,8 @@
-# binary file
-*
-!*.*
-!*/
-
-# C/C++ build outputs
-.build/
-bins
-gens
-libs
-objs
-
-# make build files
-*.o
-standalone
-*.log
-*.bin
-20*.txt
-client-recorded-time.txt
-
 # cmake build files
 build*/
 
 # Visual Studio Code artifacts
 .vscode/*
 
-# pixie sdk log
-Pixie16Msg.log%
-
-# docs
+# docs build
 docs/site

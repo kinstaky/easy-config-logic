@@ -5,11 +5,9 @@ target_link_libraries(
 	PRIVATE lexer syntax_parser logical_grammar logic_downscale_grammar
 )
 
-
 # compare
 add_executable(compare compare_logical_expression.cpp)
 target_link_libraries(compare PRIVATE logic_comparer)
-
 
 # standardize
 add_executable(standardize standardize.cpp)
@@ -19,30 +17,29 @@ target_link_libraries(
 	standard_logic_downscale_tree logic_downscale_grammar syntax_parser lexer
 )
 
-
 # convert
 add_executable(convert convert.cpp)
 target_link_libraries(convert PRIVATE memory_config config_parser)
 
-
-# i2c library
-add_library(i2c STATIC i2c.cpp i2c.h)
-
-
 # config
 add_executable(config config.cpp)
-target_link_libraries(config PRIVATE memory_config config_parser i2c)
-
+target_link_libraries(config PRIVATE memory_config config_parser)
 
 # logic test
 add_executable(logic_test logic_test.cpp)
 target_link_libraries(logic_test PRIVATE memory_config config_parser)
 
+if (BUILD_GRPC_SERVER)
+	# scaler server
+	add_executable(server server.cpp)
+	target_link_libraries(server PRIVATE service stdc++compact)
+endif()
 
 install(
 	TARGETS syntax_tree compare standardize convert config logic_test
-	DESTINATION "${CMAKE_BINARY_DIR}/bin"
+	DESTINATION "${ECL_INSTALL_PATH}/bin"
 )
 
-
-add_subdirectory(scaler)
+if (BUILD_GRPC_SERVER)
+	install(TARGETS server DESTINATION "${ECL_INSTALL_PATH}/bin")
+endif()

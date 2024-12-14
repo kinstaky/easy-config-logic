@@ -1,0 +1,5 @@
+test = 2
+port = 2235
+name = "test2"
+data_path = "data/dev"
+log_level = "debug"

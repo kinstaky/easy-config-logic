@@ -109,12 +109,13 @@ TEST(LexerTest, HandleErrorInput) {
 	int index = 0;
 	for (const std::string &expr : kErrorInputExpression) {
 		std::vector<TokenPtr> tokens;
-		int result = lexer.Analyse(expr, tokens);
-		
-		EXPECT_EQ(result, kErrorInputResult[index])
+		ParseResult result = lexer.Analyse(expr, tokens);
+
+		EXPECT_EQ(result.Ok(), kErrorInputResult[index] == 0)
+		// EXPECT_EQ(result, kErrorInputResult[index])
 			<< "Lexical parse cannot handle the input error: #" << index
-			<< ", result " << result << ".";
-		
+			<< ", result " << result.Message(expr) << ".";
+
 		++index;
 	}
 }
@@ -126,12 +127,12 @@ TEST(LexerTest, Analyse) {
 	int expression_index = 0;
 	for (const std::string &expr : kInputExpression) {
 		std::vector<TokenPtr> tokens;
-		int result = lexer.Analyse(expr, tokens);
+		ParseResult result = lexer.Analyse(expr, tokens);
 
 		// check return result
-		ASSERT_EQ(result, 0)
+		ASSERT_EQ(result.Ok(), true)
 			<< "Lexer recognize the correct input as wrong: #"
-			<< expression_index << ", result " << result << ".";
+			<< expression_index << ", result " << result.Ok() << ".";
 
 
 		// check tokens size
