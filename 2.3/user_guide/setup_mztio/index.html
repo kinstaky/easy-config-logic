@@ -924,13 +924,13 @@
 <p>本项目不限于在嵌入机中使用此 xillinux，但并未考虑其他系统的兼容性。</p>
 </div>
 <p>详细阅读  提供的文档 <a href="http://xillybus.com/downloads/doc/xillybus_getting_started_zynq.pdf">Getting started with Xillinux for Zynq-7000</a>，包括了如何下载和安装系统。下面简要介绍步骤。</p>
-<p>下载 <a href="http://xillybus.com/xillinux">xillybus</a> 提供的 linux 系统（下载地址 http://xillybus.com/downloads/xillinux-2.0a.img.gz ），然后写入到 SD 卡中作为操作系统（比如使用 <a href="https://rufus.ie/en/">rufus</a>），就像制作 U 盘启动盘一样。</p>
+<p>下载 <a href="http://xillybus.com/xillinux">xillybus</a> 提供的 linux 系统（下载地址 <a href="http://xillybus.com/downloads/xillinux-2.0a.img.gz">http://xillybus.com/downloads/xillinux-2.0a.img.gz</a> ），然后写入到 SD 卡中作为操作系统（比如使用 <a href="https://rufus.ie/en/">rufus</a>），就像制作 U 盘启动盘一样。</p>
 <p>写入完成后，SD 卡会被分为两个分区</p>
 <ol>
 <li>启动分区（boot），里面的文件是开机的时候用的，目前里面只有一个 uImage 文件</li>
 <li>文件系统分区（rootfs），是操作系统的根目录，里面能够看到平常在 linux 根目录看到的文件，比如说 home，sys</li>
 </ol>
-<p>对于一般的电脑来说，操作系统已经安装好了，但是对于嵌入机来说，还需要考虑对应的外设。所以还要再复制三个文件到启动分区中。从本项目的 Release 页面中下载启动文件，https://github.com/kinstaky/easy-config-logic/releases/download/v2.3.0/bootfile.zip。下载后解压，能够得到以下三个文件，都复制到启动分区中</p>
+<p>对于一般的电脑来说，操作系统已经安装好了，但是对于嵌入机来说，还需要考虑对应的外设。所以还要再复制三个文件到启动分区中。从本项目的 Release 页面中下载启动文件，<a href="https://github.com/kinstaky/easy-config-logic/releases/download/v2.3.0/bootfile.zip">https://github.com/kinstaky/easy-config-logic/releases/download/v2.3.0/bootfile.zip</a>。下载后解压，能够得到以下三个文件，都复制到启动分区中</p>
 <ol>
 <li>boot.bin</li>
 <li>devicetree.dtb</li>
@@ -951,7 +951,7 @@
 </ol>
 <h2 id="_4">安装软件</h2>
 <h3 id="_5">安装服务端</h3>
-<p>下载 https://github.com/kinstaky/easy-config-logic/releases/download/v2.3.0/ecl-bin.tar，然后解压到嵌入机中，就算安装完成了。</p>
+<p>下载 <a href="https://github.com/kinstaky/easy-config-logic/releases/download/v2.3.0/ecl-bin.tar">https://github.com/kinstaky/easy-config-logic/releases/download/v2.3.0/ecl-bin.tar</a>，然后解压到嵌入机中，就算安装完成了。</p>
 <p>里面包含以下可执行文件</p>
 <ul>
 <li>compare，本项目测试工具，用于比较两个逻辑表达式是否等价</li>
