@@ -1066,11 +1066,16 @@
 </ol>
 <p>同时，该目录下还有一个 <code>backup/</code> 子目录，子目录下都是之前每一个配置的内容（或者说备份）。如果使用表达式形式配置的，就会存有对应的表达式形式和寄存器形式备份，如果是用寄存器形式配置的，就只有寄存器形式的备份。这些备份文件同样是方便后续检查用的。</p>
 <p>总之，该目录的结构如下</p>
-<p>​    config-log.txt</p>
-<p>​    last-config.txt</p>
-<p>​        backup/</p>
-<p>​            xxx-backup.txt</p>
-<p>​            xxx-backup-register.txt</p>
+<div class="language-text highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
+<span class="normal">2</span>
+<span class="normal">3</span>
+<span class="normal">4</span>
+<span class="normal">5</span></pre></div></td><td class="code"><div><pre><span></span><code>config-log.txt
+last-config.txt
+    backup/
+        xxx-backup.txt
+        xxx-backup-register.txt
+</code></pre></div></td></tr></table></div>
 <h2 id="gui">不用 GUI 配置</h2>
 <p>参考<a href="../config_syntax/">配置语法</a>，编写自己的配置文件，或者使用 <code>example</code> 目录下的样例 <code>example_logic_0.txt</code>，输入如下命令进行配置</p>
 <div class="language-bash highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-4-1">1</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1"></a>$<span class="w"> </span>./config<span class="w"> </span>example_logic_0.txt
