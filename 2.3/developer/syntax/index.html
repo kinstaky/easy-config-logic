@@ -1113,7 +1113,7 @@
 </ul>
 <p>两者都是 <code>Token</code> 的子类。考虑到可能需要对变量进行求值，<code>Attach</code> 可以令标识符附加一个 C++ 内的变量，并通过 <code>GetAttached</code> 得到变量的值（即标识符此时的值）。而 <code>Operator</code> 几乎就是一个占位符。</p>
 <h3 id="production">Production</h3>
-<p><code>Production</code> 的定义和实现在 <code>include/syntax/parser/production.h</code> 和 <code>src/syntax/parser/production.cpp</code> 中。<code>Production</code> 顾名思义，是会产生东西的。具体在语法分析过程中，可以由抽象语法产生具体语法，抽象语法就是<a href="#语法分析">语法分析</a>中提到的那六个产生式，具体语法就是对应于具体的变量和运算符的逻辑表达式的一部分或全部。比如说，表达式 <code>A | B</code> 就是一个具体语法，对应于抽象语法 <code>E | T</code>。所以，我个人觉得这里很适合使用工厂模式，抽象语法作为工厂<code>ProductionFactory</code>，具体语法就是产品<code>Production</code>。</p>
+<p><code>Production</code> 的定义和实现在 <code>include/syntax/parser/production.h</code> 和 <code>src/syntax/parser/production.cpp</code> 中。<code>Production</code> 顾名思义，是会产生东西的。具体在语法分析过程中，可以由抽象语法产生具体语法，抽象语法就是语法分析中提到的那六个产生式，具体语法就是对应于具体的变量和运算符的逻辑表达式的一部分或全部。比如说，表达式 <code>A | B</code> 就是一个具体语法，对应于抽象语法 <code>E | T</code>。所以，我个人觉得这里很适合使用工厂模式，抽象语法作为工厂<code>ProductionFactory</code>，具体语法就是产品<code>Production</code>。</p>
 <p>另一方面，可以将产生式看成树，产生式左边的非终结符号是父节点，产生式右边的非终结符号和终结符号是子节点。因此，我又添加了一个类 <code>ProductionFactorySet</code> 来表示非终结符号，命名为 set 是因为往往一个非终结符号有多种产生式（即作为多个产生式的左端）。由于非终结符号和终结符号（<code>Token</code>）都是节点，所以我再添加了一个类<code>Symbol</code>作为它们的基类，使得可以使用 <code>Symbol*</code> 来代表语法树的节点。</p>
 <p>由于后面我将使用 SLR 语法分析器，所以还需要从产生式中构建<strong>项</strong>（item）和<strong>项集</strong>（collection），所以我又添加了两个类<code>ProductionItem</code> 和 <code>ProductionItemCollection</code> 来表示项和项集。</p>
 <p>这样，就有5个和产生式相关的类了。此时可以发现多个类有共同的结构和方法，所以我给<code>Production</code>、<code>ProductionFactory</code> 和 <code>ProductionItem</code> 添加了共同的基类 <code>ProductionBase</code> 以减少代码的重复。</p>
