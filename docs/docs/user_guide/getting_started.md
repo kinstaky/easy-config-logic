@@ -103,15 +103,11 @@ easy_config_logic_client
 
 总之，该目录的结构如下
 
-​    config-log.txt
-
-​    last-config.txt
-
-​        backup/
-
-​            xxx-backup.txt
-
-​            xxx-backup-register.txt
+	config-log.txt
+    last-config.txt
+		backup/
+			xxx-backup.txt
+			xxx-backup-register.txt
 
 ## 不用 GUI 配置
 
