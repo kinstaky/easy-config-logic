@@ -357,15 +357,15 @@ public:
 	}
 
 
-	/// @brief check whether the front port is logic output only
+	/// @brief check whether the front port input is inverted
 	/// @param[in] index index of port the check
-	/// @returns true if is logic output, false otherwise
+	/// @returns true if is inverted, false otherwise
 	///
-	inline bool FrontOutputInverse(size_t index) const noexcept {
+	inline bool FrontInputInverse(size_t index) const noexcept {
 		if (index >= kFrontIoNum) {
 			return false;
 		}
-		return front_output_inverse_.test(index);
+		return front_input_inverse_.test(index);
 	}
 
 
@@ -560,7 +560,7 @@ private:
 	std::bitset<kFrontIoNum> front_out_use_;
 	std::bitset<kFrontIoNum> front_in_use_;
 	std::bitset<kFrontIoNum> front_use_lemo_;
-	std::bitset<kFrontIoNum> front_output_inverse_;
+	std::bitset<kFrontIoNum> front_input_inverse_;
 
 	// back output source
 	size_t back_output_;

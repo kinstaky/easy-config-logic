@@ -35,7 +35,7 @@ int MemoryConfig::Read(ConfigParser *parser) noexcept {
 				memory_.rj45_enable[i/16] |= 1u << (i % 16);
 			} else {
 				// invert input signal, except for LEMO input
-				memory_.front_input_inverse[i/16] |= 1u << (i % 16);
+				memory_.front_output_inverse[i/16] |= 1u << (i % 16);
 			}
 		}
 		if (parser->IsFrontOutput(i)) {
@@ -44,8 +44,8 @@ int MemoryConfig::Read(ConfigParser *parser) noexcept {
 			// enable PL output
 			memory_.pl_out_enable[i/16] |= 1u << (i % 16);
 			// don't invert LEMO output and clock output
-			if (!parser->IsFrontLemo(i) && parser->FrontOutputInverse(i)) {
-				memory_.front_output_inverse[i/16] |= 1u << (i % 16);
+			if (!parser->IsFrontLemo(i) && parser->FrontInputInverse(i)) {
+				memory_.front_input_inverse[i/16] |= 1u << (i % 16);
 			}
 		}
 	}
@@ -463,7 +463,7 @@ int MemoryConfig::TesterRead(ConfigParser *parser) noexcept {
 			}
 		}
 		if (parser->IsFrontOutput(i)) {
-			if (!parser->IsFrontLemo(i) && parser->FrontOutputInverse(i)) {
+			if (!parser->IsFrontLemo(i) && parser->FrontInputInverse(i)) {
 				memory_.front_input_inverse[i/16] |= 1u << (i % 16);
 			}
 		}

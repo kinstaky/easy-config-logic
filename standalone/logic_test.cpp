@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
 			input_ports |= 1ul << i;
 			++input_size;
 		}
-		if (parser.IsFrontOutput(i) && parser.FrontOutputInverse(i)) {
+		if (parser.IsFrontOutput(i) && parser.FrontInputInverse(i)) {
 			output_ports |= 1ul << i;
 			++output_size;
 		}

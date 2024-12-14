@@ -106,7 +106,9 @@ struct Memory {
 	// front IO config
 	uint16_t rj45_enable[3];
 	uint16_t pl_out_enable[3];
+	// input is I in FPGA IOBUF, so input is actually the output signal!!!
 	uint16_t front_input_inverse[3];
+	// output is O in FPGA IOBUF, so output is actually the input singal!!!
 	uint16_t front_output_inverse[3];
 	uint8_t front_io_source[48];
 

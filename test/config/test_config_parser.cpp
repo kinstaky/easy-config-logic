@@ -397,7 +397,7 @@ TEST(ConfigParserTest, Clear) {
 			<< "Error: Front output after clear";
 		EXPECT_FALSE(parser.IsFrontLemo(i))
 			<< "Error: Front lemo after clear";
-		EXPECT_FALSE(parser.FrontOutputInverse(i))
+		EXPECT_FALSE(parser.FrontInputInverse(i))
 			<< "Error: Front logic output after clear";
 	}
 	EXPECT_EQ(parser.OrGateSize(), 0)

@@ -16,10 +16,6 @@ using namespace ecl;
 
 const std::string kTestDataDir = TEST_DATA_DIRECTORY;
 
-void CompareMomory(const Memory *memory0, const Memory *memory1) {
-	EXPECT_EQ(memcmp(memory0, memory1, sizeof(Memory)), 0);
-}
-
 
 TEST(MemoryConfigTest, FileReadWrite) {
 	MemoryConfig config0;
@@ -34,7 +30,7 @@ TEST(MemoryConfigTest, FileReadWrite) {
 		<< "Error: config1 read failed.";
 	const Memory *memory1 = config1.GetMemory();
 
-	CompareMomory(memory0, memory1);
+	EXPECT_EQ(memcmp(memory0, memory1, sizeof(Memory)), 0);
 }
 
 
@@ -57,5 +53,5 @@ TEST(MemoryConfigTest, ReadLogicExpression) {
 		<< "Error: config1 read failed.";
 	const Memory *memory1 = config1.GetMemory();
 
-	CompareMomory(memory0, memory1);
+	EXPECT_EQ(memcmp(memory0, memory1, sizeof(Memory)), 0);
 }
