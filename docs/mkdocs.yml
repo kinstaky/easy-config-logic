@@ -18,8 +18,8 @@ theme:
 
 extra:
   version:
-    - provider: mike
-    - default: latest
+    provider: mike
+    default: latest
 
 markdown_extensions:
   - pymdownx.highlight:
