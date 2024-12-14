@@ -33,8 +33,8 @@ int main(int argc, char **argv) {
 			"file", "File to read",
 			cxxopts::value<std::string>(), "file"
 		);
-
 	args.parse_positional({"file"});
+	args.positional_help("file");
 
 	try {
 		auto result = args.parse(argc, argv);
