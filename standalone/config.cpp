@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
 		}
 		file_name = result["file"].as<std::string>();
 	} catch (const cxxopts::exceptions::exception& e) {
-		std::cerr << "[Error] Parse filaed: " << e.what() << "\n";
+		std::cerr << "[Error] Parse failed: " << e.what() << "\n";
 		return -1;
 	}
 

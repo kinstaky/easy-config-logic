@@ -35,6 +35,10 @@ if (BUILD_GRPC_SERVER)
 	target_link_libraries(server PRIVATE service stdc++compact)
 endif()
 
+# scaler value decoder
+add_executable(decode decode.cpp)
+target_include_directories(decode PUBLIC "${PROJECT_SOURCE_DIR}/include")
+
 install(
 	TARGETS syntax_tree compare standardize convert config logic_test
 	DESTINATION "${ECL_INSTALL_PATH}/bin"
