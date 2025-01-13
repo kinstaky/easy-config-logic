@@ -1,12 +1,12 @@
 # Proto file
-get_filename_component(ecl_proto "ecl.proto" ABSOLUTE)
+get_filename_component(ecl_proto "ecl_rong.proto" ABSOLUTE)
 get_filename_component(ecl_proto_path "${ecl_proto}" PATH)
 
 # Generated sources
-set(ecl_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/ecl.pb.cc")
-set(ecl_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/ecl.pb.h")
-set(ecl_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/ecl.grpc.pb.cc")
-set(ecl_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/ecl.grpc.pb.h")
+set(ecl_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/ecl_rong.pb.cc")
+set(ecl_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/ecl_rong.pb.h")
+set(ecl_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/ecl_rong.grpc.pb.cc")
+set(ecl_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/ecl_rong.grpc.pb.h")
 add_custom_command(
         OUTPUT "${ecl_proto_srcs}" "${ecl_proto_hdrs}"
                 "${ecl_grpc_srcs}" "${ecl_grpc_hdrs}"

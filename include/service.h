@@ -8,7 +8,7 @@
 #include <memory>
 
 #include "config/memory.h"
-#include "ecl.grpc.pb.h"
+#include "ecl_rong.grpc.pb.h"
 
 namespace ecl {
 
@@ -57,7 +57,7 @@ struct ServiceOption {
 	}
 };
 
-class Service final : public EasyConfigLogic::CallbackService {
+class Service final : public rong::ecl::CallbackService {
 public:
 
 	/// @brief constructor
@@ -131,8 +131,8 @@ public:
 	///
 	grpc::ServerUnaryReactor* GetState(
 		grpc::CallbackServerContext *context,
-		const Request *request,
-		Response *response
+		const rong::Request *request,
+		rong::Response *response
 	) override;
 
 
@@ -143,9 +143,9 @@ public:
 	///		type 1+ refers to get range of scaler values
 	/// @returns reactor to write scaler values
 	///
-	grpc::ServerWriteReactor<Response>* GetScaler(
+	grpc::ServerWriteReactor<rong::Response>* GetScaler(
 		grpc::CallbackServerContext *context,
-		const Request *request
+		const rong::Request *request
 	) override;
 
 
@@ -156,9 +156,9 @@ public:
 	/// 	flag refers to needed scaler
 	/// @returns reactor to write scaler values
 	///
-	grpc::ServerWriteReactor<Response>* GetScalerRecent(
+	grpc::ServerWriteReactor<rong::Response>* GetScalerRecent(
 		grpc::CallbackServerContext *context,
-		const RecentRequest *request
+		const rong::RecentRequest *request
 	) override;
 
 
@@ -167,9 +167,9 @@ public:
 	/// @param[in] request request content, fill date
 	/// @returns reactor to write scaler values
 	///
-	grpc::ServerWriteReactor<Response>* GetScalerDate(
+	grpc::ServerWriteReactor<rong::Response>* GetScalerDate(
 		grpc::CallbackServerContext *context,
-		const DateRequest *request
+		const rong::DateRequest *request
 	) override;
 
 
@@ -178,9 +178,9 @@ public:
 	/// @param[in] request request content, empty now
 	/// @returns reactor to write expressions
 	///
-	grpc::ServerWriteReactor<Expression>* GetConfig(
+	grpc::ServerWriteReactor<rong::Expression>* GetConfig(
 		grpc::CallbackServerContext *context,
-		const Request *request
+		const rong::Request *request
 	) override;
 
 
@@ -189,9 +189,9 @@ public:
 	/// @param[in] response response, config result
 	/// @returns reactor to read expressions
 	///
-	grpc::ServerReadReactor<Expression>* SetConfig(
+	grpc::ServerReadReactor<rong::Expression>* SetConfig(
 		grpc::CallbackServerContext *context,
-		ParseResponse *response
+		rong::ParseResponse *response
 	) override;
 
 
