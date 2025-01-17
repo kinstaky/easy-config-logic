@@ -2,19 +2,20 @@ syntax = "proto3";
 package rong;
 
 service ecl {
-	rpc GetState(Request) returns (Response) {}
-	rpc GetScaler(Request) returns (stream Response) {}
-	rpc GetScalerRecent(RecentRequest) returns (stream Response) {}
-	rpc GetScalerDate(DateRequest) returns (stream Response) {}
+	rpc GetState(Request) returns (Reply) {}
+	rpc GetScaler(Request) returns (stream Reply) {}
+	rpc GetScalerRecent(RecentRequest) returns (stream Reply) {}
+	rpc GetScalerDate(DateRequest) returns (stream Reply) {}
 	rpc GetConfig(Request) returns (stream Expression) {}
 	rpc SetConfig(stream Expression) returns (ParseResponse) {}
+	rpc RunControl(Action) returns (Reply) {}
 };
 
 message Request {
 	int32 type = 1;
 }
 
-message Response {
+message Reply {
 	int32 value = 1;
 }
 
@@ -39,4 +40,10 @@ message ParseResponse {
 	int32 index = 2;
 	int32 position = 3;
 	int32 length = 4;
+}
+
+message Action {
+    int32 type = 1;
+    int32 option = 2;
+	int32 extra = 3;
 }

@@ -126,13 +126,13 @@ public:
 	/// @brief get state of device
 	/// @param[in] context server context, handled by gRPC
 	/// @param[in] request request content, keep empty now
-	/// @param[out] response current state, 0 finished, 1 not config, 2 good
+	/// @param[out] reply current state, 0 finished, 1 not config, 2 good
 	/// @returns default reactor
 	///
 	grpc::ServerUnaryReactor* GetState(
 		grpc::CallbackServerContext *context,
 		const rong::Request *request,
-		rong::Response *response
+		rong::Reply *reply
 	) override;
 
 
@@ -143,7 +143,7 @@ public:
 	///		type 1+ refers to get range of scaler values
 	/// @returns reactor to write scaler values
 	///
-	grpc::ServerWriteReactor<rong::Response>* GetScaler(
+	grpc::ServerWriteReactor<rong::Reply>* GetScaler(
 		grpc::CallbackServerContext *context,
 		const rong::Request *request
 	) override;
@@ -156,7 +156,7 @@ public:
 	/// 	flag refers to needed scaler
 	/// @returns reactor to write scaler values
 	///
-	grpc::ServerWriteReactor<rong::Response>* GetScalerRecent(
+	grpc::ServerWriteReactor<rong::Reply>* GetScalerRecent(
 		grpc::CallbackServerContext *context,
 		const rong::RecentRequest *request
 	) override;
@@ -167,7 +167,7 @@ public:
 	/// @param[in] request request content, fill date
 	/// @returns reactor to write scaler values
 	///
-	grpc::ServerWriteReactor<rong::Response>* GetScalerDate(
+	grpc::ServerWriteReactor<rong::Reply>* GetScalerDate(
 		grpc::CallbackServerContext *context,
 		const rong::DateRequest *request
 	) override;
@@ -186,12 +186,12 @@ public:
 
 	/// @brief set FPGA memory config
 	/// @param[in] context server context, handled by gRPC
-	/// @param[in] response response, config result
+	/// @param[in] reply reply, config result
 	/// @returns reactor to read expressions
 	///
 	grpc::ServerReadReactor<rong::Expression>* SetConfig(
 		grpc::CallbackServerContext *context,
-		rong::ParseResponse *response
+		rong::ParseResponse *reply
 	) override;
 
 

@@ -463,23 +463,23 @@ void Service::Serve() noexcept {
 grpc::ServerUnaryReactor* Service::GetState(
 	grpc::CallbackServerContext* context,
 	const rong::Request*,
-	rong::Response *response
+	rong::Reply *reply
 ) {
-	response->set_value(int(keep_running));
+	reply->set_value(int(keep_running));
 	auto *reactor = context->DefaultReactor();
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
 }
 
 
-grpc::ServerWriteReactor<rong::Response>* Service::GetScaler(
+grpc::ServerWriteReactor<rong::Reply>* Service::GetScaler(
 	grpc::CallbackServerContext*,
 	const rong::Request*
 ) {
 
-	class ScalerWriter : public grpc::ServerWriteReactor<rong::Response> {
+	class ScalerWriter : public grpc::ServerWriteReactor<rong::Reply> {
 	public:
-		ScalerWriter(const std::vector<rong::Response> &responses)
+		ScalerWriter(const std::vector<rong::Reply> &responses)
 		: index_(0), responses_(responses) {
 			NextWrite();
 		}
@@ -510,23 +510,23 @@ grpc::ServerWriteReactor<rong::Response>* Service::GetScaler(
 		}
 
 		size_t index_;
-		std::vector<rong::Response> responses_;
+		std::vector<rong::Reply> responses_;
 	};
 
-	std::vector<rong::Response> responses;
+	std::vector<rong::Reply> responses;
 	for (size_t i = 0; i < kMaxScalers; ++i) {
-		rong::Response response;
-		response.set_value(memory_->scaler[i].value);
-		responses.push_back(response);
+		rong::Reply reply;
+		reply.set_value(memory_->scaler[i].value);
+		responses.push_back(reply);
 	}
 
 	return new ScalerWriter(responses);
 }
 
 
-class ScalerWriter : public grpc::ServerWriteReactor<rong::Response> {
+class ScalerWriter : public grpc::ServerWriteReactor<rong::Reply> {
 public:
-	ScalerWriter(const std::vector<rong::Response> &responses)
+	ScalerWriter(const std::vector<rong::Reply> &responses)
 	: index_(0), responses_(responses) {
 		if (responses.empty()) {
 			Finish(grpc::Status(
@@ -563,11 +563,11 @@ private:
 	}
 
 	size_t index_;
-	std::vector<rong::Response> responses_;
+	std::vector<rong::Reply> responses_;
 };
 
 
-grpc::ServerWriteReactor<rong::Response>* Service::GetScalerRecent(
+grpc::ServerWriteReactor<rong::Reply>* Service::GetScalerRecent(
 	grpc::CallbackServerContext*,
 	const rong::RecentRequest* request
 ) {
@@ -587,7 +587,7 @@ grpc::ServerWriteReactor<rong::Response>* Service::GetScalerRecent(
 		average = 720;
 	}
 	std::vector<std::vector<uint32_t>> scalers;
-	std::vector<rong::Response> responses;
+	std::vector<rong::Reply> responses;
 	// get recent scalers from file
 	int result = ReadRecentScaler(request->flag(), range, average, scalers);
 	if (result) {
@@ -600,9 +600,9 @@ grpc::ServerWriteReactor<rong::Response>* Service::GetScalerRecent(
 
 	for (const auto &scaler : scalers) {
 		for (const auto &value : scaler) {
-			rong::Response response;
-			response.set_value(value);
-			responses.push_back(response);
+			rong::Reply reply;
+			reply.set_value(value);
+			responses.push_back(reply);
 		}
 	}
 
@@ -610,7 +610,7 @@ grpc::ServerWriteReactor<rong::Response>* Service::GetScalerRecent(
 }
 
 
-grpc::ServerWriteReactor<rong::Response>* Service::GetScalerDate(
+grpc::ServerWriteReactor<rong::Reply>* Service::GetScalerDate(
 	grpc::CallbackServerContext*,
 	const rong::DateRequest *request
 ) {
@@ -621,7 +621,7 @@ grpc::ServerWriteReactor<rong::Response>* Service::GetScalerDate(
 	date->tm_mday = request->day();
 	mktime(date);
 
-	std::vector<rong::Response> responses;
+	std::vector<rong::Reply> responses;
 	std::vector<std::vector<uint32_t>> scalers;
 	int result = ReadDateScaler(date, request->flag(), 0, 120, 720, scalers);
 	if (result) {
@@ -634,9 +634,9 @@ grpc::ServerWriteReactor<rong::Response>* Service::GetScalerDate(
 
 	for (const auto &scaler : scalers) {
 		for (const auto &value : scaler) {
-			rong::Response response;
-			response.set_value(value);
-			responses.push_back(response);
+			rong::Reply reply;
+			reply.set_value(value);
+			responses.push_back(reply);
 		}
 	}
 
@@ -738,16 +738,16 @@ grpc::ServerWriteReactor<rong::Expression>* Service::GetConfig(
 
 grpc::ServerReadReactor<rong::Expression>* Service::SetConfig(
 	grpc::CallbackServerContext*,
-	rong::ParseResponse *response
+	rong::ParseResponse *reply
 ) {
 	class Recorder : public grpc::ServerReadReactor<rong::Expression> {
 	public:
 		Recorder(
-			rong::ParseResponse *response,
+			rong::ParseResponse *reply,
 			volatile Memory* memory,
 			bool test,
 			LogLevel log_level
-		): response_(response), memory_(memory), test_(test), log_level_(log_level) {
+		): response_(reply), memory_(memory), test_(test), log_level_(log_level) {
 			// initialize
 			response_->set_value(0);
 			if (log_level_ >= kDebug) {
@@ -821,7 +821,7 @@ grpc::ServerReadReactor<rong::Expression>* Service::SetConfig(
 		std::cout << "[Debug] SetConfig().\n";
 	}
 
-	return new Recorder(response, memory_, test_, log_level_);
+	return new Recorder(reply, memory_, test_, log_level_);
 }
 
 }
