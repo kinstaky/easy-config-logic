@@ -89,7 +89,7 @@ int main(int argc, char **argv) {
 		auto toml_data = toml::parse(config_file);
 		test = toml::find_or<int>(toml_data, "test", 0);
 		port = toml::find_or<int>(toml_data, "port", 2233);
-		path = toml::find_or<std::string>(toml_data, "path", "./");
+		path = toml::find_or<std::string>(toml_data, "data_path", "./");
 		device_name = toml::find_or<std::string>(toml_data, "name", "");
 		std::string level_name =
 			toml::find_or<std::string>(toml_data, "log_level", "warn");

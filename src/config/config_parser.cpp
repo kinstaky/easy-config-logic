@@ -767,10 +767,10 @@ std::string ConfigParser::SaveConfigInformation(bool expression) const noexcept 
 	// create directories if not existed
 	std::string path = std::string(getenv("HOME")) + "/.easy-config-logic";
 #if __cplusplus >= 201703L
-	std::filesystem::create_directories(path);
+	// std::filesystem::create_directories(path);
 	std::filesystem::create_directories(path+"/backup");
 #else
-	std::experimental::filesystem::create_directories(path);
+	// std::experimental::filesystem::create_directories(path);
 	std::experimental::filesystem::create_directories(path+"/backup");
 #endif
 	// get current time

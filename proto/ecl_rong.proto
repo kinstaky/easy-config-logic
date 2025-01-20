@@ -21,14 +21,14 @@ message Reply {
 
 message RecentRequest {
 	int32 type = 1;
-	int32 flag = 2;
+	uint32 flag = 2;
 }
 
 message DateRequest {
 	int32 year = 1;
 	int32 month = 2;
 	int32 day = 3;
-	int32 flag = 4;
+	uint32 flag = 4;
 }
 
 message Expression {

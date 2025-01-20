@@ -88,7 +88,7 @@ public:
 	///
 	int ReadDateScaler(
 		tm* date,
-		int32_t flag,
+		uint32_t flag,
 		size_t seconds,
 		size_t size,
 		int average,
@@ -102,8 +102,9 @@ public:
 	/// @param[in] average get average value from [average] numbers
 	/// @param[out] value read value from file
 	/// @returns 0 if successful, -1 on invalid parameters, -2 on file error
+	///
 	int ReadRecentScaler(
-		int32_t flag,
+		uint32_t flag,
 		int seconds,
 		int average,
 		std::vector<std::vector<uint32_t>> &value
@@ -120,13 +121,38 @@ public:
 	void PrintScaler() const noexcept;
 
 	// ------------------------------------------------------------------------
+	//                          run control interface
+	// ------------------------------------------------------------------------
+
+	/// @brief read current(next) run number in running(idle) state from disk
+	/// @returns run number read from disk
+	///
+	int ReadRunNumber() noexcept;
+
+
+	/// @brief write current(next) run number in running(idle) state to disk
+	///
+	void WriteRunNumber() const noexcept;
+
+
+	/// @brief start or stop run
+	///
+	void StartRun() noexcept;
+
+
+	/// @brief change run number
+	/// @param[in] new_run new run number to change
+	///
+	void ChangeRun(int new_run) noexcept;
+
+	// ------------------------------------------------------------------------
 	//                              gRPC interface
 	// ------------------------------------------------------------------------
 
 	/// @brief get state of device
 	/// @param[in] context server context, handled by gRPC
 	/// @param[in] request request content, keep empty now
-	/// @param[out] reply current state, 0 finished, 1 not config, 2 good
+	/// @param[out] reply current state, 3 running, 2 idle, 1 stoppeds
 	/// @returns default reactor
 	///
 	grpc::ServerUnaryReactor* GetState(
@@ -134,6 +160,19 @@ public:
 		const rong::Request *request,
 		rong::Reply *reply
 	) override;
+
+
+	/// @brief control about run information
+	/// @param[in] context server context, handled by gRPC
+	///	@param[in] action action type and information
+	/// @param[out] reply control result
+	/// @returns default reactor
+	///
+	grpc::ServerUnaryReactor* RunControl(
+		grpc::CallbackServerContext *context,
+        const rong::Action *action,
+        rong::Reply *reply
+	);
 
 
 	/// @brief get scaler value
@@ -216,6 +255,10 @@ private:
 	std::unique_ptr<std::thread> write_thread_;
 	// test scaler thread
 	std::unique_ptr<std::thread> test_thread_;
+
+	// run information
+	int32_t run_;
+	bool running_;
 };
 
 }	// namespace ecl

@@ -13,6 +13,11 @@
 #include <iomanip>
 #include <fstream>
 #include <random>
+#if __cplusplus >= 201703L
+#include <filesystem>
+#else
+#include <experimental/filesystem>
+#endif
 
 #include <grpcpp/grpcpp.h>
 
@@ -21,6 +26,14 @@
 #include "i2c.h"
 
 namespace ecl {
+
+constexpr int kStateIdle = 3;
+constexpr int kStateRunning = 2;
+constexpr int kStateError = 1;
+constexpr int kStateOff = 0;
+constexpr int kActionRunNumber = 0;
+constexpr int kActionRunStart = 1;
+constexpr int kActionRunChange = 2;
 
 bool Service::keep_running = true;
 
@@ -34,6 +47,7 @@ Service::Service(const ServiceOption &option) noexcept
 , memory_(nullptr) {
 
 	keep_running = true;
+	running_ = false;
 
 	if (log_level_ >= kDebug) {
 		std::cout << "[Debug] Initialize scaler service:\n"
@@ -118,6 +132,9 @@ Service::Service(const ServiceOption &option) noexcept
 			}
 		}
 	);
+
+	// get run number
+	run_ = ReadRunNumber();
 }
 
 
@@ -193,7 +210,7 @@ std::string GetFileName(
 
 int Service::ReadDateScaler(
 	tm* date,
-	int32_t flag,
+	uint32_t flag,
 	size_t seconds,
 	size_t size,
 	int average,
@@ -252,7 +269,7 @@ int Service::ReadDateScaler(
 
 
 int Service::ReadRecentScaler(
-	int32_t flag,
+	uint32_t flag,
 	int seconds,
 	int average,
 	std::vector<std::vector<uint32_t>> &scalers
@@ -460,13 +477,108 @@ void Service::Serve() noexcept {
 }
 
 
+int Service::ReadRunNumber() noexcept {
+	// open file
+	std::string path = std::string(getenv("HOME")) + "/.easy-config-logic/";
+	path += device_name_ + "/";
+	std::string file_name = path + "run.txt";
+	std::ifstream fin(file_name);
+	if (fin.good()) {
+		fin >> run_;
+		fin.close();
+	} else {
+		run_ = 0;
+	}
+
+	return run_;
+}
+
+
+void Service::WriteRunNumber() const noexcept {
+	// open file
+    std::string path = std::string(getenv("HOME")) + "/.easy-config-logic/";
+    path += device_name_;
+#if __cplusplus >= 201703L
+	std::filesystem::create_directories(path);
+#else
+	std::experimental::filesystem::create_directories(path);
+#endif
+    std::string file_name = path + "/run.txt";
+    std::ofstream fout(file_name);
+    if (fout.good()) {
+        fout << run_;
+        fout.close();
+    }
+}
+
+
+void Service::StartRun() noexcept {
+    if (running_) {
+		if (log_level_ >= kInfo) {
+			std::cout << "[Info] Stop run.\n";
+		}
+		running_ = false;
+		++run_;
+		WriteRunNumber();
+	} else {
+		if (log_level_ >= kInfo) {
+			std::cout << "[Info] Start run.\n";
+		}
+		running_ = true;
+	}
+}
+
+
+void Service::ChangeRun(int new_run) noexcept {
+	if (running_) return;
+	if (log_level_ >= kInfo) {
+		std::cout << "[Info] Run change to "
+			<< new_run << ".\n";
+	}
+	run_ = new_run;
+	WriteRunNumber();
+}
+
+
 grpc::ServerUnaryReactor* Service::GetState(
 	grpc::CallbackServerContext* context,
 	const rong::Request*,
 	rong::Reply *reply
 ) {
-	reply->set_value(int(keep_running));
-	auto *reactor = context->DefaultReactor();
+	int state = keep_running
+		? (running_ ? kStateRunning : kStateIdle)
+		: kStateError;
+	reply->set_value(state);
+	grpc::ServerUnaryReactor *reactor = context->DefaultReactor();
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
+
+grpc::ServerUnaryReactor* Service::RunControl(
+	grpc::CallbackServerContext* context,
+    const rong::Action* action,
+    rong::Reply* reply
+) {
+	if (log_level_ >= kDebug) {
+		std::cout << "[Debug] Run Control type "
+			<< action->type() << " with option "
+			<< action->option() << "\n";
+	}
+	if (action->type() == kActionRunNumber) {
+		reply->set_value(run_);
+	} else if (action->type() == kActionRunStart) {
+		StartRun();
+		reply->set_value(running_ ? 1 : 0);
+	} else if (action->type() == kActionRunChange) {
+		if (running_) {
+			reply->set_value(-1);
+		} else {
+			ChangeRun(action->option());
+			reply->set_value(run_);
+		}
+	}
+	grpc::ServerUnaryReactor *reactor = context->DefaultReactor();
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
 }
@@ -693,6 +805,7 @@ grpc::ServerWriteReactor<rong::Expression>* Service::GetConfig(
 
 	// get last config information
 	std::ifstream last_info_file(path+"/last-config.txt");
+	if (!last_info_file.good()) return new ExpressionWriter(expressions);
 	std::string line;
 	for (int i = 0; i < 3; ++i) {
 		std::getline(last_info_file, line);
@@ -764,17 +877,19 @@ grpc::ServerReadReactor<rong::Expression>* Service::SetConfig(
 					std::cout << "[Info] Read expression from client "
 						<< expression_.value() << "\n";
 				}
-				ParseResult parse_result =
-					config_parser_.Parse(expression_.value());
-				if (!parse_result.Ok()) {
-					success_ = false;
-					response_->set_value(parse_result.Status());
-					response_->set_index(index_);
-					response_->set_position(int(parse_result.Position()));
-					response_->set_length(int(parse_result.Length()));
-					Finish(grpc::Status::OK);
+				if (!expression_.value().empty()) {
+					ParseResult parse_result =
+						config_parser_.Parse(expression_.value());
+					if (!parse_result.Ok()) {
+						success_ = false;
+						response_->set_value(parse_result.Status());
+						response_->set_index(index_);
+						response_->set_position(int(parse_result.Position()));
+						response_->set_length(int(parse_result.Length()));
+						Finish(grpc::Status::OK);
+					}
+					++index_;
 				}
-				++index_;
 				StartRead(&expression_);
 			} else {
 				if (!success_) return;
