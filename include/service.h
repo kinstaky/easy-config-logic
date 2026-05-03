@@ -8,7 +8,7 @@
 #include <memory>
 
 #include "config/memory.h"
-#include "ecl_rong.grpc.pb.h"
+#include "ecl.grpc.pb.h"
 
 namespace ecl {
 
@@ -57,7 +57,7 @@ struct ServiceOption {
 	}
 };
 
-class Service final : public rong::ecl::CallbackService {
+class Service final : public easydaq::ecl::CallbackService {
 public:
 
 	/// @brief constructor
@@ -157,8 +157,8 @@ public:
 	///
 	grpc::ServerUnaryReactor* GetState(
 		grpc::CallbackServerContext *context,
-		const rong::Request *request,
-		rong::Reply *reply
+		const easydaq::Request *request,
+		easydaq::Reply *reply
 	) override;
 
 
@@ -170,8 +170,8 @@ public:
 	///
 	grpc::ServerUnaryReactor* RunControl(
 		grpc::CallbackServerContext *context,
-        const rong::Action *action,
-        rong::Reply *reply
+        const easydaq::Action *action,
+        easydaq::Reply *reply
 	);
 
 
@@ -182,9 +182,9 @@ public:
 	///		type 1+ refers to get range of scaler values
 	/// @returns reactor to write scaler values
 	///
-	grpc::ServerWriteReactor<rong::Reply>* GetScaler(
+	grpc::ServerWriteReactor<easydaq::Reply>* GetScaler(
 		grpc::CallbackServerContext *context,
-		const rong::Request *request
+		const easydaq::Request *request
 	) override;
 
 
@@ -195,9 +195,9 @@ public:
 	/// 	flag refers to needed scaler
 	/// @returns reactor to write scaler values
 	///
-	grpc::ServerWriteReactor<rong::Reply>* GetScalerRecent(
+	grpc::ServerWriteReactor<easydaq::Reply>* GetScalerRecent(
 		grpc::CallbackServerContext *context,
-		const rong::RecentRequest *request
+		const easydaq::RecentRequest *request
 	) override;
 
 
@@ -206,9 +206,9 @@ public:
 	/// @param[in] request request content, fill date
 	/// @returns reactor to write scaler values
 	///
-	grpc::ServerWriteReactor<rong::Reply>* GetScalerDate(
+	grpc::ServerWriteReactor<easydaq::Reply>* GetScalerDate(
 		grpc::CallbackServerContext *context,
-		const rong::DateRequest *request
+		const easydaq::DateRequest *request
 	) override;
 
 
@@ -217,9 +217,9 @@ public:
 	/// @param[in] request request content, empty now
 	/// @returns reactor to write expressions
 	///
-	grpc::ServerWriteReactor<rong::Expression>* GetConfig(
+	grpc::ServerWriteReactor<easydaq::Expression>* GetConfig(
 		grpc::CallbackServerContext *context,
-		const rong::Request *request
+		const easydaq::Request *request
 	) override;
 
 
@@ -228,9 +228,9 @@ public:
 	/// @param[in] reply reply, config result
 	/// @returns reactor to read expressions
 	///
-	grpc::ServerReadReactor<rong::Expression>* SetConfig(
+	grpc::ServerReadReactor<easydaq::Expression>* SetConfig(
 		grpc::CallbackServerContext *context,
-		rong::ParseResponse *reply
+		easydaq::ParseResponse *reply
 	) override;
 
 

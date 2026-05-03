@@ -13,12 +13,14 @@
 #include <iomanip>
 #include <fstream>
 #include <random>
-#if __cplusplus >= 201703L
-#include <filesystem>
-#else
-#include <experimental/filesystem>
+#if defined(__has_include)
+	#if __has_include(<filesystem>)
+		#include <filesystem>
+		namespace fs = std::filesystem;
+	#endif
+	#include <experimental/filesystem>
+	namespace fs = std::experimental::filesystem;
 #endif
-
 #include <grpcpp/grpcpp.h>
 
 #include "config/config_parser.h"
@@ -498,11 +500,7 @@ void Service::WriteRunNumber() const noexcept {
 	// open file
     std::string path = std::string(getenv("HOME")) + "/.easy-config-logic/";
     path += device_name_;
-#if __cplusplus >= 201703L
-	std::filesystem::create_directories(path);
-#else
-	std::experimental::filesystem::create_directories(path);
-#endif
+	fs::create_directories(path);
     std::string file_name = path + "/run.txt";
     std::ofstream fout(file_name);
     if (fout.good()) {
@@ -542,8 +540,8 @@ void Service::ChangeRun(int new_run) noexcept {
 
 grpc::ServerUnaryReactor* Service::GetState(
 	grpc::CallbackServerContext* context,
-	const rong::Request*,
-	rong::Reply *reply
+	const easydaq::Request*,
+	easydaq::Reply *reply
 ) {
 	int state = keep_running
 		? (running_ ? kStateRunning : kStateIdle)
@@ -557,8 +555,8 @@ grpc::ServerUnaryReactor* Service::GetState(
 
 grpc::ServerUnaryReactor* Service::RunControl(
 	grpc::CallbackServerContext* context,
-    const rong::Action* action,
-    rong::Reply* reply
+    const easydaq::Action* action,
+    easydaq::Reply* reply
 ) {
 	if (log_level_ >= kDebug) {
 		std::cout << "[Debug] Run Control type "
@@ -584,14 +582,14 @@ grpc::ServerUnaryReactor* Service::RunControl(
 }
 
 
-grpc::ServerWriteReactor<rong::Reply>* Service::GetScaler(
+grpc::ServerWriteReactor<easydaq::Reply>* Service::GetScaler(
 	grpc::CallbackServerContext*,
-	const rong::Request*
+	const easydaq::Request*
 ) {
 
-	class ScalerWriter : public grpc::ServerWriteReactor<rong::Reply> {
+	class ScalerWriter : public grpc::ServerWriteReactor<easydaq::Reply> {
 	public:
-		ScalerWriter(const std::vector<rong::Reply> &responses)
+		ScalerWriter(const std::vector<easydaq::Reply> &responses)
 		: index_(0), responses_(responses) {
 			NextWrite();
 		}
@@ -622,12 +620,12 @@ grpc::ServerWriteReactor<rong::Reply>* Service::GetScaler(
 		}
 
 		size_t index_;
-		std::vector<rong::Reply> responses_;
+		std::vector<easydaq::Reply> responses_;
 	};
 
-	std::vector<rong::Reply> responses;
+	std::vector<easydaq::Reply> responses;
 	for (size_t i = 0; i < kMaxScalers; ++i) {
-		rong::Reply reply;
+		easydaq::Reply reply;
 		reply.set_value(memory_->scaler[i].value);
 		responses.push_back(reply);
 	}
@@ -636,9 +634,9 @@ grpc::ServerWriteReactor<rong::Reply>* Service::GetScaler(
 }
 
 
-class ScalerWriter : public grpc::ServerWriteReactor<rong::Reply> {
+class ScalerWriter : public grpc::ServerWriteReactor<easydaq::Reply> {
 public:
-	ScalerWriter(const std::vector<rong::Reply> &responses)
+	ScalerWriter(const std::vector<easydaq::Reply> &responses)
 	: index_(0), responses_(responses) {
 		if (responses.empty()) {
 			Finish(grpc::Status(
@@ -675,13 +673,13 @@ private:
 	}
 
 	size_t index_;
-	std::vector<rong::Reply> responses_;
+	std::vector<easydaq::Reply> responses_;
 };
 
 
-grpc::ServerWriteReactor<rong::Reply>* Service::GetScalerRecent(
+grpc::ServerWriteReactor<easydaq::Reply>* Service::GetScalerRecent(
 	grpc::CallbackServerContext*,
-	const rong::RecentRequest* request
+	const easydaq::RecentRequest* request
 ) {
 	int range = 120;
 	int average = 1;
@@ -699,7 +697,7 @@ grpc::ServerWriteReactor<rong::Reply>* Service::GetScalerRecent(
 		average = 720;
 	}
 	std::vector<std::vector<uint32_t>> scalers;
-	std::vector<rong::Reply> responses;
+	std::vector<easydaq::Reply> responses;
 	// get recent scalers from file
 	int result = ReadRecentScaler(request->flag(), range, average, scalers);
 	if (result) {
@@ -712,7 +710,7 @@ grpc::ServerWriteReactor<rong::Reply>* Service::GetScalerRecent(
 
 	for (const auto &scaler : scalers) {
 		for (const auto &value : scaler) {
-			rong::Reply reply;
+			easydaq::Reply reply;
 			reply.set_value(value);
 			responses.push_back(reply);
 		}
@@ -722,9 +720,9 @@ grpc::ServerWriteReactor<rong::Reply>* Service::GetScalerRecent(
 }
 
 
-grpc::ServerWriteReactor<rong::Reply>* Service::GetScalerDate(
+grpc::ServerWriteReactor<easydaq::Reply>* Service::GetScalerDate(
 	grpc::CallbackServerContext*,
-	const rong::DateRequest *request
+	const easydaq::DateRequest *request
 ) {
 	time_t t = time(NULL);
 	tm *date = localtime(&t);
@@ -733,7 +731,7 @@ grpc::ServerWriteReactor<rong::Reply>* Service::GetScalerDate(
 	date->tm_mday = request->day();
 	mktime(date);
 
-	std::vector<rong::Reply> responses;
+	std::vector<easydaq::Reply> responses;
 	std::vector<std::vector<uint32_t>> scalers;
 	int result = ReadDateScaler(date, request->flag(), 0, 120, 720, scalers);
 	if (result) {
@@ -746,7 +744,7 @@ grpc::ServerWriteReactor<rong::Reply>* Service::GetScalerDate(
 
 	for (const auto &scaler : scalers) {
 		for (const auto &value : scaler) {
-			rong::Reply reply;
+			easydaq::Reply reply;
 			reply.set_value(value);
 			responses.push_back(reply);
 		}
@@ -756,13 +754,13 @@ grpc::ServerWriteReactor<rong::Reply>* Service::GetScalerDate(
 }
 
 
-grpc::ServerWriteReactor<rong::Expression>* Service::GetConfig(
+grpc::ServerWriteReactor<easydaq::Expression>* Service::GetConfig(
 	grpc::CallbackServerContext*,
-	const rong::Request*
+	const easydaq::Request*
 ) {
-	class ExpressionWriter : public grpc::ServerWriteReactor<rong::Expression> {
+	class ExpressionWriter : public grpc::ServerWriteReactor<easydaq::Expression> {
 	public:
-		ExpressionWriter(const std::vector<rong::Expression> &expressions)
+		ExpressionWriter(const std::vector<easydaq::Expression> &expressions)
 		: expressions_(expressions), index_(0) {
 			NextWrite();
 		}
@@ -789,7 +787,7 @@ grpc::ServerWriteReactor<rong::Expression>* Service::GetConfig(
 			Finish(grpc::Status::OK);
 		}
 
-		std::vector<rong::Expression> expressions_;
+		std::vector<easydaq::Expression> expressions_;
 		size_t index_;
 	};
 
@@ -798,7 +796,7 @@ grpc::ServerWriteReactor<rong::Expression>* Service::GetConfig(
 	}
 
 	// expressions
-	std::vector<rong::Expression> expressions;
+	std::vector<easydaq::Expression> expressions;
 
 	// config or log path
 	std::string path = std::string(getenv("HOME")) + "/.easy-config-logic";
@@ -824,7 +822,7 @@ grpc::ServerWriteReactor<rong::Expression>* Service::GetConfig(
 	line[line.find_last_of("-")] = ':';
 	line[line.find_last_of("-")] = ':';
 	line[line.find_last_of("-")] = ' ';
-	rong::Expression config_time;
+	easydaq::Expression config_time;
 	config_time.set_value(line);
 	expressions.push_back(config_time);
 	if (log_level_ >= kDebug) {
@@ -835,7 +833,7 @@ grpc::ServerWriteReactor<rong::Expression>* Service::GetConfig(
 	while (fin.good()) {
 		std::getline(fin, line);
 		if (line.empty()) continue;
-		rong::Expression expr;
+		easydaq::Expression expr;
 		expr.set_value(line);
 		expressions.push_back(expr);
 		if (log_level_ >= kInfo) {
@@ -849,14 +847,14 @@ grpc::ServerWriteReactor<rong::Expression>* Service::GetConfig(
 }
 
 
-grpc::ServerReadReactor<rong::Expression>* Service::SetConfig(
+grpc::ServerReadReactor<easydaq::Expression>* Service::SetConfig(
 	grpc::CallbackServerContext*,
-	rong::ParseResponse *reply
+	easydaq::ParseResponse *reply
 ) {
-	class Recorder : public grpc::ServerReadReactor<rong::Expression> {
+	class Recorder : public grpc::ServerReadReactor<easydaq::Expression> {
 	public:
 		Recorder(
-			rong::ParseResponse *reply,
+			easydaq::ParseResponse *reply,
 			volatile Memory* memory,
 			bool test,
 			LogLevel log_level
@@ -921,11 +919,11 @@ grpc::ServerReadReactor<rong::Expression>* Service::SetConfig(
 		}
 
 	private:
-		rong::ParseResponse *response_;
+		easydaq::ParseResponse *response_;
 		volatile Memory *memory_;
 		bool test_;
 		LogLevel log_level_;
-		rong::Expression expression_;
+		easydaq::Expression expression_;
 		MemoryConfig memory_config_;
 		ConfigParser config_parser_;
 		bool success_;

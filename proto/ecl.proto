@@ -1,5 +1,5 @@
 syntax = "proto3";
-package rong;
+package easydaq;
 
 service ecl {
 	rpc GetState(Request) returns (Reply) {}
