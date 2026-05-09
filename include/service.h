@@ -57,7 +57,7 @@ struct ServiceOption {
 	}
 };
 
-class Service final : public EasyConfigLogic::CallbackService {
+class Service final : public easydaq::ecl::CallbackService {
 public:
 
 	/// @brief constructor
@@ -88,7 +88,7 @@ public:
 	///
 	int ReadDateScaler(
 		tm* date,
-		int32_t flag,
+		uint32_t flag,
 		size_t seconds,
 		size_t size,
 		int average,
@@ -102,8 +102,9 @@ public:
 	/// @param[in] average get average value from [average] numbers
 	/// @param[out] value read value from file
 	/// @returns 0 if successful, -1 on invalid parameters, -2 on file error
+	///
 	int ReadRecentScaler(
-		int32_t flag,
+		uint32_t flag,
 		int seconds,
 		int average,
 		std::vector<std::vector<uint32_t>> &value
@@ -120,20 +121,58 @@ public:
 	void PrintScaler() const noexcept;
 
 	// ------------------------------------------------------------------------
+	//                          run control interface
+	// ------------------------------------------------------------------------
+
+	/// @brief read current(next) run number in running(idle) state from disk
+	/// @returns run number read from disk
+	///
+	int ReadRunNumber() noexcept;
+
+
+	/// @brief write current(next) run number in running(idle) state to disk
+	///
+	void WriteRunNumber() const noexcept;
+
+
+	/// @brief start or stop run
+	///
+	void StartRun() noexcept;
+
+
+	/// @brief change run number
+	/// @param[in] new_run new run number to change
+	///
+	void ChangeRun(int new_run) noexcept;
+
+	// ------------------------------------------------------------------------
 	//                              gRPC interface
 	// ------------------------------------------------------------------------
 
 	/// @brief get state of device
 	/// @param[in] context server context, handled by gRPC
 	/// @param[in] request request content, keep empty now
-	/// @param[out] response current state, 0 finished, 1 not config, 2 good
+	/// @param[out] reply current state, 3 running, 2 idle, 1 stoppeds
 	/// @returns default reactor
 	///
 	grpc::ServerUnaryReactor* GetState(
 		grpc::CallbackServerContext *context,
-		const Request *request,
-		Response *response
+		const easydaq::Request *request,
+		easydaq::Reply *reply
 	) override;
+
+
+	/// @brief control about run information
+	/// @param[in] context server context, handled by gRPC
+	///	@param[in] action action type and information
+	/// @param[out] reply control result
+	/// @returns default reactor
+	///
+	grpc::ServerUnaryReactor* RunControl(
+		grpc::CallbackServerContext *context,
+        const easydaq::Action *action,
+        easydaq::Reply *reply
+	);
 
 
 	/// @brief get scaler value
@@ -143,9 +182,9 @@ public:
 	///		type 1+ refers to get range of scaler values
 	/// @returns reactor to write scaler values
 	///
-	grpc::ServerWriteReactor<Response>* GetScaler(
+	grpc::ServerWriteReactor<easydaq::Reply>* GetScaler(
 		grpc::CallbackServerContext *context,
-		const Request *request
+		const easydaq::Request *request
 	) override;
 
 
@@ -156,9 +195,9 @@ public:
 	/// 	flag refers to needed scaler
 	/// @returns reactor to write scaler values
 	///
-	grpc::ServerWriteReactor<Response>* GetScalerRecent(
+	grpc::ServerWriteReactor<easydaq::Reply>* GetScalerRecent(
 		grpc::CallbackServerContext *context,
-		const RecentRequest *request
+		const easydaq::RecentRequest *request
 	) override;
 
 
@@ -167,9 +206,9 @@ public:
 	/// @param[in] request request content, fill date
 	/// @returns reactor to write scaler values
 	///
-	grpc::ServerWriteReactor<Response>* GetScalerDate(
+	grpc::ServerWriteReactor<easydaq::Reply>* GetScalerDate(
 		grpc::CallbackServerContext *context,
-		const DateRequest *request
+		const easydaq::DateRequest *request
 	) override;
 
 
@@ -178,20 +217,20 @@ public:
 	/// @param[in] request request content, empty now
 	/// @returns reactor to write expressions
 	///
-	grpc::ServerWriteReactor<Expression>* GetConfig(
+	grpc::ServerWriteReactor<easydaq::Expression>* GetConfig(
 		grpc::CallbackServerContext *context,
-		const Request *request
+		const easydaq::Request *request
 	) override;
 
 
 	/// @brief set FPGA memory config
 	/// @param[in] context server context, handled by gRPC
-	/// @param[in] response response, config result
+	/// @param[in] reply reply, config result
 	/// @returns reactor to read expressions
 	///
-	grpc::ServerReadReactor<Expression>* SetConfig(
+	grpc::ServerReadReactor<easydaq::Expression>* SetConfig(
 		grpc::CallbackServerContext *context,
-		ParseResponse *response
+		easydaq::ParseResponse *reply
 	) override;
 
 
@@ -216,6 +255,10 @@ private:
 	std::unique_ptr<std::thread> write_thread_;
 	// test scaler thread
 	std::unique_ptr<std::thread> test_thread_;
+
+	// run information
+	int32_t run_;
+	bool running_;
 };
 
 }	// namespace ecl

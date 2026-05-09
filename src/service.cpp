@@ -13,7 +13,11 @@
 #include <iomanip>
 #include <fstream>
 #include <random>
-
+#if __cplusplus >= 201703L
+	#include <filesystem>
+#else
+	#include <experimental/filesystem>
+#endif
 #include <grpcpp/grpcpp.h>
 
 #include "config/config_parser.h"
@@ -21,6 +25,14 @@
 #include "i2c.h"
 
 namespace ecl {
+
+constexpr int kStateIdle = 3;
+constexpr int kStateRunning = 2;
+constexpr int kStateError = 1;
+constexpr int kStateOff = 0;
+constexpr int kActionRunNumber = 0;
+constexpr int kActionRunStart = 1;
+constexpr int kActionRunChange = 2;
 
 bool Service::keep_running = true;
 
@@ -34,6 +46,7 @@ Service::Service(const ServiceOption &option) noexcept
 , memory_(nullptr) {
 
 	keep_running = true;
+	running_ = false;
 
 	if (log_level_ >= kDebug) {
 		std::cout << "[Debug] Initialize scaler service:\n"
@@ -118,6 +131,9 @@ Service::Service(const ServiceOption &option) noexcept
 			}
 		}
 	);
+
+	// get run number
+	run_ = ReadRunNumber();
 }
 
 
@@ -193,7 +209,7 @@ std::string GetFileName(
 
 int Service::ReadDateScaler(
 	tm* date,
-	int32_t flag,
+	uint32_t flag,
 	size_t seconds,
 	size_t size,
 	int average,
@@ -252,7 +268,7 @@ int Service::ReadDateScaler(
 
 
 int Service::ReadRecentScaler(
-	int32_t flag,
+	uint32_t flag,
 	int seconds,
 	int average,
 	std::vector<std::vector<uint32_t>> &scalers
@@ -460,26 +476,121 @@ void Service::Serve() noexcept {
 }
 
 
+int Service::ReadRunNumber() noexcept {
+	// open file
+	std::string path = std::string(getenv("HOME")) + "/.easy-config-logic/";
+	path += device_name_ + "/";
+	std::string file_name = path + "run.txt";
+	std::ifstream fin(file_name);
+	if (fin.good()) {
+		fin >> run_;
+		fin.close();
+	} else {
+		run_ = 0;
+	}
+
+	return run_;
+}
+
+
+void Service::WriteRunNumber() const noexcept {
+	// open file
+    std::string path = std::string(getenv("HOME")) + "/.easy-config-logic/";
+    path += device_name_;
+#if __cplusplus >= 201703L
+    std::filesystem::create_directories(path);
+#else
+    std::experimental::filesystem::create_directories(path);
+#endif
+    std::string file_name = path + "/run.txt";
+    std::ofstream fout(file_name);
+    if (fout.good()) {
+        fout << run_;
+        fout.close();
+    }
+}
+
+
+void Service::StartRun() noexcept {
+    if (running_) {
+		if (log_level_ >= kInfo) {
+			std::cout << "[Info] Stop run.\n";
+		}
+		running_ = false;
+		++run_;
+		WriteRunNumber();
+	} else {
+		if (log_level_ >= kInfo) {
+			std::cout << "[Info] Start run.\n";
+		}
+		running_ = true;
+	}
+}
+
+
+void Service::ChangeRun(int new_run) noexcept {
+	if (running_) return;
+	if (log_level_ >= kInfo) {
+		std::cout << "[Info] Run change to "
+			<< new_run << ".\n";
+	}
+	run_ = new_run;
+	WriteRunNumber();
+}
+
+
 grpc::ServerUnaryReactor* Service::GetState(
 	grpc::CallbackServerContext* context,
-	const Request*,
-	Response *response
+	const easydaq::Request*,
+	easydaq::Reply *reply
 ) {
-	response->set_value(int(keep_running));
-	auto *reactor = context->DefaultReactor();
+	int state = keep_running
+		? (running_ ? kStateRunning : kStateIdle)
+		: kStateError;
+	reply->set_value(state);
+	grpc::ServerUnaryReactor *reactor = context->DefaultReactor();
 	reactor->Finish(grpc::Status::OK);
 	return reactor;
 }
 
 
-grpc::ServerWriteReactor<Response>* Service::GetScaler(
+grpc::ServerUnaryReactor* Service::RunControl(
+	grpc::CallbackServerContext* context,
+    const easydaq::Action* action,
+    easydaq::Reply* reply
+) {
+	if (log_level_ >= kDebug) {
+		std::cout << "[Debug] Run Control type "
+			<< action->type() << " with option "
+			<< action->option() << "\n";
+	}
+	if (action->type() == kActionRunNumber) {
+		reply->set_value(run_);
+	} else if (action->type() == kActionRunStart) {
+		StartRun();
+		reply->set_value(running_ ? 1 : 0);
+	} else if (action->type() == kActionRunChange) {
+		if (running_) {
+			reply->set_value(-1);
+		} else {
+			ChangeRun(action->option());
+			reply->set_value(run_);
+		}
+	}
+	grpc::ServerUnaryReactor *reactor = context->DefaultReactor();
+	reactor->Finish(grpc::Status::OK);
+	return reactor;
+}
+
+
+grpc::ServerWriteReactor<easydaq::Reply>* Service::GetScaler(
 	grpc::CallbackServerContext*,
-	const Request*
+	const easydaq::Request*
 ) {
 
-	class ScalerWriter : public grpc::ServerWriteReactor<Response> {
+	class ScalerWriter : public grpc::ServerWriteReactor<easydaq::Reply> {
 	public:
-		ScalerWriter(const std::vector<Response> &responses)
+		ScalerWriter(const std::vector<easydaq::Reply> &responses)
 		: index_(0), responses_(responses) {
 			NextWrite();
 		}
@@ -510,23 +621,23 @@ grpc::ServerWriteReactor<Response>* Service::GetScaler(
 		}
 
 		size_t index_;
-		std::vector<Response> responses_;
+		std::vector<easydaq::Reply> responses_;
 	};
 
-	std::vector<Response> responses;
+	std::vector<easydaq::Reply> responses;
 	for (size_t i = 0; i < kMaxScalers; ++i) {
-		Response response;
-		response.set_value(memory_->scaler[i].value);
-		responses.push_back(response);
+		easydaq::Reply reply;
+		reply.set_value(memory_->scaler[i].value);
+		responses.push_back(reply);
 	}
 
 	return new ScalerWriter(responses);
 }
 
 
-class ScalerWriter : public grpc::ServerWriteReactor<Response> {
+class ScalerWriter : public grpc::ServerWriteReactor<easydaq::Reply> {
 public:
-	ScalerWriter(const std::vector<Response> &responses)
+	ScalerWriter(const std::vector<easydaq::Reply> &responses)
 	: index_(0), responses_(responses) {
 		if (responses.empty()) {
 			Finish(grpc::Status(
@@ -563,13 +674,13 @@ private:
 	}
 
 	size_t index_;
-	std::vector<Response> responses_;
+	std::vector<easydaq::Reply> responses_;
 };
 
 
-grpc::ServerWriteReactor<Response>* Service::GetScalerRecent(
+grpc::ServerWriteReactor<easydaq::Reply>* Service::GetScalerRecent(
 	grpc::CallbackServerContext*,
-	const RecentRequest* request
+	const easydaq::RecentRequest* request
 ) {
 	int range = 120;
 	int average = 1;
@@ -587,7 +698,7 @@ grpc::ServerWriteReactor<Response>* Service::GetScalerRecent(
 		average = 720;
 	}
 	std::vector<std::vector<uint32_t>> scalers;
-	std::vector<Response> responses;
+	std::vector<easydaq::Reply> responses;
 	// get recent scalers from file
 	int result = ReadRecentScaler(request->flag(), range, average, scalers);
 	if (result) {
@@ -600,9 +711,9 @@ grpc::ServerWriteReactor<Response>* Service::GetScalerRecent(
 
 	for (const auto &scaler : scalers) {
 		for (const auto &value : scaler) {
-			Response response;
-			response.set_value(value);
-			responses.push_back(response);
+			easydaq::Reply reply;
+			reply.set_value(value);
+			responses.push_back(reply);
 		}
 	}
 
@@ -610,9 +721,9 @@ grpc::ServerWriteReactor<Response>* Service::GetScalerRecent(
 }
 
 
-grpc::ServerWriteReactor<Response>* Service::GetScalerDate(
+grpc::ServerWriteReactor<easydaq::Reply>* Service::GetScalerDate(
 	grpc::CallbackServerContext*,
-	const DateRequest *request
+	const easydaq::DateRequest *request
 ) {
 	time_t t = time(NULL);
 	tm *date = localtime(&t);
@@ -621,7 +732,7 @@ grpc::ServerWriteReactor<Response>* Service::GetScalerDate(
 	date->tm_mday = request->day();
 	mktime(date);
 
-	std::vector<Response> responses;
+	std::vector<easydaq::Reply> responses;
 	std::vector<std::vector<uint32_t>> scalers;
 	int result = ReadDateScaler(date, request->flag(), 0, 120, 720, scalers);
 	if (result) {
@@ -634,9 +745,9 @@ grpc::ServerWriteReactor<Response>* Service::GetScalerDate(
 
 	for (const auto &scaler : scalers) {
 		for (const auto &value : scaler) {
-			Response response;
-			response.set_value(value);
-			responses.push_back(response);
+			easydaq::Reply reply;
+			reply.set_value(value);
+			responses.push_back(reply);
 		}
 	}
 
@@ -644,13 +755,13 @@ grpc::ServerWriteReactor<Response>* Service::GetScalerDate(
 }
 
 
-grpc::ServerWriteReactor<Expression>* Service::GetConfig(
+grpc::ServerWriteReactor<easydaq::Expression>* Service::GetConfig(
 	grpc::CallbackServerContext*,
-	const Request*
+	const easydaq::Request*
 ) {
-	class ExpressionWriter : public grpc::ServerWriteReactor<Expression> {
+	class ExpressionWriter : public grpc::ServerWriteReactor<easydaq::Expression> {
 	public:
-		ExpressionWriter(const std::vector<Expression> &expressions)
+		ExpressionWriter(const std::vector<easydaq::Expression> &expressions)
 		: expressions_(expressions), index_(0) {
 			NextWrite();
 		}
@@ -677,7 +788,7 @@ grpc::ServerWriteReactor<Expression>* Service::GetConfig(
 			Finish(grpc::Status::OK);
 		}
 
-		std::vector<Expression> expressions_;
+		std::vector<easydaq::Expression> expressions_;
 		size_t index_;
 	};
 
@@ -686,13 +797,14 @@ grpc::ServerWriteReactor<Expression>* Service::GetConfig(
 	}
 
 	// expressions
-	std::vector<Expression> expressions;
+	std::vector<easydaq::Expression> expressions;
 
 	// config or log path
 	std::string path = std::string(getenv("HOME")) + "/.easy-config-logic";
 
 	// get last config information
 	std::ifstream last_info_file(path+"/last-config.txt");
+	if (!last_info_file.good()) return new ExpressionWriter(expressions);
 	std::string line;
 	for (int i = 0; i < 3; ++i) {
 		std::getline(last_info_file, line);
@@ -711,7 +823,7 @@ grpc::ServerWriteReactor<Expression>* Service::GetConfig(
 	line[line.find_last_of("-")] = ':';
 	line[line.find_last_of("-")] = ':';
 	line[line.find_last_of("-")] = ' ';
-	Expression config_time;
+	easydaq::Expression config_time;
 	config_time.set_value(line);
 	expressions.push_back(config_time);
 	if (log_level_ >= kDebug) {
@@ -722,7 +834,7 @@ grpc::ServerWriteReactor<Expression>* Service::GetConfig(
 	while (fin.good()) {
 		std::getline(fin, line);
 		if (line.empty()) continue;
-		Expression expr;
+		easydaq::Expression expr;
 		expr.set_value(line);
 		expressions.push_back(expr);
 		if (log_level_ >= kInfo) {
@@ -736,18 +848,18 @@ grpc::ServerWriteReactor<Expression>* Service::GetConfig(
 }
 
 
-grpc::ServerReadReactor<Expression>* Service::SetConfig(
+grpc::ServerReadReactor<easydaq::Expression>* Service::SetConfig(
 	grpc::CallbackServerContext*,
-	ParseResponse *response
+	easydaq::ParseResponse *reply
 ) {
-	class Recorder : public grpc::ServerReadReactor<Expression> {
+	class Recorder : public grpc::ServerReadReactor<easydaq::Expression> {
 	public:
 		Recorder(
-			ParseResponse *response,
+			easydaq::ParseResponse *reply,
 			volatile Memory* memory,
 			bool test,
 			LogLevel log_level
-		): response_(response), memory_(memory), test_(test), log_level_(log_level) {
+		): response_(reply), memory_(memory), test_(test), log_level_(log_level) {
 			// initialize
 			response_->set_value(0);
 			if (log_level_ >= kDebug) {
@@ -764,17 +876,19 @@ grpc::ServerReadReactor<Expression>* Service::SetConfig(
 					std::cout << "[Info] Read expression from client "
 						<< expression_.value() << "\n";
 				}
-				ParseResult parse_result =
-					config_parser_.Parse(expression_.value());
-				if (!parse_result.Ok()) {
-					success_ = false;
-					response_->set_value(parse_result.Status());
-					response_->set_index(index_);
-					response_->set_position(int(parse_result.Position()));
-					response_->set_length(int(parse_result.Length()));
-					Finish(grpc::Status::OK);
+				if (!expression_.value().empty()) {
+					ParseResult parse_result =
+						config_parser_.Parse(expression_.value());
+					if (!parse_result.Ok()) {
+						success_ = false;
+						response_->set_value(parse_result.Status());
+						response_->set_index(index_);
+						response_->set_position(int(parse_result.Position()));
+						response_->set_length(int(parse_result.Length()));
+						Finish(grpc::Status::OK);
+					}
+					++index_;
 				}
-				++index_;
 				StartRead(&expression_);
 			} else {
 				if (!success_) return;
@@ -806,11 +920,11 @@ grpc::ServerReadReactor<Expression>* Service::SetConfig(
 		}
 
 	private:
-		ParseResponse *response_;
+		easydaq::ParseResponse *response_;
 		volatile Memory *memory_;
 		bool test_;
 		LogLevel log_level_;
-		Expression expression_;
+		easydaq::Expression expression_;
 		MemoryConfig memory_config_;
 		ConfigParser config_parser_;
 		bool success_;
@@ -821,7 +935,7 @@ grpc::ServerReadReactor<Expression>* Service::SetConfig(
 		std::cout << "[Debug] SetConfig().\n";
 	}
 
-	return new Recorder(response, memory_, test_, log_level_);
+	return new Recorder(reply, memory_, test_, log_level_);
 }
 
 }
