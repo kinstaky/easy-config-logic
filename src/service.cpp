@@ -13,13 +13,10 @@
 #include <iomanip>
 #include <fstream>
 #include <random>
-#if defined(__has_include)
-	#if __has_include(<filesystem>)
-		#include <filesystem>
-		namespace fs = std::filesystem;
-	#endif
+#if __cplusplus >= 201703L
+	#include <filesystem>
+#else
 	#include <experimental/filesystem>
-	namespace fs = std::experimental::filesystem;
 #endif
 #include <grpcpp/grpcpp.h>
 
@@ -500,7 +497,11 @@ void Service::WriteRunNumber() const noexcept {
 	// open file
     std::string path = std::string(getenv("HOME")) + "/.easy-config-logic/";
     path += device_name_;
-	fs::create_directories(path);
+#if __cplusplus >= 201703L
+    std::filesystem::create_directories(path);
+#else
+    std::experimental::filesystem::create_directories(path);
+#endif
     std::string file_name = path + "/run.txt";
     std::ofstream fout(file_name);
     if (fout.good()) {
